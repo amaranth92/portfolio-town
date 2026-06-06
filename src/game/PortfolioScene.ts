@@ -193,14 +193,17 @@ export class PortfolioScene extends Phaser.Scene {
   private getActiveLadderInfo(): LadderInfo | null {
     if (!this.player || !this.ladders) return null;
     const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
-    const playerRect = new Phaser.Geom.Rectangle(playerBody.x - 8, playerBody.y, playerBody.width + 16, playerBody.height);
+    const playerRect = new Phaser.Geom.Rectangle(playerBody.x, playerBody.y, playerBody.width, playerBody.height);
     const ladders = this.ladders.getChildren()
       .map((ladder) => {
         const ladderBody = (ladder as Phaser.Physics.Arcade.Image).body as Phaser.Physics.Arcade.StaticBody;
         const ladderRect = new Phaser.Geom.Rectangle(ladderBody.x, ladderBody.y, ladderBody.width, ladderBody.height);
         return { ladder, ladderBody, ladderRect };
       })
-      .filter(({ ladderRect }) => Phaser.Geom.Intersects.RectangleToRectangle(playerRect, ladderRect))
+      .filter(({ ladderBody, ladderRect }) => {
+        const centerInsideLadder = playerBody.center.x >= ladderBody.left - 4 && playerBody.center.x <= ladderBody.right + 4;
+        return centerInsideLadder && Phaser.Geom.Intersects.RectangleToRectangle(playerRect, ladderRect);
+      })
       .sort((a, b) => Math.abs(a.ladderBody.center.x - playerBody.center.x) - Math.abs(b.ladderBody.center.x - playerBody.center.x));
 
     const active = ladders[0];
@@ -473,7 +476,7 @@ export class PortfolioScene extends Phaser.Scene {
           return;
         }
 
-        if (!this.isWalkableFrame(frame, row) || this.hasWalkableAbove(sampleMap, col, row)) return;
+        if (!this.isWalkableFrame(frame) || this.hasWalkableAbove(sampleMap, col, row)) return;
 
         const platform = solids.create(x + tileSize / 2, y + 6, 'tile:block') as Phaser.Physics.Arcade.Image;
         platform.setDisplaySize(tileSize * 0.78, 9).setVisible(false).refreshBody();
@@ -509,7 +512,7 @@ export class PortfolioScene extends Phaser.Scene {
         const height = end - start + tileSize;
         const ladder = ladders.create(x + tileSize / 2, start + height / 2, 'tile:block') as Phaser.Physics.Arcade.Image;
         ladder
-          .setDisplaySize(tileSize * 1.15, height + tileSize * 0.75)
+          .setDisplaySize(tileSize * 0.78, height + tileSize * 0.55)
           .setVisible(false)
           .setData('top', start)
           .setData('bottom', end + tileSize)
@@ -566,10 +569,10 @@ export class PortfolioScene extends Phaser.Scene {
 
   private hasWalkableAbove(sampleMap: KenneySampleMap, col: number, row: number) {
     if (row <= 0) return false;
-    return sampleMap.layers.some((layer) => this.isWalkableFrame(layer.tiles[(row - 1) * sampleMap.width + col], row - 1));
+    return sampleMap.layers.some((layer) => this.isWalkableFrame(layer.tiles[(row - 1) * sampleMap.width + col]));
   }
 
-  private isWalkableFrame(frame: number, row = 0) {
+  private isWalkableFrame(frame: number) {
     // 밟을 수 있는 타일 frame만 아주 보수적으로 등록합니다.
     // 범위를 넓게 잡으면 문, 줄, 장식, 아이템까지 바닥처럼 인식될 수 있으니 한 번에 많이 추가하지 마세요.
     return (
@@ -577,7 +580,6 @@ export class PortfolioScene extends Phaser.Scene {
       (frame >= 20 && frame <= 25) ||
       (frame >= 40 && frame <= 43) ||
       (frame >= 60 && frame <= 63) ||
-      (row >= 8 && frame >= 121 && frame <= 123) ||
       frame === 96 ||
       frame === 97 ||
       (frame >= 153 && frame <= 156)
