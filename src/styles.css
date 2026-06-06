@@ -1,0 +1,302 @@
+:root {
+  color-scheme: light;
+  --ink: #25313a;
+  --muted: #5d6b74;
+  --paper: #fffbee;
+  --line: #2d2630;
+  --accent: #e4572e;
+  --gold: #f6c453;
+  --sky: #d9f2f1;
+  font-family: "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", "Segoe UI", Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow-x: hidden;
+  background: var(--sky);
+  color: var(--ink);
+}
+
+button {
+  border: 3px solid var(--line);
+  background: var(--paper);
+  box-shadow: 4px 4px 0 var(--line);
+  color: var(--ink);
+  cursor: pointer;
+  font-weight: 950;
+}
+
+.app-shell {
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+.hud {
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: start;
+  border: 3px solid var(--line);
+  background: rgba(255, 251, 238, 0.94);
+  box-shadow: 4px 4px 0 var(--line);
+  padding: 9px;
+}
+
+.hud span,
+.hud small {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.hud strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 15px;
+  line-height: 1.1;
+}
+
+.hud button {
+  min-height: 38px;
+  padding: 6px 8px;
+  font-size: 12px;
+}
+
+.hud-progress {
+  grid-column: 1 / -1;
+  height: 10px;
+  border: 2px solid var(--line);
+  background: #fff;
+}
+
+.hud-progress i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, #58a65c, var(--gold));
+}
+
+.hud section {
+  grid-column: 1 / -1;
+}
+
+.skill-chips,
+.recruiter-skills {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 5px 0 2px;
+}
+
+.skill-chips em,
+.recruiter-skills span,
+.popup-skills em {
+  flex: 0 0 auto;
+  border: 2px solid var(--line);
+  background: #fff;
+  padding: 4px 7px;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 950;
+}
+
+.game-layout {
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 146px 10px 124px;
+}
+
+.game-host {
+  width: min(100vw - 20px, 430px);
+  height: min(65dvh, 760px);
+  min-height: 520px;
+  border: 3px solid var(--line);
+  background: #d9f2f1;
+  box-shadow: 5px 5px 0 var(--line);
+  overflow: hidden;
+}
+
+.game-host canvas {
+  image-rendering: pixelated;
+}
+
+.touch-controls {
+  position: fixed;
+  left: 10px;
+  right: 10px;
+  bottom: 42px;
+  z-index: 4;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 430px;
+  margin: 0 auto;
+}
+
+.touch-controls button {
+  min-height: 52px;
+  font-size: 14px;
+}
+
+.control-hint {
+  position: fixed;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
+  margin: 0;
+  color: rgba(37, 49, 58, 0.78);
+  font-size: 12px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.popup-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  background: rgba(37, 49, 58, 0.32);
+}
+
+.portfolio-popup {
+  width: min(100%, 520px);
+  max-height: min(76dvh, 680px);
+  overflow: auto;
+  border: 3px solid var(--line);
+  background: var(--paper);
+  box-shadow: 6px 6px 0 var(--line);
+  padding: 18px;
+}
+
+.portfolio-popup span,
+.recruiter-mode section > p:first-child {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.portfolio-popup h2,
+.recruiter-hero h1 {
+  margin: 6px 0 10px;
+  font-size: 25px;
+  line-height: 1.08;
+}
+
+.portfolio-popup p,
+.portfolio-popup li,
+.recruiter-mode p,
+.recruiter-mode li {
+  color: var(--muted);
+  font-weight: 750;
+  line-height: 1.55;
+}
+
+.portfolio-popup ul {
+  padding-left: 18px;
+}
+
+.popup-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0;
+}
+
+.portfolio-popup button {
+  width: 100%;
+  min-height: 46px;
+  background: var(--gold);
+}
+
+.recruiter-mode {
+  width: min(920px, 100% - 28px);
+  margin: 0 auto;
+  padding: 130px 0 40px;
+}
+
+.recruiter-mode section,
+.recruiter-timeline article {
+  border: 3px solid var(--line);
+  background: rgba(255, 251, 238, 0.94);
+  box-shadow: 4px 4px 0 var(--line);
+  padding: 18px;
+  margin-bottom: 16px;
+}
+
+.recruiter-mode h2 {
+  margin: 0 0 12px;
+  font-size: 22px;
+}
+
+.recruiter-timeline {
+  display: grid;
+  gap: 12px;
+}
+
+.recruiter-timeline article {
+  margin: 0;
+}
+
+.recruiter-timeline span {
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.recruiter-timeline h3 {
+  margin: 5px 0;
+  font-size: 20px;
+}
+
+.recruiter-mode a {
+  color: var(--ink);
+  font-weight: 950;
+}
+
+@media (min-width: 760px) {
+  .hud {
+    grid-template-columns: 220px 1fr auto;
+    align-items: center;
+  }
+
+  .hud-progress,
+  .hud section {
+    grid-column: auto;
+  }
+
+  .game-layout {
+    padding-top: 102px;
+  }
+
+  .game-host {
+    width: min(54vw, 460px);
+    height: min(78dvh, 820px);
+  }
+
+  .touch-controls {
+    display: none;
+  }
+
+  .control-hint {
+    bottom: 18px;
+  }
+}
