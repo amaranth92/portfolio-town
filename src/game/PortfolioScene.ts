@@ -157,7 +157,8 @@ export class PortfolioScene extends Phaser.Scene {
     this.drawBackground(theme, milestone.chapterTheme);
 
     const solids = this.physics.add.staticGroup();
-    this.drawGround(solids, layout);
+    const platforms = this.physics.add.staticGroup();
+    this.drawGround(solids, platforms, layout);
     this.drawSceneDecor(milestone.chapterTheme, layout);
 
     this.block = this.physics.add.staticImage(layout.block.x, layout.block.y, 'tile:question').setScale(3).setSize(46, 46);
@@ -174,6 +175,7 @@ export class PortfolioScene extends Phaser.Scene {
     this.cameras.main.scrollX = 0;
 
     this.physics.add.collider(this.player, solids);
+    this.physics.add.collider(this.player, platforms, undefined, this.canLandOnPlatform, this);
     this.physics.add.collider(this.player, this.block, () => this.tryOpenMilestone(), undefined, this);
 
     this.add.text(22, 22, `${milestone.year}`, {
@@ -233,7 +235,11 @@ export class PortfolioScene extends Phaser.Scene {
     this.add.rectangle(worldWidth / 2, 620, worldWidth, 40, theme.water);
   }
 
-  private drawGround(solids: Phaser.Physics.Arcade.StaticGroup, layout: ChapterLayout) {
+  private drawGround(
+    solids: Phaser.Physics.Arcade.StaticGroup,
+    platforms: Phaser.Physics.Arcade.StaticGroup,
+    layout: ChapterLayout
+  ) {
     for (let x = 18; x < worldWidth; x += 54) {
       solids.create(x, 514, 'tile:grassMidA').setScale(3).refreshBody();
       solids.create(x, 568, 'tile:dirtA').setScale(3).refreshBody();
@@ -241,14 +247,34 @@ export class PortfolioScene extends Phaser.Scene {
     solids.create(layout.ledge.x - 54, layout.ledge.y, 'tile:grassLeft').setScale(3).refreshBody();
     solids.create(layout.ledge.x, layout.ledge.y, 'tile:grassMidB').setScale(3).refreshBody();
     solids.create(layout.ledge.x + 54, layout.ledge.y, 'tile:grassRight').setScale(3).refreshBody();
-    solids.create(284, 390, 'tile:cloudLeft').setScale(3).refreshBody();
-    solids.create(338, 390, 'tile:cloudRight').setScale(3).refreshBody();
-    solids.create(566, 356, 'tile:cloudLeft').setScale(3).refreshBody();
-    solids.create(620, 356, 'tile:cloudRight').setScale(3).refreshBody();
+    this.createCloudPlatform(platforms, 284, 390, 'tile:cloudLeft');
+    this.createCloudPlatform(platforms, 338, 390, 'tile:cloudRight');
+    this.createCloudPlatform(platforms, 566, 356, 'tile:cloudLeft');
+    this.createCloudPlatform(platforms, 620, 356, 'tile:cloudRight');
     solids.create(740, 430, 'tile:grassLeft').setScale(3).refreshBody();
     solids.create(794, 430, 'tile:grassMidB').setScale(3).refreshBody();
     solids.create(848, 430, 'tile:grassRight').setScale(3).refreshBody();
   }
+
+  private createCloudPlatform(platforms: Phaser.Physics.Arcade.StaticGroup, x: number, y: number, texture: string) {
+    const platform = platforms.create(x, y, texture) as Phaser.Physics.Arcade.Image;
+    platform.setScale(3);
+    platform.setSize(48, 8);
+    platform.setOffset(0, 14);
+    platform.refreshBody();
+    const body = platform.body as Phaser.Physics.Arcade.StaticBody;
+    body.checkCollision.down = false;
+    body.checkCollision.left = false;
+    body.checkCollision.right = false;
+  }
+
+  private canLandOnPlatform: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = (_playerObject, platformObject) => {
+    if (!this.player) return false;
+    const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
+    const platformSource = platformObject as { body?: Phaser.Physics.Arcade.StaticBody };
+    const platformBody = platformSource.body ?? (platformObject as Phaser.Physics.Arcade.StaticBody);
+    return playerBody.velocity.y >= 0 && playerBody.bottom <= platformBody.top + 18;
+  };
 
   private drawSceneDecor(theme: string, layout: ChapterLayout) {
     this.add.image(42, 460, 'tile:sign').setScale(2.5);
