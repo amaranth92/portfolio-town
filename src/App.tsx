@@ -17,6 +17,8 @@ function App() {
   const [recruiterMode, setRecruiterMode] = useState(false);
 
   useEffect(() => {
+    // Phaser가 milestone-open을 보내면 React가 팝업을 그리고,
+    // resume-game을 받으면 같은 통로로 팝업 상태를 비워 씬 재개와 UI 상태가 어긋나지 않게 합니다.
     const open = (event: Event) => {
       const detail = (event as CustomEvent<MilestoneOpenEvent>).detail;
       setActiveMilestone((current) => current ?? detail.milestone);
@@ -49,6 +51,8 @@ function App() {
   useEffect(() => {
     if (!activeMilestone) return undefined;
 
+    // 팝업이 열린 동안에는 키보드/터치 점프를 "닫기" 입력으로도 받습니다.
+    // TouchControls의 pointer 해제 이벤트는 그대로 Scene에 전달되므로, 닫은 직후 점프가 눌린 채 남지 않게 pressed=true만 처리합니다.
     const closeWithKey = (event: KeyboardEvent) => {
       if (event.code === 'Space' || event.code === 'Enter') gameEvents.resumeGame();
     };

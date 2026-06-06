@@ -137,6 +137,8 @@ export class PortfolioScene extends Phaser.Scene {
     const climbDown = onLadder && this.cursors.down.isDown;
     this.isClimbing = climbUp || climbDown;
 
+    // 사다리 위에서는 중력을 꺼서 미끄러짐을 막고, 꼭대기에 도달하면 다시 일반 점프/낙하 물리로 넘깁니다.
+    // top/bottom 임계값을 바꾸면 아래 isAtLadderTop/isAtLadderBottom 판정과 함께 조정해야 합니다.
     if (left) {
       this.player.setVelocityX(Math.max(body.velocity.x - 1550 * dt, -250));
       this.player.setFlipX(true);
@@ -763,6 +765,7 @@ export class PortfolioScene extends Phaser.Scene {
     block.setVisible(true).setTexture('tile:questionUsed');
     this.chapterIndex = milestoneIndex;
     // 팝업이 열리면 React가 표시를 맡고 Phaser 씬은 일시정지합니다.
+    // React가 resume-game을 돌려보내기 전까지 물리 update가 멈추므로, 팝업 중 중복 충돌/중복 open을 피할 수 있습니다.
     this.emitSkills();
     gameEvents.emitChapter(milestoneIndex);
     gameEvents.emitMilestoneOpen({ milestone, index: milestoneIndex });
