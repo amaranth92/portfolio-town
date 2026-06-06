@@ -77,7 +77,7 @@ function App() {
         <main className="game-layout">
           <PhaserGame />
           <TouchControls />
-          <p className="control-hint">Hit the ! block from below. Read, continue, then enter the portal.</p>
+          <p className="control-hint">Hit ! blocks from below, then keep moving right.</p>
         </main>
       )}
       <PortfolioPopup milestone={activeMilestone} />

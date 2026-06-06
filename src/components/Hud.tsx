@@ -14,7 +14,7 @@ export function Hud({ skills, chapterIndex, recruiterMode, onToggleMode }: Props
   return (
     <header className="hud">
       <div className="hud-title">
-        <span>Chapter {chapterIndex + 1} / {portfolioTimeline.length}</span>
+        <span>Milestone {chapterIndex + 1} / {portfolioTimeline.length}</span>
         <strong>{chapter.year}</strong>
         <small>{chapter.title}</small>
       </div>

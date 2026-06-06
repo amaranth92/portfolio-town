@@ -1,4 +1,4 @@
-import Phaser from 'phaser';
+﻿import Phaser from 'phaser';
 import { portfolioTimeline } from '../data/portfolioTimeline';
 import { assetManifest } from './assetManifest';
 import { gameEvents } from './gameEvents';
@@ -10,17 +10,20 @@ type Theme = {
   water: number;
 };
 
-type ScenePoint = { x: number; y: number };
-
-type ChapterLayout = {
-  block: ScenePoint;
-  ledge: ScenePoint;
-  coins: ScenePoint[];
-  enemy: ScenePoint;
-  portalX: number;
+type SegmentLayout = {
+  startX: number;
+  centerX: number;
+  blockX: number;
+  blockY: number;
+  ledgeX: number;
+  ledgeY: number;
+  coins: Array<{ x: number; y: number; skillIndex: number }>;
+  hazardX: number;
+  hazardY: number;
 };
 
-const worldWidth = 960;
+const segmentWidth = 540;
+const worldWidth = 280 + portfolioTimeline.length * segmentWidth;
 const viewHeight = 640;
 
 const themes: Record<string, Theme> = {
@@ -35,7 +38,6 @@ const themes: Record<string, Theme> = {
 export class PortfolioScene extends Phaser.Scene {
   private chapterIndex = 0;
   private player?: Phaser.Physics.Arcade.Sprite;
-  private block?: Phaser.Physics.Arcade.Image;
   private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
   private keys?: Record<'left' | 'right' | 'jump', Phaser.Input.Keyboard.Key>;
   private moveLeft = false;
@@ -46,7 +48,6 @@ export class PortfolioScene extends Phaser.Scene {
   private wasGrounded = false;
   private viewedIds = new Set<string>();
   private skills = new Set<string>();
-  private portalOpen = false;
   private milestoneOpen = false;
   private justOpenedAt = 0;
   private lastHazardHitAt = -Infinity;
@@ -78,12 +79,13 @@ export class PortfolioScene extends Phaser.Scene {
     this.physics.world.gravity.y = 1120;
     this.physics.world.setBounds(0, 0, worldWidth, viewHeight);
     this.cameras.main.setBounds(0, 0, worldWidth, viewHeight);
+    this.cameras.main.setBackgroundColor(themes.campus.sky);
     this.cameras.main.setDeadzone(92, 90);
     this.cameras.main.setFollowOffset(-28, 0);
-    this.loadChapter(0);
+
+    this.buildTimelineWorld();
 
     gameEvents.addEventListener('resume-game', this.resumeFromPopup);
-    gameEvents.addEventListener('next-chapter', this.nextChapter);
     window.addEventListener('touch-control', this.handleTouchControl as EventListener);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanupListeners());
     this.events.once(Phaser.Scenes.Events.DESTROY, () => this.cleanupListeners());
@@ -98,10 +100,10 @@ export class PortfolioScene extends Phaser.Scene {
     const grounded = body.blocked.down || body.touching.down;
 
     if (left) {
-      this.player.setVelocityX(Math.max(body.velocity.x - 1500 * dt, -235));
+      this.player.setVelocityX(Math.max(body.velocity.x - 1550 * dt, -250));
       this.player.setFlipX(true);
     } else if (right) {
-      this.player.setVelocityX(Math.min(body.velocity.x + 1500 * dt, 235));
+      this.player.setVelocityX(Math.min(body.velocity.x + 1550 * dt, 250));
       this.player.setFlipX(false);
     } else {
       this.player.setVelocityX(Phaser.Math.Linear(body.velocity.x, 0, grounded ? 0.22 : 0.08));
@@ -114,14 +116,13 @@ export class PortfolioScene extends Phaser.Scene {
     if (!grounded && body.velocity.y < -80 && !this.jumpHeld) this.player.setVelocityY(body.velocity.y * 0.94);
 
     if (this.player.y > 620) {
-      this.player.setPosition(64, 458);
+      this.player.setPosition(Math.max(64, this.player.x - 120), 454);
       this.player.setVelocity(0, 0);
     }
 
+    this.updateCurrentMilestone();
     this.animatePlayer(time, grounded, left, right);
     this.wasGrounded = grounded;
-
-    if (this.portalOpen && this.player.x > this.getLayout(portfolioTimeline[this.chapterIndex].chapterTheme).portalX - 28 && body.blocked.down) this.nextChapter();
   }
 
   private handleTouchControl = (event: Event) => {
@@ -144,27 +145,47 @@ export class PortfolioScene extends Phaser.Scene {
     this.addJumpPuff(this.player.x, this.player.y + 30);
   }
 
-  private loadChapter(index: number) {
-    this.chapterIndex = Math.min(index, portfolioTimeline.length - 1);
-    this.portalOpen = false;
-    this.milestoneOpen = false;
-    this.clearSceneObjects();
-
-    const milestone = portfolioTimeline[this.chapterIndex];
-    const theme = themes[milestone.chapterTheme];
-    this.cameras.main.setBackgroundColor(theme.sky);
-    const layout = this.getLayout(milestone.chapterTheme);
-    this.drawBackground(theme, milestone.chapterTheme);
+  private buildTimelineWorld() {
+    this.physics.world.colliders.destroy();
+    this.children.removeAll();
 
     const solids = this.physics.add.staticGroup();
     const platforms = this.physics.add.staticGroup();
     const collectibles = this.physics.add.staticGroup();
     const hazards = this.physics.add.staticGroup();
-    this.drawGround(solids, platforms, layout);
-    this.drawSceneDecor(milestone.chapterTheme, layout, collectibles, hazards);
+    const blocks = this.physics.add.staticGroup();
 
-    this.block = this.physics.add.staticImage(layout.block.x, layout.block.y, 'tile:question').setScale(3).setSize(46, 46);
-    this.block.refreshBody();
+    portfolioTimeline.forEach((milestone, index) => {
+      const layout = this.getSegmentLayout(index);
+      const theme = themes[milestone.chapterTheme];
+      this.drawSegmentBackground(theme, milestone.chapterTheme, layout, index);
+      this.drawSegmentGround(solids, platforms, layout, index);
+      this.drawSegmentDecor(milestone.chapterTheme, layout, collectibles, hazards, index);
+
+      const block = blocks.create(layout.blockX, layout.blockY, 'tile:question') as Phaser.Physics.Arcade.Image;
+      block.setScale(3).setSize(46, 46).setData('milestoneIndex', index).refreshBody();
+
+      this.add.text(layout.startX + 22, 22, milestone.year, {
+        fontFamily: 'Arial',
+        fontSize: '16px',
+        fontStyle: '900',
+        color: '#2d2630'
+      });
+      this.add.text(layout.startX + 22, 42, milestone.title, {
+        fontFamily: 'Arial',
+        fontSize: '14px',
+        fontStyle: '900',
+        color: '#2d2630',
+        wordWrap: { width: 280 }
+      });
+    });
+
+    this.add.text(worldWidth - 250, 405, 'CONTACT', {
+      fontFamily: 'Arial',
+      fontSize: '16px',
+      fontStyle: '900',
+      color: '#2d2630'
+    });
 
     this.shadow = this.add.ellipse(64, 492, 42, 12, 0x25313a, 0.22).setDepth(8);
     this.player = this.physics.add.sprite(64, 454, 'char:player').setScale(2.25).setDepth(10);
@@ -176,86 +197,87 @@ export class PortfolioScene extends Phaser.Scene {
 
     this.physics.add.collider(this.player, solids);
     this.physics.add.collider(this.player, platforms, undefined, this.canLandOnPlatform, this);
-    this.physics.add.collider(this.player, this.block, () => this.tryOpenMilestone(), undefined, this);
+    this.physics.add.collider(this.player, blocks, this.tryOpenMilestone, undefined, this);
     this.physics.add.overlap(this.player, collectibles, this.collectSkillItem, undefined, this);
     this.physics.add.overlap(this.player, hazards, this.hitHazard, undefined, this);
 
-    this.add.text(22, 22, `${milestone.year}`, {
-      fontFamily: 'Arial',
-      fontSize: '16px',
-      fontStyle: '900',
-      color: '#2d2630'
-    });
-    this.add.text(22, 42, milestone.title, {
-      fontFamily: 'Arial',
-      fontSize: '14px',
-      fontStyle: '900',
-      color: '#2d2630',
-      wordWrap: { width: 280 }
-    });
-    gameEvents.emitChapter(this.chapterIndex);
+    this.chapterIndex = 0;
+    gameEvents.emitChapter(0);
     this.emitSkills();
   }
 
-  private clearSceneObjects() {
-    this.physics.world.colliders.destroy();
-    this.children.removeAll();
-  }
-
-  private getLayout(name: string): ChapterLayout {
-    const layouts: Record<string, ChapterLayout> = {
-      campus: { block: { x: 392, y: 320 }, ledge: { x: 154, y: 410 }, coins: [{ x: 456, y: 334 }, { x: 506, y: 334 }, { x: 604, y: 286 }], enemy: { x: 658, y: 462 }, portalX: 876 },
-      office: { block: { x: 420, y: 312 }, ledge: { x: 186, y: 396 }, coins: [{ x: 484, y: 318 }, { x: 548, y: 350 }, { x: 704, y: 300 }], enemy: { x: 672, y: 462 }, portalX: 876 },
-      australia: { block: { x: 404, y: 334 }, ledge: { x: 172, y: 424 }, coins: [{ x: 470, y: 346 }, { x: 536, y: 346 }, { x: 706, y: 326 }], enemy: { x: 690, y: 462 }, portalX: 876 },
-      lab: { block: { x: 412, y: 304 }, ledge: { x: 160, y: 410 }, coins: [{ x: 476, y: 316 }, { x: 542, y: 316 }, { x: 690, y: 292 }], enemy: { x: 680, y: 456 }, portalX: 876 },
-      modern: { block: { x: 396, y: 322 }, ledge: { x: 184, y: 402 }, coins: [{ x: 462, y: 330 }, { x: 532, y: 330 }, { x: 728, y: 310 }], enemy: { x: 680, y: 462 }, portalX: 876 },
-      contact: { block: { x: 408, y: 318 }, ledge: { x: 172, y: 408 }, coins: [{ x: 476, y: 330 }, { x: 546, y: 330 }, { x: 720, y: 314 }], enemy: { x: 686, y: 462 }, portalX: 876 }
+  private getSegmentLayout(index: number): SegmentLayout {
+    const startX = index * segmentWidth;
+    const centerX = startX + 270;
+    const variant = index % 4;
+    return {
+      startX,
+      centerX,
+      blockX: centerX + 110,
+      blockY: [318, 304, 334, 312][variant],
+      ledgeX: centerX - 106,
+      ledgeY: [410, 396, 424, 408][variant],
+      coins: [
+        { x: centerX + 176, y: [330, 318, 346, 326][variant], skillIndex: 0 },
+        { x: centerX + 238, y: [330, 350, 346, 316][variant], skillIndex: 1 },
+        { x: centerX + 330, y: [286, 300, 326, 292][variant], skillIndex: 2 }
+      ],
+      hazardX: centerX + 304,
+      hazardY: variant === 1 ? 456 : 462
     };
-    return layouts[name] ?? layouts.campus;
   }
 
-  private drawBackground(theme: Theme, name: string) {
-    this.add.rectangle(worldWidth / 2, 470, worldWidth, 120, theme.haze, 0.38);
+  private drawSegmentBackground(theme: Theme, name: string, layout: SegmentLayout, index: number) {
+    this.add.rectangle(layout.centerX, 320, segmentWidth, 640, theme.sky).setDepth(-20);
+    this.add.rectangle(layout.centerX, 470, segmentWidth, 120, theme.haze, 0.38).setDepth(-15);
+    this.add.rectangle(layout.centerX, 620, segmentWidth, 40, theme.water).setDepth(-12);
+    this.add.rectangle(layout.startX + segmentWidth - 4, 320, 8, 640, theme.accent, 0.16).setDepth(-10);
+
     if (name === 'australia') {
-      this.add.circle(780, 86, 30, 0xf6c453).setStrokeStyle(4, 0x2d2630);
-      this.add.rectangle(130, 456, 220, 30, 0xfff3d2, 0.5);
-      this.add.rectangle(520, 438, 280, 30, 0xfff3d2, 0.5);
-      this.add.rectangle(820, 456, 180, 30, 0xfff3d2, 0.5);
-    } else if (name === 'office' || name === 'modern') {
-      for (let i = 0; i < 10; i += 1) {
-        this.add.rectangle(52 + i * 92, 414 - (i % 2) * 24, 46, 160, theme.haze, 0.32);
-      }
-    } else {
-      [70, 390, 720].forEach((x, index) => {
-        this.add.image(x, 122 + (index % 2) * 34, 'tile:cloudLeft').setScale(3);
-        this.add.image(x + 54, 122 + (index % 2) * 34, 'tile:cloudMidA').setScale(3);
-        this.add.image(x + 108, 122 + (index % 2) * 34, 'tile:cloudRight').setScale(3);
-      });
-      this.add.image(252, 176, 'tile:cloudLeft').setScale(2.5);
-      this.add.image(298, 176, 'tile:cloudRight').setScale(2.5);
+      this.add.circle(layout.centerX + 150, 86, 30, 0xf6c453).setStrokeStyle(4, 0x2d2630);
+      this.add.rectangle(layout.centerX - 80, 456, 220, 30, 0xfff3d2, 0.5);
+      this.add.rectangle(layout.centerX + 180, 438, 220, 30, 0xfff3d2, 0.5);
+      return;
     }
-    this.add.rectangle(worldWidth / 2, 620, worldWidth, 40, theme.water);
+
+    if (name === 'office' || name === 'modern') {
+      for (let i = 0; i < 5; i += 1) {
+        this.add.rectangle(layout.startX + 54 + i * 96, 414 - (i % 2) * 24, 46, 160, theme.haze, 0.32);
+      }
+      return;
+    }
+
+    [layout.startX + 70, layout.startX + 320].forEach((x, cloudIndex) => {
+      this.add.image(x, 122 + (cloudIndex % 2) * 34, 'tile:cloudLeft').setScale(3);
+      this.add.image(x + 54, 122 + (cloudIndex % 2) * 34, 'tile:cloudMidA').setScale(3);
+      this.add.image(x + 108, 122 + (cloudIndex % 2) * 34, 'tile:cloudRight').setScale(3);
+    });
+
+    if (index === 0) this.add.image(layout.startX + 252, 176, 'tile:cloudLeft').setScale(2.5);
   }
 
-  private drawGround(
+  private drawSegmentGround(
     solids: Phaser.Physics.Arcade.StaticGroup,
     platforms: Phaser.Physics.Arcade.StaticGroup,
-    layout: ChapterLayout
+    layout: SegmentLayout,
+    index: number
   ) {
-    for (let x = 18; x < worldWidth; x += 54) {
+    for (let x = layout.startX + 18; x < layout.startX + segmentWidth + 36; x += 54) {
       solids.create(x, 514, 'tile:grassMidA').setScale(3).refreshBody();
       solids.create(x, 568, 'tile:dirtA').setScale(3).refreshBody();
     }
-    solids.create(layout.ledge.x - 54, layout.ledge.y, 'tile:grassLeft').setScale(3).refreshBody();
-    solids.create(layout.ledge.x, layout.ledge.y, 'tile:grassMidB').setScale(3).refreshBody();
-    solids.create(layout.ledge.x + 54, layout.ledge.y, 'tile:grassRight').setScale(3).refreshBody();
-    this.createCloudPlatform(platforms, 284, 390, 'tile:cloudLeft');
-    this.createCloudPlatform(platforms, 338, 390, 'tile:cloudRight');
-    this.createCloudPlatform(platforms, 566, 356, 'tile:cloudLeft');
-    this.createCloudPlatform(platforms, 620, 356, 'tile:cloudRight');
-    solids.create(740, 430, 'tile:grassLeft').setScale(3).refreshBody();
-    solids.create(794, 430, 'tile:grassMidB').setScale(3).refreshBody();
-    solids.create(848, 430, 'tile:grassRight').setScale(3).refreshBody();
+
+    solids.create(layout.ledgeX - 54, layout.ledgeY, 'tile:grassLeft').setScale(3).refreshBody();
+    solids.create(layout.ledgeX, layout.ledgeY, 'tile:grassMidB').setScale(3).refreshBody();
+    solids.create(layout.ledgeX + 54, layout.ledgeY, 'tile:grassRight').setScale(3).refreshBody();
+
+    this.createCloudPlatform(platforms, layout.centerX + 20, 390 - (index % 2) * 18, 'tile:cloudLeft');
+    this.createCloudPlatform(platforms, layout.centerX + 74, 390 - (index % 2) * 18, 'tile:cloudRight');
+
+    if (index % 3 === 1) {
+      solids.create(layout.centerX + 255, 430, 'tile:grassLeft').setScale(3).refreshBody();
+      solids.create(layout.centerX + 309, 430, 'tile:grassRight').setScale(3).refreshBody();
+    }
   }
 
   private createCloudPlatform(platforms: Phaser.Physics.Arcade.StaticGroup, x: number, y: number, texture: string) {
@@ -278,34 +300,36 @@ export class PortfolioScene extends Phaser.Scene {
     return playerBody.velocity.y >= 0 && playerBody.bottom <= platformBody.top + 18;
   };
 
-  private drawSceneDecor(
+  private drawSegmentDecor(
     theme: string,
-    layout: ChapterLayout,
+    layout: SegmentLayout,
     collectibles: Phaser.Physics.Arcade.StaticGroup,
-    hazards: Phaser.Physics.Arcade.StaticGroup
+    hazards: Phaser.Physics.Arcade.StaticGroup,
+    index: number
   ) {
-    this.add.image(42, 460, 'tile:sign').setScale(2.5);
-    this.add.image(98, 462, 'tile:plantA').setScale(2.2);
-    this.add.image(126, 462, 'tile:plantB').setScale(2.2);
-    this.add.image(232, 462, 'tile:plantC').setScale(2.1);
-    this.add.image(520, 462, 'tile:arrow').setScale(2.2).setFlipX(true);
-    const key = collectibles.create(812, 378, 'tile:key') as Phaser.Physics.Arcade.Image;
-    key.setScale(2.1).setData('kind', 'key').refreshBody();
-    layout.coins.forEach((coin, index) => {
-      const item = collectibles.create(coin.x, coin.y, index % 2 ? 'tile:coinB' : 'tile:coinA') as Phaser.Physics.Arcade.Image;
-      item.setScale(2.2).setData('skillIndex', index).refreshBody();
+    this.add.image(layout.startX + 42, 460, 'tile:arrow').setScale(2.2).setFlipX(true);
+    this.add.image(layout.startX + 90, 462, 'tile:plantA').setScale(2.2);
+    this.add.image(layout.startX + 128, 462, 'tile:plantB').setScale(2.2);
+    this.add.image(layout.centerX - 12, 462, 'tile:plantC').setScale(2.1);
+    this.add.image(layout.centerX + 250, 462, 'tile:arrow').setScale(2.2).setFlipX(true);
+
+    const key = collectibles.create(layout.centerX + 360, 378, 'tile:key') as Phaser.Physics.Arcade.Image;
+    key.setScale(2.1).setData('kind', 'key').setData('milestoneIndex', index).refreshBody();
+
+    layout.coins.forEach((coin, coinIndex) => {
+      const item = collectibles.create(coin.x, coin.y, coinIndex % 2 ? 'tile:coinB' : 'tile:coinA') as Phaser.Physics.Arcade.Image;
+      item.setScale(2.2).setData('skillIndex', coin.skillIndex).setData('milestoneIndex', index).refreshBody();
     });
-    if (theme === 'lab') {
-      const hazard = hazards.create(layout.enemy.x, layout.enemy.y, 'char:robotA') as Phaser.Physics.Arcade.Image;
-      this.configureHazard(hazard, 2.4);
-      this.add.image(284, 294, 'tile:gem').setScale(2.3);
-    } else if (theme === 'modern') {
-      this.add.image(286, 456, 'tile:pipeTopLeft').setScale(2.6);
-      this.add.image(328, 456, 'tile:pipeTopRight').setScale(2.6);
-    } else {
-      const hazard = hazards.create(layout.enemy.x, layout.enemy.y, theme === 'australia' ? 'char:enemyB' : 'char:enemyA') as Phaser.Physics.Arcade.Image;
-      this.configureHazard(hazard, 2.2);
+
+    if (theme === 'modern') {
+      this.add.image(layout.centerX + 264, 456, 'tile:pipeTopLeft').setScale(2.6);
+      this.add.image(layout.centerX + 306, 456, 'tile:pipeTopRight').setScale(2.6);
+      return;
     }
+
+    const texture = theme === 'lab' ? 'char:robotA' : theme === 'australia' ? 'char:enemyB' : 'char:enemyA';
+    const hazard = hazards.create(layout.hazardX, layout.hazardY, texture) as Phaser.Physics.Arcade.Image;
+    this.configureHazard(hazard, theme === 'lab' ? 2.4 : 2.2);
   }
 
   private configureHazard(hazard: Phaser.Physics.Arcade.Image, scale: number) {
@@ -315,30 +339,33 @@ export class PortfolioScene extends Phaser.Scene {
     hazard.refreshBody();
   }
 
-  private tryOpenMilestone() {
-    if (!this.player || !this.block) return;
-    if (this.milestoneOpen || this.scene.isPaused()) return;
+  private tryOpenMilestone: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = (_playerObject, blockObject) => {
+    if (!this.player || this.milestoneOpen || this.scene.isPaused()) return;
     const now = this.time.now;
     if (now - this.justOpenedAt < 900) return;
-    const body = this.player.body as Phaser.Physics.Arcade.Body;
-    const blockBody = this.block.body as Phaser.Physics.Arcade.StaticBody;
-    const centeredUnderBlock = Math.abs(this.player.x - this.block.x) < 28;
-    const headReachedBlock = body.top <= blockBody.bottom + 6;
-    const playerIsBelowBlock = body.center.y > blockBody.center.y + 10;
-    const headHit = centeredUnderBlock && headReachedBlock && playerIsBelowBlock && (body.blocked.up || body.touching.up || body.velocity.y <= 0);
-    if (!headHit) return;
 
-    this.openMilestone();
-  }
+    const block = blockObject as Phaser.Physics.Arcade.Image;
+    const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
+    const blockBody = block.body as Phaser.Physics.Arcade.StaticBody;
+    const horizontallyTouchingBlock = playerBody.right > blockBody.left + 4 && playerBody.left < blockBody.right - 4;
+    const headReachedBlock = playerBody.top <= blockBody.bottom + 6;
+    const playerIsBelowBlock = playerBody.center.y > blockBody.center.y + 10;
+    const headHit = horizontallyTouchingBlock && headReachedBlock && playerIsBelowBlock && (playerBody.blocked.up || playerBody.touching.up || playerBody.velocity.y <= 0);
+
+    if (!headHit) return;
+    this.openMilestone(block);
+  };
 
   private collectSkillItem: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = (_playerObject, itemObject) => {
     const item = itemObject as Phaser.Physics.Arcade.Image;
     if (!item.visible) return;
 
-    const milestone = portfolioTimeline[this.chapterIndex];
+    const milestoneIndex = (item.getData('milestoneIndex') as number | undefined) ?? this.chapterIndex;
+    const milestone = portfolioTimeline[milestoneIndex];
     const kind = item.getData('kind') as string | undefined;
+
     if (kind === 'key') {
-      this.floatLabel(item.x, item.y - 18, this.viewedIds.has(milestone.id) ? 'Portal ready' : 'Hit the ? block');
+      this.floatLabel(item.x, item.y - 18, this.viewedIds.has(milestone.id) ? 'Reviewed' : 'Hit the ! block');
       if (this.viewedIds.has(milestone.id)) item.destroy();
       return;
     }
@@ -357,35 +384,40 @@ export class PortfolioScene extends Phaser.Scene {
     if (now - this.lastHazardHitAt < 900) return;
     this.lastHazardHitAt = now;
     this.addJumpPuff(this.player.x, this.player.y + 24);
-    this.floatLabel(this.player.x - 42, this.player.y - 42, '장애물에 조심하세요');
+    this.floatLabel(this.player.x - 42, this.player.y - 42, this.hazardMessage());
     this.player.setVelocityY(Math.min(-180, (this.player.body as Phaser.Physics.Arcade.Body).velocity.y));
   };
 
-  private openMilestone() {
-    if (!this.block) return;
+  private hazardMessage() {
+    return navigator.language.toLowerCase().startsWith('ko') ? '장애물에 조심하세요' : 'Watch out for obstacles';
+  }
+
+  private openMilestone(block: Phaser.Physics.Arcade.Image) {
     if (this.milestoneOpen || this.scene.isPaused()) return;
     const now = this.time.now;
     if (now - this.justOpenedAt < 900) return;
     this.justOpenedAt = now;
     this.milestoneOpen = true;
-    const milestone = portfolioTimeline[this.chapterIndex];
+
+    const milestoneIndex = (block.getData('milestoneIndex') as number | undefined) ?? this.chapterIndex;
+    const milestone = portfolioTimeline[milestoneIndex];
     milestone.skills.forEach((skill) => this.skills.add(skill));
     this.viewedIds.add(milestone.id);
-    this.block.setTexture('tile:questionUsed');
+    block.setTexture('tile:questionUsed');
+    this.chapterIndex = milestoneIndex;
     this.emitSkills();
-    gameEvents.emitMilestoneOpen({ milestone, index: this.chapterIndex });
+    gameEvents.emitChapter(milestoneIndex);
+    gameEvents.emitMilestoneOpen({ milestone, index: milestoneIndex });
     this.scene.pause();
   }
 
-  private openPortal() {
-    if (this.portalOpen) return;
-    this.portalOpen = true;
-    const group = this.add.group();
-    const portalX = this.getLayout(portfolioTimeline[this.chapterIndex].chapterTheme).portalX;
-    group.add(this.add.rectangle(portalX, 458, 38, 74, 0x2d2630));
-    group.add(this.add.rectangle(portalX, 458, 24, 56, 0xf6c453));
-    group.add(this.add.text(portalX - 18, 398, 'NEXT', { fontFamily: 'Arial', fontSize: '11px', fontStyle: '900', color: '#2d2630' }));
-    gameEvents.emitPortalReady(this.chapterIndex);
+  private updateCurrentMilestone() {
+    if (!this.player) return;
+    const index = Phaser.Math.Clamp(Math.floor((this.player.x + segmentWidth * 0.35) / segmentWidth), 0, portfolioTimeline.length - 1);
+    if (index === this.chapterIndex) return;
+    this.chapterIndex = index;
+    gameEvents.emitChapter(index);
+    this.emitSkills();
   }
 
   private animatePlayer(time: number, grounded: boolean, left: boolean, right: boolean) {
@@ -459,11 +491,6 @@ export class PortfolioScene extends Phaser.Scene {
   private resumeFromPopup = () => {
     this.milestoneOpen = false;
     this.scene.resume();
-    this.openPortal();
-  };
-
-  private nextChapter = () => {
-    this.loadChapter(this.chapterIndex + 1);
   };
 
   private emitSkills() {
@@ -476,7 +503,6 @@ export class PortfolioScene extends Phaser.Scene {
 
   private cleanupListeners() {
     gameEvents.removeEventListener('resume-game', this.resumeFromPopup);
-    gameEvents.removeEventListener('next-chapter', this.nextChapter);
     window.removeEventListener('touch-control', this.handleTouchControl as EventListener);
   }
 
