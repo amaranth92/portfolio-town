@@ -105,7 +105,7 @@ button {
   right: 8px;
   z-index: 5;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 74px;
+  grid-template-columns: minmax(0, 1fr) 76px;
   gap: 6px 8px;
   align-items: center;
   border: 3px solid var(--line);
@@ -168,14 +168,14 @@ button {
   position: fixed;
   left: 10px;
   right: 10px;
-  bottom: max(94px, calc(env(safe-area-inset-bottom) + 94px));
+  bottom: max(112px, calc(env(safe-area-inset-bottom) + 112px));
   z-index: 4;
   max-width: 430px;
   margin: 0 auto;
   border: 3px solid var(--line);
   background: rgba(255, 251, 238, 0.94);
   box-shadow: 3px 3px 0 var(--line);
-  padding: 5px 7px 6px;
+  padding: 6px 8px 7px;
   min-width: 0;
 }
 
@@ -189,7 +189,7 @@ button {
 .skill-chips,
 .recruiter-skills {
   display: flex;
-  gap: 6px;
+  gap: 5px;
   overflow-x: auto;
   padding: 2px 0 0;
   scrollbar-width: none;
@@ -216,13 +216,13 @@ button {
   min-height: 100dvh;
   display: grid;
   place-items: center;
-  padding: 78px 8px 154px;
+  padding: 102px 8px 172px;
 }
 
 .game-host {
   width: min(100vw - 16px, 430px);
-  height: min(68dvh, 720px);
-  min-height: 500px;
+  height: min(61dvh, 700px);
+  min-height: clamp(360px, calc(100dvh - 290px), 500px);
   border: 3px solid var(--line);
   background: #d9f2f1;
   box-shadow: 5px 5px 0 var(--line);
@@ -237,18 +237,18 @@ button {
   position: fixed;
   left: 12px;
   right: 12px;
-  bottom: max(30px, env(safe-area-inset-bottom));
+  bottom: max(28px, env(safe-area-inset-bottom));
   z-index: 4;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 92px;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) 96px;
+  gap: 10px;
   max-width: 430px;
   margin: 0 auto;
   pointer-events: none;
 }
 
 .touch-controls button {
-  min-height: 54px;
+  min-height: 58px;
   font-size: 0;
   pointer-events: auto;
   touch-action: none;
@@ -257,7 +257,7 @@ button {
 
 .touch-controls button::before {
   display: block;
-  font-size: 22px;
+  font-size: 23px;
   line-height: 1;
 }
 
@@ -280,7 +280,7 @@ button {
 }
 
 .jump-button {
-  min-height: 70px;
+  min-height: 76px;
   align-self: end;
   background: var(--gold);
 }
@@ -289,12 +289,15 @@ button {
   position: fixed;
   left: 10px;
   right: 10px;
-  bottom: 6px;
+  top: max(92px, calc(env(safe-area-inset-top) + 92px));
+  bottom: auto;
   margin: 0;
-  color: rgba(37, 49, 58, 0.78);
+  color: rgba(37, 49, 58, 0.84);
   font-size: 11px;
   font-weight: 900;
   text-align: center;
+  z-index: 4;
+  pointer-events: none;
 }
 
 .popup-backdrop {
@@ -303,18 +306,18 @@ button {
   z-index: 10;
   display: grid;
   place-items: center;
-  padding: 16px;
+  padding: max(12px, env(safe-area-inset-top)) 12px max(12px, env(safe-area-inset-bottom));
   background: rgba(37, 49, 58, 0.32);
 }
 
 .portfolio-popup {
   width: min(100%, 520px);
-  max-height: min(76dvh, 680px);
+  max-height: min(84dvh, 680px);
   overflow: auto;
   border: 3px solid var(--line);
   background: var(--paper);
   box-shadow: 6px 6px 0 var(--line);
-  padding: 18px;
+  padding: clamp(14px, 4vw, 20px);
 }
 
 .portfolio-popup span,
@@ -328,7 +331,7 @@ button {
 .portfolio-popup h2,
 .recruiter-hero h1 {
   margin: 6px 0 10px;
-  font-size: 25px;
+  font-size: clamp(20px, 5.5vw, 26px);
   line-height: 1.08;
 }
 
@@ -338,7 +341,7 @@ button {
 .recruiter-mode li {
   color: var(--muted);
   font-weight: 750;
-  line-height: 1.55;
+  line-height: 1.62;
 }
 
 .portfolio-popup ul {
@@ -354,7 +357,7 @@ button {
 
 .portfolio-popup button {
   width: 100%;
-  min-height: 46px;
+  min-height: 50px;
   background: var(--gold);
 }
 
@@ -426,7 +429,7 @@ button {
 
   .game-layout {
     padding-top: 94px;
-    padding-bottom: 96px;
+    padding-bottom: 104px;
   }
 
   .game-host {
@@ -439,6 +442,7 @@ button {
   }
 
   .control-hint {
+    top: auto;
     bottom: 18px;
   }
 }
@@ -460,11 +464,11 @@ button {
   }
 
   .game-layout {
-    padding-top: 78px;
+    padding-top: 100px;
   }
 
   .game-host {
-    min-height: 490px;
-    height: min(67dvh, 630px);
+    min-height: clamp(350px, calc(100dvh - 292px), 470px);
+    height: min(60dvh, 630px);
   }
 }

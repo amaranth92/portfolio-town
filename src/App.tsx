@@ -9,6 +9,7 @@ import { gameEvents, type MilestoneOpenEvent, type SkillsEvent } from './game/ga
 
 function App() {
   const isPrivacyPolicy = window.location.pathname.replace(/\/+$/, '') === '/privacy-policy-car-park-dash';
+  const isKorean = navigator.language.toLowerCase().startsWith('ko');
   const [activeMilestone, setActiveMilestone] = useState<PortfolioMilestone | null>(null);
   const [skills, setSkills] = useState<string[]>([]);
   const [chapterIndex, setChapterIndex] = useState(0);
@@ -70,6 +71,7 @@ function App() {
         chapterIndex={chapterIndex}
         recruiterMode={recruiterMode}
         onToggleMode={() => setRecruiterMode((value) => !value)}
+        isKorean={isKorean}
       />
       {recruiterMode ? (
         <RecruiterMode />
@@ -77,10 +79,12 @@ function App() {
         <main className="game-layout">
           <PhaserGame />
           <TouchControls />
-          <p className="control-hint">Hit ! blocks from below, then keep moving right.</p>
+          <p className="control-hint">
+            {isKorean ? '! 블록을 아래에서 치고 오른쪽으로 계속 이동하세요.' : 'Hit ! blocks from below, then keep moving right.'}
+          </p>
         </main>
       )}
-      <PortfolioPopup milestone={activeMilestone} />
+      <PortfolioPopup milestone={activeMilestone} isKorean={isKorean} />
     </div>
   );
 }

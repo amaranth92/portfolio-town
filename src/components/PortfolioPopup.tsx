@@ -3,9 +3,10 @@ import { gameEvents } from '../game/gameEvents';
 
 type Props = {
   milestone: PortfolioMilestone | null;
+  isKorean: boolean;
 };
 
-export function PortfolioPopup({ milestone }: Props) {
+export function PortfolioPopup({ milestone, isKorean }: Props) {
   if (!milestone) return null;
 
   return (
@@ -25,7 +26,7 @@ export function PortfolioPopup({ milestone }: Props) {
           ))}
         </div>
         <button type="button" onClick={() => gameEvents.resumeGame()}>
-          Close and Resume
+          {isKorean ? '닫고 계속하기' : 'Close and Resume'}
         </button>
       </article>
     </div>

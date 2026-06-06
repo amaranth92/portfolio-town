@@ -180,13 +180,6 @@ export class PortfolioScene extends Phaser.Scene {
       });
     });
 
-    this.add.text(worldWidth - 250, 405, 'CONTACT', {
-      fontFamily: 'Arial',
-      fontSize: '16px',
-      fontStyle: '900',
-      color: '#2d2630'
-    });
-
     this.shadow = this.add.ellipse(64, 492, 42, 12, 0x25313a, 0.22).setDepth(8);
     this.player = this.physics.add.sprite(64, 454, 'char:player').setScale(2.25).setDepth(10);
     this.player.setSize(17, 21);
@@ -209,21 +202,28 @@ export class PortfolioScene extends Phaser.Scene {
   private getSegmentLayout(index: number): SegmentLayout {
     const startX = index * segmentWidth;
     const centerX = startX + 270;
-    const variant = index % 4;
+    const profiles = [
+      { block: 318, ledgeX: -106, ledgeY: 410, hazardX: 304, hazardY: 462, coins: [[176, 330], [238, 330], [330, 286]] },
+      { block: 296, ledgeX: -134, ledgeY: 396, hazardX: 318, hazardY: 456, coins: [[132, 320], [214, 306], [306, 334]] },
+      { block: 340, ledgeX: -88, ledgeY: 424, hazardX: 286, hazardY: 462, coins: [[154, 348], [240, 326], [352, 348]] },
+      { block: 308, ledgeX: -150, ledgeY: 408, hazardX: 338, hazardY: 462, coins: [[170, 322], [256, 300], [342, 322]] },
+      { block: 328, ledgeX: -96, ledgeY: 388, hazardX: 300, hazardY: 462, coins: [[138, 340], [228, 316], [320, 292]] },
+      { block: 300, ledgeX: -118, ledgeY: 420, hazardX: 342, hazardY: 456, coins: [[156, 334], [244, 308], [332, 334]] },
+      { block: 316, ledgeX: -146, ledgeY: 398, hazardX: 292, hazardY: 462, coins: [[146, 328], [226, 348], [318, 318]] },
+      { block: 336, ledgeX: -82, ledgeY: 414, hazardX: 320, hazardY: 462, coins: [[164, 346], [250, 324], [356, 304]] },
+      { block: 304, ledgeX: -126, ledgeY: 404, hazardX: 306, hazardY: 462, coins: [[146, 326], [238, 300], [338, 326]] }
+    ] as const;
+    const profile = profiles[index] ?? profiles[index % profiles.length];
     return {
       startX,
       centerX,
-      blockX: centerX + 110,
-      blockY: [318, 304, 334, 312][variant],
-      ledgeX: centerX - 106,
-      ledgeY: [410, 396, 424, 408][variant],
-      coins: [
-        { x: centerX + 176, y: [330, 318, 346, 326][variant], skillIndex: 0 },
-        { x: centerX + 238, y: [330, 350, 346, 316][variant], skillIndex: 1 },
-        { x: centerX + 330, y: [286, 300, 326, 292][variant], skillIndex: 2 }
-      ],
-      hazardX: centerX + 304,
-      hazardY: variant === 1 ? 456 : 462
+      blockX: centerX + 72,
+      blockY: profile.block,
+      ledgeX: centerX + profile.ledgeX,
+      ledgeY: profile.ledgeY,
+      coins: profile.coins.map(([x, y], skillIndex) => ({ x: centerX + x, y, skillIndex })),
+      hazardX: centerX + profile.hazardX,
+      hazardY: profile.hazardY
     };
   }
 
@@ -231,12 +231,14 @@ export class PortfolioScene extends Phaser.Scene {
     this.add.rectangle(layout.centerX, 320, segmentWidth, 640, theme.sky).setDepth(-20);
     this.add.rectangle(layout.centerX, 470, segmentWidth, 120, theme.haze, 0.38).setDepth(-15);
     this.add.rectangle(layout.centerX, 620, segmentWidth, 40, theme.water).setDepth(-12);
-    this.add.rectangle(layout.startX + segmentWidth - 4, 320, 8, 640, theme.accent, 0.16).setDepth(-10);
+    this.add.rectangle(layout.startX + segmentWidth - 36, 460, 72, 72, theme.haze, 0.16).setDepth(-10);
 
     if (name === 'australia') {
       this.add.circle(layout.centerX + 150, 86, 30, 0xf6c453).setStrokeStyle(4, 0x2d2630);
       this.add.rectangle(layout.centerX - 80, 456, 220, 30, 0xfff3d2, 0.5);
       this.add.rectangle(layout.centerX + 180, 438, 220, 30, 0xfff3d2, 0.5);
+      this.add.image(layout.centerX - 188, 462, 'tile:plantB').setScale(2.5);
+      this.add.image(layout.centerX + 228, 462, 'tile:plantC').setScale(2.4);
       return;
     }
 
@@ -244,6 +246,7 @@ export class PortfolioScene extends Phaser.Scene {
       for (let i = 0; i < 5; i += 1) {
         this.add.rectangle(layout.startX + 54 + i * 96, 414 - (i % 2) * 24, 46, 160, theme.haze, 0.32);
       }
+      this.add.image(layout.startX + segmentWidth - 70, 454, 'tile:pipeBody').setScale(2.4).setAlpha(0.72);
       return;
     }
 
@@ -263,8 +266,8 @@ export class PortfolioScene extends Phaser.Scene {
     index: number
   ) {
     for (let x = layout.startX + 18; x < layout.startX + segmentWidth + 36; x += 54) {
-      solids.create(x, 514, 'tile:grassMidA').setScale(3).refreshBody();
-      solids.create(x, 568, 'tile:dirtA').setScale(3).refreshBody();
+      solids.create(x, 514, x % 108 === 18 ? 'tile:grassMidB' : 'tile:grassMidA').setScale(3).refreshBody();
+      solids.create(x, 568, x % 162 === 18 ? 'tile:dirtB' : 'tile:dirtA').setScale(3).refreshBody();
     }
 
     solids.create(layout.ledgeX - 54, layout.ledgeY, 'tile:grassLeft').setScale(3).refreshBody();
@@ -277,6 +280,11 @@ export class PortfolioScene extends Phaser.Scene {
     if (index % 3 === 1) {
       solids.create(layout.centerX + 255, 430, 'tile:grassLeft').setScale(3).refreshBody();
       solids.create(layout.centerX + 309, 430, 'tile:grassRight').setScale(3).refreshBody();
+    }
+
+    if (index % 3 === 2) {
+      this.add.image(layout.centerX - 210, 462, 'tile:ladderTop').setScale(2.2);
+      this.add.image(layout.centerX - 210, 486, 'tile:ladder').setScale(2.2);
     }
   }
 
@@ -307,11 +315,19 @@ export class PortfolioScene extends Phaser.Scene {
     hazards: Phaser.Physics.Arcade.StaticGroup,
     index: number
   ) {
-    this.add.image(layout.startX + 42, 460, 'tile:arrow').setScale(2.2).setFlipX(true);
+    if (index === 0 || index === portfolioTimeline.length - 1 || index % 4 === 3) {
+      this.add.image(layout.startX + 42, 460, 'tile:arrow').setScale(2.2).setFlipX(true);
+    } else {
+      this.add.image(layout.startX + 42, 460, 'tile:sign').setScale(2.2);
+    }
     this.add.image(layout.startX + 90, 462, 'tile:plantA').setScale(2.2);
     this.add.image(layout.startX + 128, 462, 'tile:plantB').setScale(2.2);
     this.add.image(layout.centerX - 12, 462, 'tile:plantC').setScale(2.1);
-    this.add.image(layout.centerX + 250, 462, 'tile:arrow').setScale(2.2).setFlipX(true);
+    if (index === 0 || index === portfolioTimeline.length - 2) {
+      this.add.image(layout.centerX + 250, 462, 'tile:arrow').setScale(2.2).setFlipX(true);
+    }
+    this.add.image(layout.blockX, layout.blockY + 46, 'tile:block').setScale(2.2);
+    this.add.image(layout.blockX - 42, layout.blockY + 24, 'tile:gem').setScale(1.8);
 
     const key = collectibles.create(layout.centerX + 360, 378, 'tile:key') as Phaser.Physics.Arcade.Image;
     key.setScale(2.1).setData('kind', 'key').setData('milestoneIndex', index).refreshBody();
@@ -319,17 +335,37 @@ export class PortfolioScene extends Phaser.Scene {
     layout.coins.forEach((coin, coinIndex) => {
       const item = collectibles.create(coin.x, coin.y, coinIndex % 2 ? 'tile:coinB' : 'tile:coinA') as Phaser.Physics.Arcade.Image;
       item.setScale(2.2).setData('skillIndex', coin.skillIndex).setData('milestoneIndex', index).refreshBody();
+      const skill = portfolioTimeline[index].skills[coin.skillIndex % portfolioTimeline[index].skills.length];
+      this.add.text(coin.x - 18, coin.y + 18, skill, {
+        fontFamily: 'Arial',
+        fontSize: '8px',
+        fontStyle: '900',
+        color: '#2d2630',
+        backgroundColor: '#fffbee'
+      }).setDepth(4);
     });
 
     if (theme === 'modern') {
       this.add.image(layout.centerX + 264, 456, 'tile:pipeTopLeft').setScale(2.6);
       this.add.image(layout.centerX + 306, 456, 'tile:pipeTopRight').setScale(2.6);
-      return;
+      this.add.image(layout.centerX + 286, 486, 'tile:pipeBody').setScale(2.6);
     }
 
     const texture = theme === 'lab' ? 'char:robotA' : theme === 'australia' ? 'char:enemyB' : 'char:enemyA';
     const hazard = hazards.create(layout.hazardX, layout.hazardY, texture) as Phaser.Physics.Arcade.Image;
     this.configureHazard(hazard, theme === 'lab' ? 2.4 : 2.2);
+
+    if (index === portfolioTimeline.length - 1) {
+      this.add.image(layout.centerX + 180, 442, 'tile:sign').setScale(2.6);
+      this.add.image(layout.centerX + 222, 428, 'tile:gem').setScale(2.4);
+      this.add.text(layout.centerX + 150, 390, 'CONTACT', {
+        fontFamily: 'Arial',
+        fontSize: '15px',
+        fontStyle: '900',
+        color: '#2d2630',
+        backgroundColor: '#fffbee'
+      });
+    }
   }
 
   private configureHazard(hazard: Phaser.Physics.Arcade.Image, scale: number) {
@@ -365,7 +401,7 @@ export class PortfolioScene extends Phaser.Scene {
     const kind = item.getData('kind') as string | undefined;
 
     if (kind === 'key') {
-      this.floatLabel(item.x, item.y - 18, this.viewedIds.has(milestone.id) ? 'Reviewed' : 'Hit the ! block');
+      this.floatLabel(item.x, item.y - 18, this.viewedIds.has(milestone.id) ? this.reviewedMessage() : this.hitBlockMessage());
       if (this.viewedIds.has(milestone.id)) item.destroy();
       return;
     }
@@ -390,6 +426,14 @@ export class PortfolioScene extends Phaser.Scene {
 
   private hazardMessage() {
     return navigator.language.toLowerCase().startsWith('ko') ? '장애물에 조심하세요' : 'Watch out for obstacles';
+  }
+
+  private hitBlockMessage() {
+    return navigator.language.toLowerCase().startsWith('ko') ? '! 블록을 치세요' : 'Hit the ! block';
+  }
+
+  private reviewedMessage() {
+    return navigator.language.toLowerCase().startsWith('ko') ? '확인 완료' : 'Reviewed';
   }
 
   private openMilestone(block: Phaser.Physics.Arcade.Image) {
