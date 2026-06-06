@@ -38,6 +38,7 @@ const themes: Record<string, Theme> = {
 };
 
 export class PortfolioScene extends Phaser.Scene {
+  // 포트폴리오 월드의 모든 플레이 상태는 이 씬이 소유하고, UI 전달만 gameEvents로 넘깁니다.
   private chapterIndex = 0;
   private player?: Phaser.Physics.Arcade.Sprite;
   private cursors?: Phaser.Types.Input.Keyboard.CursorKeys;
@@ -62,6 +63,7 @@ export class PortfolioScene extends Phaser.Scene {
   }
 
   preload() {
+    // assetManifest의 논리 키를 Phaser texture key로 변환해 이후 월드 생성 코드가 경로를 몰라도 되게 합니다.
     Object.entries(assetManifest.tiles).forEach(([key, path]) => this.load.image(`tile:${key}`, path));
     Object.entries(assetManifest.characters).forEach(([key, path]) => this.load.image(`char:${key}`, path));
     Object.entries(assetManifest.backgrounds).forEach(([key, path]) => this.load.image(`bg:${key}`, path));
@@ -72,6 +74,7 @@ export class PortfolioScene extends Phaser.Scene {
   }
 
   create() {
+    // 키보드와 모바일 터치 입력을 같은 이동 플래그로 합쳐 update 루프에서 동일하게 처리합니다.
     this.cursors = this.input.keyboard?.createCursorKeys();
     this.keys = this.input.keyboard?.addKeys({
       left: Phaser.Input.Keyboard.KeyCodes.A,
@@ -100,6 +103,8 @@ export class PortfolioScene extends Phaser.Scene {
 
   update(time: number, delta: number) {
     if (!this.player || !this.cursors || !this.keys) return;
+    this.cameras.main.scrollY = 0;
+    // 프레임 시간이 튀어도 물리 이동이 과하게 점프하지 않도록 dt 상한을 둡니다.
     const left = this.cursors.left.isDown || this.keys.left.isDown || this.moveLeft;
     const right = this.cursors.right.isDown || this.keys.right.isDown || this.moveRight;
     const body = this.player.body as Phaser.Physics.Arcade.Body;
@@ -153,12 +158,12 @@ export class PortfolioScene extends Phaser.Scene {
   }
 
   private buildTimelineWorld() {
+    // 타임라인 데이터 1개가 게임 월드의 한 구간이 됩니다. 구간별 배경/발판/수집품/팝업 블록을 생성합니다.
     this.physics.world.colliders.destroy();
     this.children.removeAll();
     this.renderedSampleChunks.clear();
 
     const solids = this.physics.add.staticGroup();
-    const platforms = this.physics.add.staticGroup();
     const collectibles = this.physics.add.staticGroup();
     const hazards = this.physics.add.staticGroup();
     const blocks = this.physics.add.staticGroup();
@@ -167,8 +172,8 @@ export class PortfolioScene extends Phaser.Scene {
       const layout = this.getSegmentLayout(index);
       const theme = themes[milestone.chapterTheme];
       this.drawSegmentBackground(theme, milestone.chapterTheme, layout);
-      this.drawSegmentGround(solids, platforms, layout, index);
-      this.drawSegmentDecor(milestone.chapterTheme, layout, collectibles, hazards, index);
+      this.createGameplayColliders(solids, layout);
+      this.drawPortfolioItems(milestone.chapterTheme, layout, collectibles, hazards, index);
 
       const block = blocks.create(layout.blockX, layout.blockY, 'tile:question') as Phaser.Physics.Arcade.Image;
       block.setScale(3).setSize(46, 46).setData('milestoneIndex', index).refreshBody();
@@ -179,11 +184,10 @@ export class PortfolioScene extends Phaser.Scene {
     this.player.setSize(17, 21);
     this.player.setOffset(3, 2);
     this.player.setCollideWorldBounds(true);
-    this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
+    this.cameras.main.startFollow(this.player, true, 0.12, 0);
     this.cameras.main.scrollX = 0;
 
     this.physics.add.collider(this.player, solids);
-    this.physics.add.collider(this.player, platforms, undefined, this.canLandOnPlatform, this);
     this.physics.add.collider(this.player, blocks, this.tryOpenMilestone, undefined, this);
     this.physics.add.overlap(this.player, collectibles, this.collectSkillItem, undefined, this);
     this.physics.add.overlap(this.player, hazards, this.hitHazard, undefined, this);
@@ -224,19 +228,8 @@ export class PortfolioScene extends Phaser.Scene {
   private drawSegmentBackground(theme: Theme, name: string, layout: SegmentLayout) {
     const isAustralia = name === 'australia';
     const sky = isAustralia ? theme.sky : baseBackdrop.sky;
-    const haze = isAustralia ? theme.haze : baseBackdrop.haze;
-    const water = isAustralia ? theme.water : baseBackdrop.water;
 
     this.add.rectangle(layout.centerX, 320, segmentWidth, 640, sky).setDepth(-20);
-    this.add.rectangle(layout.centerX, 470, segmentWidth, 120, haze, isAustralia ? 0.48 : 0.34).setDepth(-15);
-    this.add.rectangle(layout.centerX, 620, segmentWidth, 40, water).setDepth(-12);
-    this.add.rectangle(layout.startX + segmentWidth - 36, 460, 72, 72, haze, 0.14).setDepth(-10);
-
-    [layout.startX + 70, layout.startX + 320].forEach((x, cloudIndex) => {
-      this.add.image(x, 122 + (cloudIndex % 2) * 34, 'tile:cloudLeft').setScale(3);
-      this.add.image(x + 54, 122 + (cloudIndex % 2) * 34, 'tile:cloudMidA').setScale(3);
-      this.add.image(x + 108, 122 + (cloudIndex % 2) * 34, 'tile:cloudRight').setScale(3);
-    });
 
     this.drawKenneySampleChunk(layout, isAustralia ? kenneySampleMaps.sampleB : kenneySampleMaps.sampleA, isAustralia);
   }
@@ -265,76 +258,18 @@ export class PortfolioScene extends Phaser.Scene {
     });
   }
 
-  private drawSegmentGround(
-    solids: Phaser.Physics.Arcade.StaticGroup,
-    platforms: Phaser.Physics.Arcade.StaticGroup,
-    layout: SegmentLayout,
-    index: number
-  ) {
-    for (let x = layout.startX + 18; x < layout.startX + segmentWidth + 36; x += 54) {
-      solids.create(x, 514, x % 108 === 18 ? 'tile:grassMidB' : 'tile:grassMidA').setScale(3).refreshBody();
-      solids.create(x, 568, x % 162 === 18 ? 'tile:dirtB' : 'tile:dirtA').setScale(3).refreshBody();
-    }
-
-    solids.create(layout.ledgeX - 54, layout.ledgeY, 'tile:grassLeft').setScale(3).refreshBody();
-    solids.create(layout.ledgeX, layout.ledgeY, 'tile:grassMidB').setScale(3).refreshBody();
-    solids.create(layout.ledgeX + 54, layout.ledgeY, 'tile:grassRight').setScale(3).refreshBody();
-
-    this.createCloudPlatform(platforms, layout.centerX + 20, 390 - (index % 2) * 18, 'tile:cloudLeft');
-    this.createCloudPlatform(platforms, layout.centerX + 74, 390 - (index % 2) * 18, 'tile:cloudRight');
-
-    if (index % 3 === 1) {
-      solids.create(layout.centerX + 255, 430, 'tile:grassLeft').setScale(3).refreshBody();
-      solids.create(layout.centerX + 309, 430, 'tile:grassRight').setScale(3).refreshBody();
-    }
-
-    if (index % 3 === 2) {
-      this.add.image(layout.centerX - 210, 462, 'tile:ladderTop').setScale(2.2);
-      this.add.image(layout.centerX - 210, 486, 'tile:ladder').setScale(2.2);
-    }
+  private createGameplayColliders(solids: Phaser.Physics.Arcade.StaticGroup, layout: SegmentLayout) {
+    const floor = solids.create(layout.centerX, 516, 'tile:block') as Phaser.Physics.Arcade.Image;
+    floor.setDisplaySize(segmentWidth + 24, 28).setVisible(false).refreshBody();
   }
 
-  private createCloudPlatform(platforms: Phaser.Physics.Arcade.StaticGroup, x: number, y: number, texture: string) {
-    const platform = platforms.create(x, y, texture) as Phaser.Physics.Arcade.Image;
-    platform.setScale(3);
-    platform.setSize(48, 8);
-    platform.setOffset(0, 14);
-    platform.refreshBody();
-    const body = platform.body as Phaser.Physics.Arcade.StaticBody;
-    body.checkCollision.down = false;
-    body.checkCollision.left = false;
-    body.checkCollision.right = false;
-  }
-
-  private canLandOnPlatform: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = (_playerObject, platformObject) => {
-    if (!this.player) return false;
-    const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
-    const platformSource = platformObject as { body?: Phaser.Physics.Arcade.StaticBody };
-    const platformBody = platformSource.body ?? (platformObject as Phaser.Physics.Arcade.StaticBody);
-    return playerBody.velocity.y >= 0 && playerBody.bottom <= platformBody.top + 18;
-  };
-
-  private drawSegmentDecor(
+  private drawPortfolioItems(
     theme: string,
     layout: SegmentLayout,
     collectibles: Phaser.Physics.Arcade.StaticGroup,
     hazards: Phaser.Physics.Arcade.StaticGroup,
     index: number
   ) {
-    if (index === 0 || index === portfolioTimeline.length - 1 || index % 4 === 3) {
-      this.add.image(layout.startX + 42, 460, 'tile:arrowRight').setScale(2.2);
-    } else {
-      this.add.image(layout.startX + 42, 460, 'tile:sign').setScale(2.2);
-    }
-    this.add.image(layout.startX + 90, 462, 'tile:plantA').setScale(2.2);
-    this.add.image(layout.startX + 128, 462, 'tile:plantB').setScale(2.2);
-    this.add.image(layout.centerX - 12, 462, 'tile:plantC').setScale(2.1);
-    if (index === 0 || index === portfolioTimeline.length - 2) {
-      this.add.image(layout.centerX + 250, 462, 'tile:arrowRight').setScale(2.2);
-    }
-    this.add.image(layout.blockX, layout.blockY + 46, 'tile:block').setScale(2.2);
-    this.add.image(layout.blockX - 42, layout.blockY + 24, 'tile:gem').setScale(1.8);
-
     const key = collectibles.create(layout.centerX + 360, 378, 'tile:key') as Phaser.Physics.Arcade.Image;
     key.setScale(2.1).setData('kind', 'key').setData('milestoneIndex', index).refreshBody();
 
@@ -343,27 +278,9 @@ export class PortfolioScene extends Phaser.Scene {
       item.setScale(2.2).setData('skillIndex', coin.skillIndex).setData('milestoneIndex', index).refreshBody();
     });
 
-    if (theme === 'modern') {
-      this.add.image(layout.centerX + 264, 456, 'tile:pipeTopLeft').setScale(2.6);
-      this.add.image(layout.centerX + 306, 456, 'tile:pipeTopRight').setScale(2.6);
-      this.add.image(layout.centerX + 286, 486, 'tile:pipeBody').setScale(2.6);
-    }
-
     const texture = theme === 'lab' ? 'char:robotA' : theme === 'australia' ? 'char:enemyB' : 'char:enemyA';
     const hazard = hazards.create(layout.hazardX, layout.hazardY, texture) as Phaser.Physics.Arcade.Image;
     this.configureHazard(hazard, theme === 'lab' ? 2.4 : 2.2);
-
-    if (index === portfolioTimeline.length - 1) {
-      this.add.image(layout.centerX + 180, 442, 'tile:sign').setScale(2.6);
-      this.add.image(layout.centerX + 222, 428, 'tile:gem').setScale(2.4);
-      this.add.text(layout.centerX + 150, 390, 'CONTACT', {
-        fontFamily: 'Arial',
-        fontSize: '15px',
-        fontStyle: '900',
-        color: '#2d2630',
-        backgroundColor: '#fffbee'
-      });
-    }
   }
 
   private configureHazard(hazard: Phaser.Physics.Arcade.Image, scale: number) {
