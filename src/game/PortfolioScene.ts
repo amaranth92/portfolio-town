@@ -74,7 +74,7 @@ export class PortfolioScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-UP', () => this.jump());
     this.input.keyboard?.on('keydown-W', () => this.jump());
 
-    this.physics.world.gravity.y = 1450;
+    this.physics.world.gravity.y = 1350;
     this.physics.world.setBounds(0, 0, worldWidth, viewHeight);
     this.cameras.main.setBounds(0, 0, worldWidth, viewHeight);
     this.cameras.main.setDeadzone(92, 90);
@@ -138,7 +138,7 @@ export class PortfolioScene extends Phaser.Scene {
 
   private performJump() {
     if (!this.player) return;
-    this.player.setVelocityY(-575);
+    this.player.setVelocityY(-675);
     this.jumpQueuedAt = -Infinity;
     this.squashUntil = this.time.now + 120;
     this.addJumpPuff(this.player.x, this.player.y + 30);
@@ -158,12 +158,12 @@ export class PortfolioScene extends Phaser.Scene {
 
     const solids = this.physics.add.staticGroup();
     const platforms = this.physics.add.staticGroup();
+    const collectibles = this.physics.add.staticGroup();
+    const hazards = this.physics.add.staticGroup();
     this.drawGround(solids, platforms, layout);
-    this.drawSceneDecor(milestone.chapterTheme, layout);
+    this.drawSceneDecor(milestone.chapterTheme, layout, collectibles, hazards);
 
     this.block = this.physics.add.staticImage(layout.block.x, layout.block.y, 'tile:question').setScale(3).setSize(46, 46);
-    this.block.setInteractive({ useHandCursor: true });
-    this.block.on('pointerdown', () => this.openMilestone());
     this.block.refreshBody();
 
     this.shadow = this.add.ellipse(64, 492, 42, 12, 0x25313a, 0.22).setDepth(8);
@@ -177,6 +177,8 @@ export class PortfolioScene extends Phaser.Scene {
     this.physics.add.collider(this.player, solids);
     this.physics.add.collider(this.player, platforms, undefined, this.canLandOnPlatform, this);
     this.physics.add.collider(this.player, this.block, () => this.tryOpenMilestone(), undefined, this);
+    this.physics.add.overlap(this.player, collectibles, this.collectSkillItem, undefined, this);
+    this.physics.add.overlap(this.player, hazards, this.hitHazard, undefined, this);
 
     this.add.text(22, 22, `${milestone.year}`, {
       fontFamily: 'Arial',
@@ -276,22 +278,33 @@ export class PortfolioScene extends Phaser.Scene {
     return playerBody.velocity.y >= 0 && playerBody.bottom <= platformBody.top + 18;
   };
 
-  private drawSceneDecor(theme: string, layout: ChapterLayout) {
+  private drawSceneDecor(
+    theme: string,
+    layout: ChapterLayout,
+    collectibles: Phaser.Physics.Arcade.StaticGroup,
+    hazards: Phaser.Physics.Arcade.StaticGroup
+  ) {
     this.add.image(42, 460, 'tile:sign').setScale(2.5);
     this.add.image(98, 462, 'tile:plantA').setScale(2.2);
     this.add.image(126, 462, 'tile:plantB').setScale(2.2);
     this.add.image(232, 462, 'tile:plantC').setScale(2.1);
     this.add.image(520, 462, 'tile:arrow').setScale(2.2);
-    this.add.image(812, 378, 'tile:key').setScale(2.1);
-    layout.coins.forEach((coin, index) => this.add.image(coin.x, coin.y, index % 2 ? 'tile:coinB' : 'tile:coinA').setScale(2.2));
+    const key = collectibles.create(812, 378, 'tile:key') as Phaser.Physics.Arcade.Image;
+    key.setScale(2.1).setData('kind', 'key').refreshBody();
+    layout.coins.forEach((coin, index) => {
+      const item = collectibles.create(coin.x, coin.y, index % 2 ? 'tile:coinB' : 'tile:coinA') as Phaser.Physics.Arcade.Image;
+      item.setScale(2.2).setData('skillIndex', index).refreshBody();
+    });
     if (theme === 'lab') {
-      this.add.image(layout.enemy.x, layout.enemy.y, 'char:robotA').setScale(2.4);
+      const hazard = hazards.create(layout.enemy.x, layout.enemy.y, 'char:robotA') as Phaser.Physics.Arcade.Image;
+      hazard.setScale(2.4).refreshBody();
       this.add.image(284, 294, 'tile:gem').setScale(2.3);
     } else if (theme === 'modern') {
       this.add.image(286, 456, 'tile:pipeTopLeft').setScale(2.6);
       this.add.image(328, 456, 'tile:pipeTopRight').setScale(2.6);
     } else {
-      this.add.image(layout.enemy.x, layout.enemy.y, theme === 'australia' ? 'char:enemyB' : 'char:enemyA').setScale(2.2);
+      const hazard = hazards.create(layout.enemy.x, layout.enemy.y, theme === 'australia' ? 'char:enemyB' : 'char:enemyA') as Phaser.Physics.Arcade.Image;
+      hazard.setScale(2.2).refreshBody();
     }
   }
 
@@ -301,7 +314,7 @@ export class PortfolioScene extends Phaser.Scene {
     const now = this.time.now;
     if (now - this.justOpenedAt < 900) return;
     const body = this.player.body as Phaser.Physics.Arcade.Body;
-    const headHit = body.velocity.y < 0 || this.player.y > this.block.y + 20;
+    const headHit = body.velocity.y < 0 && this.player.y > this.block.y + 20;
     if (!headHit) return;
 
     this.openMilestone();
@@ -315,6 +328,33 @@ export class PortfolioScene extends Phaser.Scene {
     const underBlock = this.player.y > this.block.y + 24 && this.player.y < this.block.y + 118;
     if (closeX && underBlock && body.velocity.y < -160) this.openMilestone();
   }
+
+  private collectSkillItem: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = (_playerObject, itemObject) => {
+    const item = itemObject as Phaser.Physics.Arcade.Image;
+    if (!item.visible) return;
+
+    const milestone = portfolioTimeline[this.chapterIndex];
+    const kind = item.getData('kind') as string | undefined;
+    if (kind === 'key') {
+      this.floatLabel(item.x, item.y - 18, this.viewedIds.has(milestone.id) ? 'Portal ready' : 'Hit the ? block');
+      if (this.viewedIds.has(milestone.id)) item.destroy();
+      return;
+    }
+
+    const skillIndex = (item.getData('skillIndex') as number | undefined) ?? 0;
+    const skill = milestone.skills[skillIndex % milestone.skills.length];
+    this.skills.add(skill);
+    this.emitSkills();
+    this.floatLabel(item.x, item.y - 18, skill);
+    item.destroy();
+  };
+
+  private hitHazard: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = () => {
+    if (!this.player || this.milestoneOpen || this.scene.isPaused()) return;
+    this.addJumpPuff(this.player.x, this.player.y + 24);
+    this.player.setPosition(Math.max(64, this.player.x - 140), 454);
+    this.player.setVelocity(0, -220);
+  };
 
   private openMilestone() {
     if (!this.block) return;
@@ -390,6 +430,25 @@ export class PortfolioScene extends Phaser.Scene {
         onComplete: () => puff.destroy()
       });
     }
+  }
+
+  private floatLabel(x: number, y: number, text: string) {
+    const label = this.add.text(x - 18, y, text, {
+      fontFamily: 'Arial',
+      fontSize: '11px',
+      fontStyle: '900',
+      color: '#2d2630',
+      backgroundColor: '#fffbee'
+    }).setDepth(20);
+
+    this.tweens.add({
+      targets: label,
+      y: y - 26,
+      alpha: 0,
+      duration: 680,
+      ease: 'Quad.easeOut',
+      onComplete: () => label.destroy()
+    });
   }
 
   private resumeFromPopup = () => {

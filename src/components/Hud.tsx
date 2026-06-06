@@ -25,6 +25,7 @@ export function Hud({ skills, chapterIndex, recruiterMode, onToggleMode }: Props
         {recruiterMode ? 'Game' : 'Resume'}
       </button>
       <section className="hud-skills">
+        <span>Stack</span>
         <div className="skill-chips">
           {(skills.length ? skills : ['Ready']).map((skill) => (
             <em key={skill}>{skill}</em>

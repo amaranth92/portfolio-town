@@ -108,9 +108,25 @@ button {
 }
 
 .hud-skills {
-  grid-column: 1 / -1;
-  grid-row: 3;
+  position: fixed;
+  left: 10px;
+  right: 10px;
+  bottom: max(94px, calc(env(safe-area-inset-bottom) + 94px));
+  z-index: 4;
+  max-width: 430px;
+  margin: 0 auto;
+  border: 3px solid var(--line);
+  background: rgba(255, 251, 238, 0.94);
+  box-shadow: 3px 3px 0 var(--line);
+  padding: 5px 7px 6px;
   min-width: 0;
+}
+
+.hud-skills span {
+  margin-bottom: 2px;
+  color: var(--accent);
+  font-size: 9px;
+  text-transform: uppercase;
 }
 
 .skill-chips,
@@ -143,7 +159,7 @@ button {
   min-height: 100dvh;
   display: grid;
   place-items: center;
-  padding: 96px 8px 112px;
+  padding: 78px 8px 154px;
 }
 
 .game-host {
@@ -342,14 +358,18 @@ button {
     width: auto;
   }
 
-  .hud-progress,
-  .hud-skills {
+  .hud-progress {
     grid-column: auto;
     grid-row: auto;
   }
 
+  .hud-skills {
+    bottom: 18px;
+  }
+
   .game-layout {
-    padding-top: 102px;
+    padding-top: 94px;
+    padding-bottom: 96px;
   }
 
   .game-host {
@@ -383,11 +403,11 @@ button {
   }
 
   .game-layout {
-    padding-top: 94px;
+    padding-top: 78px;
   }
 
   .game-host {
     min-height: 490px;
-    height: min(69dvh, 640px);
+    height: min(67dvh, 630px);
   }
 }

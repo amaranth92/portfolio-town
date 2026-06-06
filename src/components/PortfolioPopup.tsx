@@ -25,7 +25,7 @@ export function PortfolioPopup({ milestone }: Props) {
           ))}
         </div>
         <button type="button" onClick={() => gameEvents.resumeGame()}>
-          Continue
+          Close and Resume
         </button>
       </article>
     </div>

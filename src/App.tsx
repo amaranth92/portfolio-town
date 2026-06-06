@@ -39,6 +39,25 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!activeMilestone) return undefined;
+
+    const closeWithKey = (event: KeyboardEvent) => {
+      if (event.code === 'Space' || event.code === 'Enter') gameEvents.resumeGame();
+    };
+    const closeWithJump = (event: Event) => {
+      const detail = (event as CustomEvent<{ control: string; pressed: boolean }>).detail;
+      if (detail.control === 'jump' && detail.pressed) gameEvents.resumeGame();
+    };
+
+    window.addEventListener('keydown', closeWithKey);
+    window.addEventListener('touch-control', closeWithJump as EventListener);
+    return () => {
+      window.removeEventListener('keydown', closeWithKey);
+      window.removeEventListener('touch-control', closeWithJump as EventListener);
+    };
+  }, [activeMilestone]);
+
   return (
     <div className="app-shell">
       <Hud
