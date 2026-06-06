@@ -8,6 +8,10 @@ import { PhaserGame } from './game/PhaserGame';
 import { gameEvents, type MilestoneOpenEvent, type SkillsEvent } from './game/gameEvents';
 
 function App() {
+  if (window.location.pathname.replace(/\/+$/, '') === '/privacy-policy-car-park-dash') {
+    return <PrivacyPolicy />;
+  }
+
   const [activeMilestone, setActiveMilestone] = useState<PortfolioMilestone | null>(null);
   const [skills, setSkills] = useState<string[]>([]);
   const [chapterIndex, setChapterIndex] = useState(0);
@@ -77,6 +81,63 @@ function App() {
       )}
       <PortfolioPopup milestone={activeMilestone} />
     </div>
+  );
+}
+
+function PrivacyPolicy() {
+  return (
+    <main className="privacy-page">
+      <section className="privacy-card">
+        <p className="privacy-kicker">Aussie Pus Studio</p>
+        <h1>Car Park Dash Privacy Policy</h1>
+        <p className="privacy-date">Last updated: June 6, 2026</p>
+        <p>
+          Car Park Dash respects your privacy. The game does not require account registration and does not collect or store
+          directly identifying information such as your name, phone number, or email address on servers operated by us.
+        </p>
+
+        <h2>Information That May Be Processed</h2>
+        <ul>
+          <li>Advertising identifier, device information, OS version, app version, ad impressions, ad clicks, and rewarded-ad completion records.</li>
+          <li>Local game data such as settings, stage progress, owned items, sound preferences, and tutorial state.</li>
+          <li>Crash logs or performance diagnostics when provided by the platform or SDK providers.</li>
+        </ul>
+
+        <h2>How Information Is Used</h2>
+        <ul>
+          <li>To provide advertising through Google AdMob and Google Mobile Ads.</li>
+          <li>To measure ad performance and grant rewards for rewarded advertisements.</li>
+          <li>To save game progress, keep preferences, improve gameplay quality, and troubleshoot issues.</li>
+        </ul>
+
+        <h2>Third-Party Services</h2>
+        <p>
+          The game may use Google AdMob / Google Mobile Ads for advertising. Google processes data according to the
+          <a href="https://policies.google.com/privacy"> Google Privacy Policy</a>.
+        </p>
+
+        <h2>Retention And Deletion</h2>
+        <p>
+          We do not store personal information on our own servers. Local game data can be removed by uninstalling the app
+          or clearing app storage. Data processed by advertising providers is retained and deleted according to their policies.
+        </p>
+
+        <h2>Children</h2>
+        <p>
+          The game is not directed to children under 13. If a parent or guardian has questions about a child&apos;s data,
+          please use the support contact shown on the app store listing.
+        </p>
+
+        <h2>Your Choices</h2>
+        <p>
+          You can reset your advertising identifier, limit personalized ads, change app permissions, or uninstall the app
+          through your device settings. Where required by region, you may choose or change ad consent in the consent screen.
+        </p>
+
+        <h2>Contact</h2>
+        <p>Please use the developer support contact shown on the Google Play or App Store listing.</p>
+      </section>
+    </main>
   );
 }
 
