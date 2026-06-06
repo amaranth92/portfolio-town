@@ -177,6 +177,8 @@ button {
   box-shadow: 3px 3px 0 var(--line);
   padding: 6px 8px 7px;
   min-width: 0;
+  max-height: 92px;
+  overflow: hidden;
 }
 
 .hud-skills span {
@@ -189,10 +191,16 @@ button {
 .skill-chips,
 .recruiter-skills {
   display: flex;
+  flex-wrap: wrap;
   gap: 5px;
-  overflow-x: auto;
+  overflow: auto;
   padding: 2px 0 0;
   scrollbar-width: none;
+}
+
+.skill-chips {
+  max-height: 58px;
+  align-content: flex-start;
 }
 
 .skill-chips::-webkit-scrollbar,
@@ -451,6 +459,11 @@ button {
     background: rgba(255, 251, 238, 0.94);
     box-shadow: 4px 4px 0 var(--line);
     padding: 8px 10px 9px;
+    max-height: 104px;
+  }
+
+  .skill-chips {
+    max-height: 66px;
   }
 
   .game-layout {
