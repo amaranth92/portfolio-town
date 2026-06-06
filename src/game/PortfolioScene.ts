@@ -557,10 +557,11 @@ export class PortfolioScene extends Phaser.Scene {
     // 범위를 넓게 잡으면 문, 줄, 장식, 아이템까지 바닥처럼 인식될 수 있으니 한 번에 많이 추가하지 마세요.
     return (
       (frame >= 0 && frame <= 3) ||
-      (frame >= 20 && frame <= 23) ||
+      (frame >= 20 && frame <= 25) ||
       (frame >= 40 && frame <= 43) ||
       (frame >= 60 && frame <= 63) ||
-      (frame >= 96 && frame <= 99) ||
+      frame === 96 ||
+      frame === 97 ||
       (frame >= 153 && frame <= 156)
     );
   }
