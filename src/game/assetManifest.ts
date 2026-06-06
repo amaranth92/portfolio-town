@@ -1,4 +1,4 @@
-const base = '/assets/kenney/pixel-platformer';
+const base = `${import.meta.env.BASE_URL}assets/kenney/pixel-platformer`;
 
 export const assetManifest = {
   base,
