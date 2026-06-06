@@ -8,6 +8,7 @@ type GameSize = {
 };
 
 function getGameSize(): GameSize {
+  // 데스크톱은 가로 스테이지, 모바일은 세로 조작감을 우선하는 크기로 Phaser 캔버스를 다시 만듭니다.
   if (window.matchMedia('(min-width: 900px)').matches) {
     return { width: 960, height: 540 };
   }
@@ -30,6 +31,7 @@ export function PhaserGame() {
   useEffect(() => {
     if (!hostRef.current) return undefined;
 
+    // gameSize가 바뀌면 Phaser 인스턴스를 재생성하므로, 씬 내부 상태도 함께 초기화됩니다.
     const game = new Phaser.Game({
       type: Phaser.AUTO,
       parent: hostRef.current,

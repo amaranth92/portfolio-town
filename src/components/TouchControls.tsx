@@ -1,4 +1,5 @@
 function emit(control: string, pressed: boolean) {
+  // 모바일 버튼 입력을 PortfolioScene이 구독하는 전역 touch-control 이벤트로 변환합니다.
   window.dispatchEvent(new CustomEvent('touch-control', { detail: { control, pressed } }));
 }
 
