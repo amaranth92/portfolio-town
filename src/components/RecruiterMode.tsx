@@ -66,6 +66,13 @@ export function RecruiterMode({ isKorean }: Props) {
         <h2>{isKorean ? '연락처' : 'Contact'}</h2>
         <p>{profileText.note}</p>
         <a href={`mailto:${profile.contact.email}`}>{profile.contact.email}</a>
+        <div className="recruiter-links">
+          {profile.links.map((link) => (
+            <a key={link.url} href={link.url} target="_blank" rel="noreferrer">
+              {isKorean && link.url.includes('aussie-pus') ? '사이드프로젝트 게임' : isKorean && link.url.includes('github') ? 'GitHub' : link.label}
+            </a>
+          ))}
+        </div>
       </section>
     </main>
   );

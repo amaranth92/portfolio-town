@@ -1,4 +1,4 @@
-import type { PortfolioMilestone } from '../data/portfolioTimeline';
+import { profile, type PortfolioMilestone } from '../data/portfolioTimeline';
 import { gameEvents } from '../game/gameEvents';
 
 type Props = {
@@ -27,6 +27,15 @@ export function PortfolioPopup({ milestone, isKorean }: Props) {
             <em key={skill}>{skill}</em>
           ))}
         </div>
+        {milestone.id === 'contact' ? (
+          <div className="popup-links">
+            {profile.links.map((link) => (
+              <a key={link.url} href={link.url} target="_blank" rel="noreferrer">
+                {link.label}
+              </a>
+            ))}
+          </div>
+        ) : null}
         <button type="button" onClick={() => gameEvents.resumeGame()}>
           {isKorean ? '닫고 계속하기' : 'Close and Resume'}
         </button>

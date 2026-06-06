@@ -373,6 +373,26 @@ button {
   margin: 12px 0;
 }
 
+.popup-links,
+.recruiter-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0;
+}
+
+.popup-links a,
+.recruiter-links a {
+  border: 2px solid var(--line);
+  background: #fff;
+  box-shadow: 2px 2px 0 var(--line);
+  color: var(--ink);
+  padding: 7px 9px;
+  font-size: 12px;
+  font-weight: 950;
+  text-decoration: none;
+}
+
 .portfolio-popup button {
   width: 100%;
   min-height: 50px;

@@ -23,6 +23,12 @@ type SegmentLayout = {
   hazardY: number;
 };
 
+type LadderInfo = {
+  top: number;
+  bottom: number;
+  centerX: number;
+};
+
 const segmentWidth = 540;
 const viewHeight = 640;
 const sampleScale = 2;
@@ -68,6 +74,7 @@ export class PortfolioScene extends Phaser.Scene {
   private lastSpringAt = -Infinity;
   private lastSafePosition = { ...spawnPoint };
   private locale: 'en' | 'ko' = navigator.language.toLowerCase().startsWith('ko') ? 'ko' : 'en';
+  private hazards?: Phaser.Physics.Arcade.Group;
 
   constructor() {
     super('PortfolioScene');
@@ -122,8 +129,9 @@ export class PortfolioScene extends Phaser.Scene {
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     const dt = Math.min(delta / 1000, 0.033);
     const grounded = body.blocked.down || body.touching.down;
-    const onLadder = this.isPlayerOnLadder();
-    const ladderTopJumpable = this.isAtLadderTop();
+    const activeLadder = this.getActiveLadderInfo();
+    const onLadder = !!activeLadder;
+    const ladderTopJumpable = this.isAtLadderTop(activeLadder);
     const ladderLocksPlayer = onLadder && !ladderTopJumpable;
     const climbUp = ladderLocksPlayer && (this.cursors.up.isDown || this.keys.jump.isDown || this.jumpHeld);
     const climbDown = onLadder && this.cursors.down.isDown;
@@ -144,10 +152,16 @@ export class PortfolioScene extends Phaser.Scene {
     body.allowGravity = !ladderLocksPlayer;
     if (ladderLocksPlayer) {
       if (climbUp) {
-        this.player.setVelocityY(-135);
+        if (activeLadder && body.bottom <= activeLadder.top + 26) {
+          this.player.setPosition(activeLadder.centerX, activeLadder.top - 26);
+          this.player.setVelocityY(0);
+          this.lastGroundedAt = time;
+        } else {
+          this.player.setVelocityY(-135);
+        }
         this.jumpQueuedAt = -Infinity;
       } else if (climbDown) {
-        this.player.setVelocityY(120);
+        this.player.setVelocityY(this.isAtLadderBottom(activeLadder) ? 0 : 120);
       } else {
         this.player.setVelocityY(0);
       }
@@ -161,38 +175,54 @@ export class PortfolioScene extends Phaser.Scene {
     }
 
     if (grounded && this.player.y < 590) {
-      this.lastSafePosition = { x: this.player.x, y: this.player.y - 8 };
+      this.lastSafePosition = { x: this.player.x, y: Math.max(80, this.player.y - 84) };
     }
 
     if (this.player.y > viewHeight + 80) this.respawnPlayer();
 
+    this.updateHazards();
     this.updateCurrentMilestone();
     this.animatePlayer(time, grounded, left, right);
     this.wasGrounded = grounded;
   }
 
   private isPlayerOnLadder() {
-    if (!this.player || !this.ladders) return false;
-    const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
-    const playerRect = new Phaser.Geom.Rectangle(playerBody.x, playerBody.y, playerBody.width, playerBody.height);
-    return this.ladders.getChildren().some((ladder) => {
-      const ladderBody = (ladder as Phaser.Physics.Arcade.Image).body as Phaser.Physics.Arcade.StaticBody;
-      const ladderRect = new Phaser.Geom.Rectangle(ladderBody.x, ladderBody.y, ladderBody.width, ladderBody.height);
-      return Phaser.Geom.Intersects.RectangleToRectangle(playerRect, ladderRect);
-    });
+    return !!this.getActiveLadderInfo();
   }
 
-  private isAtLadderTop() {
-    if (!this.player || !this.ladders) return false;
+  private getActiveLadderInfo(): LadderInfo | null {
+    if (!this.player || !this.ladders) return null;
     const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
-    const playerRect = new Phaser.Geom.Rectangle(playerBody.x, playerBody.y, playerBody.width, playerBody.height);
+    const playerRect = new Phaser.Geom.Rectangle(playerBody.x - 8, playerBody.y, playerBody.width + 16, playerBody.height);
+    const ladders = this.ladders.getChildren()
+      .map((ladder) => {
+        const ladderBody = (ladder as Phaser.Physics.Arcade.Image).body as Phaser.Physics.Arcade.StaticBody;
+        const ladderRect = new Phaser.Geom.Rectangle(ladderBody.x, ladderBody.y, ladderBody.width, ladderBody.height);
+        return { ladder, ladderBody, ladderRect };
+      })
+      .filter(({ ladderRect }) => Phaser.Geom.Intersects.RectangleToRectangle(playerRect, ladderRect))
+      .sort((a, b) => Math.abs(a.ladderBody.center.x - playerBody.center.x) - Math.abs(b.ladderBody.center.x - playerBody.center.x));
 
-    return this.ladders.getChildren().some((ladder) => {
-      const ladderBody = (ladder as Phaser.Physics.Arcade.Image).body as Phaser.Physics.Arcade.StaticBody;
-      const ladderRect = new Phaser.Geom.Rectangle(ladderBody.x, ladderBody.y, ladderBody.width, ladderBody.height);
-      if (!Phaser.Geom.Intersects.RectangleToRectangle(playerRect, ladderRect)) return false;
-      return playerBody.bottom <= ladderBody.top + 18;
-    });
+    const active = ladders[0];
+    if (!active) return null;
+    const ladderObject = active.ladder as Phaser.Physics.Arcade.Image;
+    return {
+      top: (ladderObject.getData('top') as number | undefined) ?? active.ladderBody.top,
+      bottom: (ladderObject.getData('bottom') as number | undefined) ?? active.ladderBody.bottom,
+      centerX: active.ladderBody.center.x
+    };
+  }
+
+  private isAtLadderTop(ladderInfo = this.getActiveLadderInfo()) {
+    if (!this.player || !ladderInfo) return false;
+    const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
+    return playerBody.bottom <= ladderInfo.top + 20;
+  }
+
+  private isAtLadderBottom(ladderInfo = this.getActiveLadderInfo()) {
+    if (!this.player || !ladderInfo) return false;
+    const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
+    return playerBody.bottom >= ladderInfo.bottom - 12;
   }
 
   private handleTouchControl = (event: Event) => {
@@ -229,9 +259,13 @@ export class PortfolioScene extends Phaser.Scene {
     const ladders = this.physics.add.staticGroup();
     const springs = this.physics.add.staticGroup();
     const collectibles = this.physics.add.staticGroup();
-    const hazards = this.physics.add.staticGroup();
+    const hazards = this.physics.add.group({
+      allowGravity: true,
+      collideWorldBounds: false
+    });
     const blocks = this.physics.add.staticGroup();
     this.ladders = ladders;
+    this.hazards = hazards;
     this.lastSafePosition = { ...spawnPoint };
 
     portfolioTimeline.forEach((milestone, index) => {
@@ -260,6 +294,7 @@ export class PortfolioScene extends Phaser.Scene {
     this.cameras.main.scrollX = 0;
 
     this.physics.add.collider(this.player, solids);
+    this.physics.add.collider(hazards, solids);
     this.physics.add.collider(this.player, blocks, this.tryOpenMilestone, undefined, this);
     this.physics.add.overlap(this.player, collectibles, this.collectSkillItem, undefined, this);
     this.physics.add.overlap(this.player, hazards, this.hitHazard, undefined, this);
@@ -288,6 +323,9 @@ export class PortfolioScene extends Phaser.Scene {
   }
 
   private getSegmentLayout(index: number): SegmentLayout {
+    // 수작업 포인트:
+    // 챕터별 ! 블록 기준 위치와 몬스터 배치 기준을 바꾸고 싶으면 이 profiles 값을 먼저 조정하세요.
+    // 실제 샘플맵 이미지는 반복 렌더링되지만, milestone block과 hazard는 이 layout 좌표를 기준으로 붙습니다.
     const startX = index * segmentWidth;
     const centerX = startX + 270;
     const profiles = [
@@ -374,6 +412,8 @@ export class PortfolioScene extends Phaser.Scene {
     sampleMap: KenneySampleMap
   ) {
     // Kenney 샘플 타일맵에서 1x1 타일 단위의 충돌/아이템/사다리/스프링을 생성합니다.
+    // 화면에 보이는 타일과 물리 충돌체는 별개입니다.
+    // 특정 장식이 밟히거나, 밟아야 할 타일이 통과되면 아래 isWalkableFrame/isLadderFrame 계열을 먼저 확인하세요.
     const chunkIndex = this.getSampleChunkIndex(layout.startX);
     if (this.physicsSampleChunks.has(chunkIndex)) return;
     this.physicsSampleChunks.add(chunkIndex);
@@ -382,6 +422,7 @@ export class PortfolioScene extends Phaser.Scene {
     const tileSize = sampleMap.tileWidth * scale;
     const originX = chunkIndex * sampleChunkWidth + 18;
     const originY = 10;
+    const ladderTiles: Array<{ x: number; y: number }> = [];
 
     sampleMap.layers.forEach((layer, layerIndex) => {
       layer.tiles.forEach((frame, tileIndex) => {
@@ -411,8 +452,7 @@ export class PortfolioScene extends Phaser.Scene {
         }
 
         if (this.isLadderFrame(frame)) {
-          const ladder = ladders.create(x + tileSize / 2, y + tileSize / 2, 'tile:block') as Phaser.Physics.Arcade.Image;
-          ladder.setDisplaySize(tileSize * 0.95, tileSize * 1.12).setVisible(false).refreshBody();
+          ladderTiles.push({ x, y });
           return;
         }
 
@@ -425,6 +465,48 @@ export class PortfolioScene extends Phaser.Scene {
         body.checkCollision.left = false;
         body.checkCollision.right = false;
       });
+    });
+
+    this.createMergedLadders(ladders, ladderTiles, tileSize);
+  }
+
+  private createMergedLadders(
+    ladders: Phaser.Physics.Arcade.StaticGroup,
+    ladderTiles: Array<{ x: number; y: number }>,
+    tileSize: number
+  ) {
+    // 사다리 감지는 개별 타일마다 만들면 맨 위/맨 아래 판정이 흔들립니다.
+    // 같은 x좌표의 사다리 타일을 하나의 긴 감지 영역으로 합쳐서 안정적으로 오르내리게 합니다.
+    const byColumn = new Map<number, number[]>();
+    ladderTiles.forEach(({ x, y }) => {
+      const key = Math.round(x);
+      byColumn.set(key, [...(byColumn.get(key) ?? []), y]);
+    });
+
+    byColumn.forEach((ys, x) => {
+      const sorted = [...new Set(ys.map((y) => Math.round(y)))].sort((a, b) => a - b);
+      let runStart = sorted[0];
+      let previous = sorted[0];
+
+      const createRun = (start: number, end: number) => {
+        const height = end - start + tileSize;
+        const ladder = ladders.create(x + tileSize / 2, start + height / 2, 'tile:block') as Phaser.Physics.Arcade.Image;
+        ladder
+          .setDisplaySize(tileSize * 1.15, height + tileSize * 0.75)
+          .setVisible(false)
+          .setData('top', start)
+          .setData('bottom', end + tileSize)
+          .refreshBody();
+      };
+
+      sorted.slice(1).forEach((y) => {
+        if (y - previous > tileSize * 1.2) {
+          createRun(runStart, previous);
+          runStart = y;
+        }
+        previous = y;
+      });
+      if (sorted.length) createRun(runStart, previous);
     });
   }
 
@@ -471,6 +553,8 @@ export class PortfolioScene extends Phaser.Scene {
   }
 
   private isWalkableFrame(frame: number) {
+    // 밟을 수 있는 타일 frame만 아주 보수적으로 등록합니다.
+    // 범위를 넓게 잡으면 문, 줄, 장식, 아이템까지 바닥처럼 인식될 수 있으니 한 번에 많이 추가하지 마세요.
     return (
       (frame >= 0 && frame <= 3) ||
       (frame >= 20 && frame <= 23) ||
@@ -516,18 +600,54 @@ export class PortfolioScene extends Phaser.Scene {
   private drawPortfolioHazard(
     theme: string,
     layout: SegmentLayout,
-    hazards: Phaser.Physics.Arcade.StaticGroup
+    hazards: Phaser.Physics.Arcade.Group
   ) {
+    // 몬스터는 동적 물리 body입니다. minX/maxX 안에서 걷고, solids와 충돌하며 중력을 받습니다.
+    // 박혀 보이면 hazardY를 올리거나 configureHazard의 setSize/setOffset을 조정하세요.
     const texture = theme === 'lab' ? 'char:robotA' : theme === 'australia' ? 'char:enemyB' : 'char:enemyA';
-    const hazard = hazards.create(layout.hazardX, layout.hazardY, texture) as Phaser.Physics.Arcade.Image;
+    const hazard = hazards.create(layout.hazardX, layout.hazardY - 70, texture) as Phaser.Physics.Arcade.Image;
+    hazard
+      .setData('minX', layout.centerX + 120)
+      .setData('maxX', layout.centerX + 410)
+      .setData('speed', theme === 'lab' ? 58 : 44)
+      .setData('direction', -1);
     this.configureHazard(hazard, theme === 'lab' ? 2.4 : 2.2);
   }
 
   private configureHazard(hazard: Phaser.Physics.Arcade.Image, scale: number) {
     hazard.setScale(scale);
-    hazard.setSize(12, 12);
-    hazard.setOffset(4, 6);
-    hazard.refreshBody();
+    hazard.setSize(12, 13);
+    hazard.setOffset(4, 5);
+    hazard.setVelocityX(-((hazard.getData('speed') as number | undefined) ?? 44));
+    hazard.setBounce(0);
+    hazard.setDepth(9);
+    hazard.setCollideWorldBounds(false);
+  }
+
+  private updateHazards() {
+    // 몬스터 순찰 루프입니다.
+    // 각 몬스터는 data(minX, maxX, speed, direction)를 갖고 있고, 벽이나 범위 끝에서 방향을 바꿉니다.
+    if (!this.hazards) return;
+    this.hazards.getChildren().forEach((hazardObject) => {
+      const hazard = hazardObject as Phaser.Physics.Arcade.Image;
+      if (!hazard.active) return;
+      const body = hazard.body as Phaser.Physics.Arcade.Body;
+      const minX = (hazard.getData('minX') as number | undefined) ?? hazard.x - 80;
+      const maxX = (hazard.getData('maxX') as number | undefined) ?? hazard.x + 80;
+      const speed = (hazard.getData('speed') as number | undefined) ?? 44;
+      let direction = (hazard.getData('direction') as number | undefined) ?? -1;
+
+      if (hazard.x <= minX || body.blocked.left) direction = 1;
+      if (hazard.x >= maxX || body.blocked.right) direction = -1;
+      if (hazard.y > viewHeight + 80) {
+        hazard.setPosition(Phaser.Math.Clamp(hazard.x, minX + 16, maxX - 16), 250);
+        hazard.setVelocityY(0);
+      }
+
+      hazard.setData('direction', direction);
+      hazard.setVelocityX(direction * speed);
+      hazard.setFlipX(direction > 0);
+    });
   }
 
   private tryOpenMilestone: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = (_playerObject, blockObject) => {
@@ -598,6 +718,8 @@ export class PortfolioScene extends Phaser.Scene {
   }
 
   private respawnPlayer() {
+    // 플레이어가 화면 아래로 떨어지면 마지막으로 저장한 안전 위치에서 다시 시작합니다.
+    // 리스폰이 낮으면 update()의 lastSafePosition y 보정값을 더 키우세요.
     if (!this.player) return;
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     this.player.setPosition(this.lastSafePosition.x, this.lastSafePosition.y);

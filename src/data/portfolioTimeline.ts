@@ -25,6 +25,12 @@ export const profile = {
     email: 'contact@example.com',
     note: 'Available for backend developer, web developer, system engineer, network engineer roles.'
   },
+  links: [
+    // Recruiter Mode와 마지막 Contact 팝업에 노출되는 외부 링크입니다.
+    // 새 사이드프로젝트나 배포 사이트가 생기면 여기에 { label, url } 형태로 추가하세요.
+    { label: 'Side projects: Aussie Pus', url: 'https://aussie-pus.pages.dev/' },
+    { label: 'GitHub: amaranth92', url: 'https://github.com/amaranth92' }
+  ],
   ko: {
     name: '백엔드 / 웹 개발자',
     headline: '안정성을 중요시하며 최신 기술을 꾸준히 학습하는 개발자',
@@ -238,7 +244,9 @@ export const portfolioTimeline: PortfolioMilestone[] = [
     details: [
       'Core stack: Java, Spring Boot, React, JavaScript, MyBatis, MSSQL, Oracle, PostgreSQL and AWS.',
       'Open to backend developer, web developer, system engineer and related software roles.',
-      'Use Recruiter Mode for the full scrollable portfolio without gameplay.'
+      'Use Recruiter Mode for the full scrollable portfolio without gameplay.',
+      'Side project games: https://aussie-pus.pages.dev/',
+      'GitHub: https://github.com/amaranth92'
     ],
     skills: ['Jenkins', 'Jira', 'GitHub', 'JSON', 'XML', 'MyBatis'],
     ko: {
@@ -248,7 +256,9 @@ export const portfolioTimeline: PortfolioMilestone[] = [
       details: [
         '주요 스택은 Java, Spring Boot, React, JavaScript, MyBatis, MSSQL, Oracle, PostgreSQL, AWS입니다.',
         '백엔드 개발자, 웹 개발자, 시스템 엔지니어 등 소프트웨어 직무를 희망합니다.',
-        '전체 이력은 이력서 모드에서 게임 없이 스크롤 문서로 확인할 수 있습니다.'
+        '전체 이력은 이력서 모드에서 게임 없이 스크롤 문서로 확인할 수 있습니다.',
+        '사이드프로젝트 게임: https://aussie-pus.pages.dev/',
+        'GitHub: https://github.com/amaranth92'
       ]
     }
   }
