@@ -1,4 +1,4 @@
-const base = `${import.meta.env.BASE_URL}assets/kenney/pixel-platformer`;
+const base = new URL(`${import.meta.env.BASE_URL}assets/kenney/pixel-platformer`, window.location.href).toString().replace(/\/$/, '');
 
 export const assetManifest = {
   base,
