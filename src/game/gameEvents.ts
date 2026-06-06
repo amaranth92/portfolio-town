@@ -14,6 +14,8 @@ export type SkillsEvent = {
 };
 
 class GameEvents extends EventTarget {
+  // React와 Phaser는 서로의 객체 수명주기를 모릅니다.
+  // 이 EventTarget을 경계로 삼아 payload만 주고받으면 Phaser 재생성, React rerender, 팝업 pause/resume이 서로 덜 엉킵니다.
   // Phaser -> React: 플레이어가 ! 블록을 열었을 때 팝업에 표시할 마일스톤을 전달합니다.
   emitMilestoneOpen(payload: MilestoneOpenEvent) {
     this.dispatchEvent(new CustomEvent<MilestoneOpenEvent>('milestone-open', { detail: payload }));

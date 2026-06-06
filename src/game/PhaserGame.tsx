@@ -21,6 +21,8 @@ export function PhaserGame() {
   const [gameSize, setGameSize] = useState(getGameSize);
 
   useEffect(() => {
+    // 데스크톱/모바일 breakpoint가 바뀌면 캔버스 비율 자체가 달라집니다.
+    // CSS scale만 바꾸지 않고 Phaser 인스턴스를 재생성해 카메라 bounds와 물리 world size를 함께 맞춥니다.
     const media = window.matchMedia('(min-width: 900px)');
     const syncSize = () => setGameSize(getGameSize());
 
