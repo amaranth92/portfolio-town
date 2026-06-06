@@ -24,8 +24,11 @@ type SegmentLayout = {
 };
 
 const segmentWidth = 540;
-const worldWidth = 280 + portfolioTimeline.length * segmentWidth;
 const viewHeight = 640;
+const sampleScale = 2;
+const sampleChunkWidth = kenneySampleMaps.sampleA.width * kenneySampleMaps.sampleA.tileWidth * sampleScale;
+const timelineWorldWidth = 280 + portfolioTimeline.length * segmentWidth;
+const worldWidth = Math.ceil(timelineWorldWidth / sampleChunkWidth) * sampleChunkWidth;
 const baseBackdrop = { sky: 0xd9f2f1, haze: 0xffffff, water: 0x69c8dd };
 const spawnPoint = { x: 126, y: 250 };
 
@@ -59,8 +62,11 @@ export class PortfolioScene extends Phaser.Scene {
   private shadow?: Phaser.GameObjects.Ellipse;
   private renderedSampleChunks = new Set<number>();
   private physicsSampleChunks = new Set<number>();
+  private sampleCollectibleVisuals = new Map<string, Phaser.GameObjects.Image>();
   private ladders?: Phaser.Physics.Arcade.StaticGroup;
   private isClimbing = false;
+  private lastSpringAt = -Infinity;
+  private lastSafePosition = { ...spawnPoint };
 
   constructor() {
     super('PortfolioScene');
@@ -115,7 +121,9 @@ export class PortfolioScene extends Phaser.Scene {
     const dt = Math.min(delta / 1000, 0.033);
     const grounded = body.blocked.down || body.touching.down;
     const onLadder = this.isPlayerOnLadder();
-    const climbUp = onLadder && (this.cursors.up.isDown || this.keys.jump.isDown || this.jumpHeld);
+    const ladderTopJumpable = this.isAtLadderTop();
+    const ladderLocksPlayer = onLadder && !ladderTopJumpable;
+    const climbUp = ladderLocksPlayer && (this.cursors.up.isDown || this.keys.jump.isDown || this.jumpHeld);
     const climbDown = onLadder && this.cursors.down.isDown;
     this.isClimbing = climbUp || climbDown;
 
@@ -130,8 +138,8 @@ export class PortfolioScene extends Phaser.Scene {
       if (Math.abs(body.velocity.x) < 8) this.player.setVelocityX(0);
     }
 
-    body.allowGravity = !onLadder;
-    if (onLadder) {
+    body.allowGravity = !ladderLocksPlayer;
+    if (ladderLocksPlayer) {
       if (climbUp) {
         this.player.setVelocityY(-135);
         this.jumpQueuedAt = -Infinity;
@@ -143,15 +151,20 @@ export class PortfolioScene extends Phaser.Scene {
     }
 
     if (grounded) this.lastGroundedAt = time;
-    if (!onLadder) {
+    if (!ladderLocksPlayer) {
       if (this.jumpHeld && time - this.jumpQueuedAt > 260) this.jumpQueuedAt = time;
       if (time - this.jumpQueuedAt < 180 && time - this.lastGroundedAt < 130) this.performJump();
       if (!grounded && body.velocity.y < -80 && !this.jumpHeld) this.player.setVelocityY(body.velocity.y * 0.94);
     }
 
+    if (grounded && this.player.y < 590) {
+      this.lastSafePosition = { x: this.player.x, y: this.player.y - 8 };
+    }
+
     if (this.player.y > 620) {
-      this.player.setPosition(Math.max(spawnPoint.x, this.player.x - 120), spawnPoint.y);
+      this.player.setPosition(this.lastSafePosition.x, this.lastSafePosition.y);
       this.player.setVelocity(0, 0);
+      body.allowGravity = true;
     }
 
     this.updateCurrentMilestone();
@@ -170,8 +183,22 @@ export class PortfolioScene extends Phaser.Scene {
     });
   }
 
+  private isAtLadderTop() {
+    if (!this.player || !this.ladders) return false;
+    const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
+    const playerRect = new Phaser.Geom.Rectangle(playerBody.x, playerBody.y, playerBody.width, playerBody.height);
+
+    return this.ladders.getChildren().some((ladder) => {
+      const ladderBody = (ladder as Phaser.Physics.Arcade.Image).body as Phaser.Physics.Arcade.StaticBody;
+      const ladderRect = new Phaser.Geom.Rectangle(ladderBody.x, ladderBody.y, ladderBody.width, ladderBody.height);
+      if (!Phaser.Geom.Intersects.RectangleToRectangle(playerRect, ladderRect)) return false;
+      return playerBody.bottom <= ladderBody.top + 18;
+    });
+  }
+
   private handleTouchControl = (event: Event) => {
     const detail = (event as CustomEvent<{ control: string; pressed: boolean }>).detail;
+    // React 터치 버튼의 pressed 상태를 프레임별 이동 플래그로 보관합니다.
     this.moveLeft = detail.control === 'left' ? detail.pressed : this.moveLeft;
     this.moveRight = detail.control === 'right' ? detail.pressed : this.moveRight;
     this.jumpHeld = detail.control === 'jump' ? detail.pressed : this.jumpHeld;
@@ -179,7 +206,7 @@ export class PortfolioScene extends Phaser.Scene {
   };
 
   private jump() {
-    if (this.isPlayerOnLadder()) return;
+    if (this.isPlayerOnLadder() && !this.isAtLadderTop()) return;
     this.jumpQueuedAt = this.time.now;
   }
 
@@ -197,23 +224,33 @@ export class PortfolioScene extends Phaser.Scene {
     this.children.removeAll();
     this.renderedSampleChunks.clear();
     this.physicsSampleChunks.clear();
+    this.sampleCollectibleVisuals.clear();
 
     const solids = this.physics.add.staticGroup();
     const ladders = this.physics.add.staticGroup();
+    const springs = this.physics.add.staticGroup();
     const collectibles = this.physics.add.staticGroup();
     const hazards = this.physics.add.staticGroup();
     const blocks = this.physics.add.staticGroup();
     this.ladders = ladders;
+    this.lastSafePosition = { ...spawnPoint };
 
     portfolioTimeline.forEach((milestone, index) => {
       const layout = this.getSegmentLayout(index);
       const theme = themes[milestone.chapterTheme];
       const sampleMap = this.getSampleMapForLayout(layout);
       this.drawSegmentBackground(theme, milestone.chapterTheme, layout);
-      this.createSamplePhysics(solids, ladders, layout, sampleMap);
+      this.createSamplePhysics(solids, ladders, springs, collectibles, layout, sampleMap);
       this.createSampleMilestoneBlock(blocks, layout, sampleMap, index);
-      this.drawPortfolioItems(milestone.chapterTheme, layout, collectibles, hazards, index);
+      this.drawPortfolioHazard(milestone.chapterTheme, layout, hazards);
     });
+
+    for (let chunkIndex = 0; chunkIndex < Math.ceil(worldWidth / sampleChunkWidth); chunkIndex += 1) {
+      const layout = this.getSampleChunkLayout(chunkIndex);
+      const sampleMap = this.getSampleMapForLayout(layout);
+      this.drawKenneySampleChunk(layout, sampleMap);
+      this.createSamplePhysics(solids, ladders, springs, collectibles, layout, sampleMap);
+    }
 
     this.shadow = this.add.ellipse(spawnPoint.x, 316, 42, 12, 0x25313a, 0.22).setDepth(8);
     this.player = this.physics.add.sprite(spawnPoint.x, spawnPoint.y, 'char:player').setScale(2.25).setDepth(10);
@@ -227,6 +264,7 @@ export class PortfolioScene extends Phaser.Scene {
     this.physics.add.collider(this.player, blocks, this.tryOpenMilestone, undefined, this);
     this.physics.add.overlap(this.player, collectibles, this.collectSkillItem, undefined, this);
     this.physics.add.overlap(this.player, hazards, this.hitHazard, undefined, this);
+    this.physics.add.overlap(this.player, springs, this.hitSpring, undefined, this);
 
     this.chapterIndex = 0;
     gameEvents.emitChapter(0);
@@ -234,10 +272,20 @@ export class PortfolioScene extends Phaser.Scene {
   }
 
   private getSampleMapForLayout(layout: SegmentLayout) {
-    const chunkIndex = Math.floor(layout.startX / (segmentWidth * 2));
-    const firstIndex = chunkIndex * 2;
-    const chunkMilestones = portfolioTimeline.slice(firstIndex, firstIndex + 2);
-    return chunkMilestones.some((milestone) => milestone.chapterTheme === 'australia') ? kenneySampleMaps.sampleB : kenneySampleMaps.sampleA;
+    const chunkIndex = this.getSampleChunkIndex(layout.startX);
+    const chunkStart = chunkIndex * sampleChunkWidth;
+    const chunkEnd = chunkStart + sampleChunkWidth;
+    const hasAustraliaMilestone = portfolioTimeline.some((milestone, index) => {
+      if (milestone.chapterTheme !== 'australia') return false;
+      const segmentStart = index * segmentWidth;
+      const segmentEnd = segmentStart + segmentWidth;
+      return segmentStart < chunkEnd && segmentEnd > chunkStart;
+    });
+    return hasAustraliaMilestone ? kenneySampleMaps.sampleB : kenneySampleMaps.sampleA;
+  }
+
+  private getSampleChunkIndex(worldX: number) {
+    return Math.floor(worldX / sampleChunkWidth);
   }
 
   private getSegmentLayout(index: number): SegmentLayout {
@@ -268,6 +316,21 @@ export class PortfolioScene extends Phaser.Scene {
     };
   }
 
+  private getSampleChunkLayout(chunkIndex: number): SegmentLayout {
+    const startX = chunkIndex * sampleChunkWidth;
+    return {
+      startX,
+      centerX: startX + sampleChunkWidth / 2,
+      blockX: startX + sampleChunkWidth / 2,
+      blockY: 0,
+      ledgeX: startX,
+      ledgeY: 0,
+      coins: [],
+      hazardX: startX,
+      hazardY: 0
+    };
+  }
+
   private drawSegmentBackground(theme: Theme, name: string, layout: SegmentLayout) {
     const isAustralia = name === 'australia';
     const sky = isAustralia ? theme.sky : baseBackdrop.sky;
@@ -278,12 +341,12 @@ export class PortfolioScene extends Phaser.Scene {
   }
 
   private drawKenneySampleChunk(layout: SegmentLayout, sampleMap: KenneySampleMap) {
-    const chunkIndex = Math.floor(layout.startX / (segmentWidth * 2));
+    const chunkIndex = this.getSampleChunkIndex(layout.startX);
     if (this.renderedSampleChunks.has(chunkIndex)) return;
     this.renderedSampleChunks.add(chunkIndex);
 
-    const scale = 2;
-    const originX = chunkIndex * segmentWidth * 2 + 18;
+    const scale = sampleScale;
+    const originX = chunkIndex * sampleChunkWidth + 18;
     const originY = 10;
 
     sampleMap.layers.forEach((layer, layerIndex) => {
@@ -291,11 +354,14 @@ export class PortfolioScene extends Phaser.Scene {
         if (frame < 0) return;
         const col = tileIndex % sampleMap.width;
         const row = Math.floor(tileIndex / sampleMap.width);
-        this.add
+        const image = this.add
           .image(originX + col * sampleMap.tileWidth * scale, originY + row * sampleMap.tileHeight * scale, 'tilemap:tiles', frame)
           .setOrigin(0, 0)
           .setScale(scale)
           .setDepth(-9 + layerIndex);
+        if (this.isSampleCollectibleFrame(frame)) {
+          this.sampleCollectibleVisuals.set(this.getSampleTileKey(chunkIndex, layerIndex, col, row, frame), image.setDepth(3));
+        }
       });
     });
   }
@@ -303,26 +369,47 @@ export class PortfolioScene extends Phaser.Scene {
   private createSamplePhysics(
     solids: Phaser.Physics.Arcade.StaticGroup,
     ladders: Phaser.Physics.Arcade.StaticGroup,
+    springs: Phaser.Physics.Arcade.StaticGroup,
+    collectibles: Phaser.Physics.Arcade.StaticGroup,
     layout: SegmentLayout,
     sampleMap: KenneySampleMap
   ) {
-    // Kenney 샘플 타일맵에서 실제로 밟을 수 있는 상단 타일만 얇은 충돌체로 변환합니다.
-    const chunkIndex = Math.floor(layout.startX / (segmentWidth * 2));
+    // Kenney 샘플 타일맵에서 1x1 타일 단위의 충돌/아이템/사다리/스프링을 생성합니다.
+    const chunkIndex = this.getSampleChunkIndex(layout.startX);
     if (this.physicsSampleChunks.has(chunkIndex)) return;
     this.physicsSampleChunks.add(chunkIndex);
 
-    const scale = 2;
+    const scale = sampleScale;
     const tileSize = sampleMap.tileWidth * scale;
-    const originX = chunkIndex * segmentWidth * 2 + 18;
+    const originX = chunkIndex * sampleChunkWidth + 18;
     const originY = 10;
 
-    sampleMap.layers.forEach((layer) => {
+    sampleMap.layers.forEach((layer, layerIndex) => {
       layer.tiles.forEach((frame, tileIndex) => {
         if (frame < 0) return;
         const col = tileIndex % sampleMap.width;
         const row = Math.floor(tileIndex / sampleMap.width);
         const x = originX + col * tileSize;
         const y = originY + row * tileSize;
+
+        if (this.isSampleCollectibleFrame(frame)) {
+          const item = collectibles.create(x + tileSize / 2, y + tileSize / 2, 'tile:block') as Phaser.Physics.Arcade.Image;
+          item
+            .setDisplaySize(tileSize * 0.72, tileSize * 0.72)
+            .setVisible(false)
+            .setData('kind', this.getSampleCollectibleKind(frame))
+            .setData('milestoneIndex', this.getMilestoneIndexForWorldX(x))
+            .setData('skillIndex', this.getSkillIndexForSampleCollectible(frame, col, row))
+            .setData('visualKey', this.getSampleTileKey(chunkIndex, layerIndex, col, row, frame))
+            .refreshBody();
+          return;
+        }
+
+        if (this.isSpringFrame(frame)) {
+          const spring = springs.create(x + tileSize / 2, y + tileSize / 2, 'tile:block') as Phaser.Physics.Arcade.Image;
+          spring.setDisplaySize(tileSize * 0.9, tileSize * 0.55).setVisible(false).refreshBody();
+          return;
+        }
 
         if (this.isLadderFrame(frame)) {
           const ladder = ladders.create(x + tileSize / 2, y + tileSize / 2, 'tile:block') as Phaser.Physics.Arcade.Image;
@@ -332,8 +419,8 @@ export class PortfolioScene extends Phaser.Scene {
 
         if (!this.isWalkableFrame(frame) || this.hasWalkableAbove(sampleMap, col, row)) return;
 
-        const platform = solids.create(x + tileSize / 2, y + 5, 'tile:block') as Phaser.Physics.Arcade.Image;
-        platform.setDisplaySize(tileSize, 10).setVisible(false).refreshBody();
+        const platform = solids.create(x + tileSize / 2, y + 6, 'tile:block') as Phaser.Physics.Arcade.Image;
+        platform.setDisplaySize(tileSize, 12).setVisible(false).refreshBody();
         const body = platform.body as Phaser.Physics.Arcade.StaticBody;
         body.checkCollision.down = false;
         body.checkCollision.left = false;
@@ -353,14 +440,14 @@ export class PortfolioScene extends Phaser.Scene {
     if (!blockPosition) return;
 
     const block = blocks.create(blockPosition.x, blockPosition.y, 'tile:question') as Phaser.Physics.Arcade.Image;
-    block.setScale(2).setSize(18, 18).setVisible(false).setData('milestoneIndex', milestoneIndex).refreshBody();
+    block.setDisplaySize(42, 42).setVisible(false).setData('milestoneIndex', milestoneIndex).refreshBody();
   }
 
   private findSampleFramePosition(layout: SegmentLayout, sampleMap: KenneySampleMap, frameToFind: number) {
-    const chunkIndex = Math.floor(layout.startX / (segmentWidth * 2));
-    const scale = 2;
+    const chunkIndex = this.getSampleChunkIndex(layout.startX);
+    const scale = sampleScale;
     const tileSize = sampleMap.tileWidth * scale;
-    const originX = chunkIndex * segmentWidth * 2 + 18;
+    const originX = chunkIndex * sampleChunkWidth + 18;
     const originY = 10;
     const candidates: Array<{ x: number; y: number; distance: number }> = [];
 
@@ -393,6 +480,7 @@ export class PortfolioScene extends Phaser.Scene {
       (frame >= 60 && frame <= 63) ||
       (frame >= 80 && frame <= 83) ||
       (frame >= 89 && frame <= 91) ||
+      (frame >= 96 && frame <= 99) ||
       (frame >= 100 && frame <= 103) ||
       (frame >= 129 && frame <= 132) ||
       (frame >= 149 && frame <= 151)
@@ -403,21 +491,39 @@ export class PortfolioScene extends Phaser.Scene {
     return frame === 51 || frame === 71;
   }
 
-  private drawPortfolioItems(
+  private isSpringFrame(frame: number) {
+    return frame === 107 || frame === 108;
+  }
+
+  private isSampleCollectibleFrame(frame: number) {
+    return frame === 27 || frame === 67 || frame === 151 || frame === 152 || frame === 153;
+  }
+
+  private getSampleCollectibleKind(frame: number) {
+    if (frame === 27) return 'key';
+    if (frame === 67) return 'diamond';
+    return 'coin';
+  }
+
+  private getSkillIndexForSampleCollectible(frame: number, col: number, row: number) {
+    if (frame === 27) return 0;
+    if (frame === 67) return 1;
+    return (col + row) % 3;
+  }
+
+  private getMilestoneIndexForWorldX(x: number) {
+    return Phaser.Math.Clamp(Math.floor((x + segmentWidth * 0.35) / segmentWidth), 0, portfolioTimeline.length - 1);
+  }
+
+  private getSampleTileKey(chunkIndex: number, layerIndex: number, col: number, row: number, frame: number) {
+    return `${chunkIndex}:${layerIndex}:${col}:${row}:${frame}`;
+  }
+
+  private drawPortfolioHazard(
     theme: string,
     layout: SegmentLayout,
-    collectibles: Phaser.Physics.Arcade.StaticGroup,
-    hazards: Phaser.Physics.Arcade.StaticGroup,
-    index: number
+    hazards: Phaser.Physics.Arcade.StaticGroup
   ) {
-    const key = collectibles.create(layout.centerX + 360, 378, 'tile:key') as Phaser.Physics.Arcade.Image;
-    key.setScale(2.1).setData('kind', 'key').setData('milestoneIndex', index).refreshBody();
-
-    layout.coins.forEach((coin, coinIndex) => {
-      const item = collectibles.create(coin.x, coin.y, coinIndex % 2 ? 'tile:coinB' : 'tile:coinA') as Phaser.Physics.Arcade.Image;
-      item.setScale(2.2).setData('skillIndex', coin.skillIndex).setData('milestoneIndex', index).refreshBody();
-    });
-
     const texture = theme === 'lab' ? 'char:robotA' : theme === 'australia' ? 'char:enemyB' : 'char:enemyA';
     const hazard = hazards.create(layout.hazardX, layout.hazardY, texture) as Phaser.Physics.Arcade.Image;
     this.configureHazard(hazard, theme === 'lab' ? 2.4 : 2.2);
@@ -450,25 +556,37 @@ export class PortfolioScene extends Phaser.Scene {
 
   private collectSkillItem: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = (_playerObject, itemObject) => {
     const item = itemObject as Phaser.Physics.Arcade.Image;
-    if (!item.visible) return;
+    if (!item.active) return;
 
     const milestoneIndex = (item.getData('milestoneIndex') as number | undefined) ?? this.chapterIndex;
     const milestone = portfolioTimeline[milestoneIndex];
     const kind = item.getData('kind') as string | undefined;
-
-    if (kind === 'key') {
-      this.floatLabel(item.x, item.y - 18, this.viewedIds.has(milestone.id) ? this.reviewedMessage() : this.hitBlockMessage());
-      if (this.viewedIds.has(milestone.id)) item.destroy();
-      return;
-    }
-
     const skillIndex = (item.getData('skillIndex') as number | undefined) ?? 0;
     const skill = milestone.skills[skillIndex % milestone.skills.length];
+    const visualKey = item.getData('visualKey') as string | undefined;
+    const visual = visualKey ? this.sampleCollectibleVisuals.get(visualKey) : undefined;
+
     // 수집된 기술은 Set에 누적한 뒤 HUD에 다시 발행합니다.
     this.skills.add(skill);
     this.emitSkills();
-    this.floatLabel(item.x, item.y - 18, skill);
+    this.floatLabel(item.x, item.y - 18, kind === 'diamond' ? `${skill} + gem` : kind === 'key' ? `${skill} + key` : skill);
+    visual?.destroy();
+    if (visualKey) this.sampleCollectibleVisuals.delete(visualKey);
     item.destroy();
+  };
+
+  private hitSpring: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = (_playerObject, springObject) => {
+    if (!this.player || this.milestoneOpen || this.scene.isPaused()) return;
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    const springBody = (springObject as Phaser.Physics.Arcade.Image).body as Phaser.Physics.Arcade.StaticBody;
+    const now = this.time.now;
+    if (now - this.lastSpringAt < 450 || body.velocity.y < -80) return;
+    if (body.bottom > springBody.top + 18) return;
+    this.lastSpringAt = now;
+    this.player.setVelocityY(-900 * 2.5);
+    this.squashUntil = now + 150;
+    this.addJumpPuff(this.player.x, this.player.y + 30);
+    this.floatLabel(this.player.x - 20, this.player.y - 52, navigator.language.toLowerCase().startsWith('ko') ? '점프 부스트' : 'Jump boost');
   };
 
   private hitHazard: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = () => {
@@ -483,14 +601,6 @@ export class PortfolioScene extends Phaser.Scene {
 
   private hazardMessage() {
     return navigator.language.toLowerCase().startsWith('ko') ? '장애물에 조심하세요' : 'Watch out for obstacles';
-  }
-
-  private hitBlockMessage() {
-    return navigator.language.toLowerCase().startsWith('ko') ? '! 블록을 치세요' : 'Hit the ! block';
-  }
-
-  private reviewedMessage() {
-    return navigator.language.toLowerCase().startsWith('ko') ? '확인 완료' : 'Reviewed';
   }
 
   private openMilestone(block: Phaser.Physics.Arcade.Image) {

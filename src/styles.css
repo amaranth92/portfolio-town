@@ -177,7 +177,7 @@ button {
   box-shadow: 3px 3px 0 var(--line);
   padding: 6px 8px 7px;
   min-width: 0;
-  max-height: 92px;
+  max-height: min(24dvh, 124px);
   overflow: hidden;
 }
 
@@ -199,8 +199,10 @@ button {
 }
 
 .skill-chips {
-  max-height: 58px;
+  max-height: min(16dvh, 88px);
   align-content: flex-start;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .skill-chips::-webkit-scrollbar,
@@ -218,6 +220,8 @@ button {
   font-size: 10px;
   font-style: normal;
   font-weight: 950;
+  max-width: 100%;
+  white-space: nowrap;
 }
 
 .game-layout {
@@ -459,21 +463,21 @@ button {
     background: rgba(255, 251, 238, 0.94);
     box-shadow: 4px 4px 0 var(--line);
     padding: 8px 10px 9px;
-    max-height: 104px;
+    max-height: min(18dvh, 132px);
   }
 
   .skill-chips {
-    max-height: 66px;
+    max-height: min(12dvh, 92px);
   }
 
   .game-layout {
     min-height: 100dvh;
-    padding: 104px 24px 112px;
+    padding: 104px 24px 172px;
   }
 
   .game-host {
     width: min(calc(100vw - 64px), 1060px);
-    height: min(calc((100vw - 64px) * 0.5625), calc(100dvh - 190px), 596px);
+    height: min(calc((100vw - 64px) * 0.5625), calc(100dvh - 260px), 596px);
     min-height: 420px;
     border-width: 4px;
     box-shadow: 7px 7px 0 var(--line);
@@ -489,9 +493,7 @@ button {
   }
 
   .control-hint {
-    top: auto;
-    bottom: 78px;
-    font-size: 13px;
+    display: none;
   }
 }
 
@@ -503,7 +505,7 @@ button {
 
   .game-host {
     width: min(72vw, 1120px);
-    height: min(40.5vw, calc(100dvh - 190px), 630px);
+    height: min(40.5vw, calc(100dvh - 260px), 630px);
   }
 }
 
