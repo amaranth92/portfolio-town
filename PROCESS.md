@@ -1,5 +1,22 @@
 # Portfolio Town 작업 프로세스
+ 
 
+## 유지보수 보강 메모
+
+### React와 Phaser 경계
+- `src/game/gameEvents.ts`는 React UI와 Phaser Scene 사이의 유일한 이벤트 버스입니다. Phaser 내부에서 React state를 직접 만지지 않고, React도 Phaser 객체에 직접 접근하지 않는 구조를 유지해야 씬 재생성/정리 시 이벤트가 꼬이지 않습니다.
+- 팝업은 Phaser가 `milestone-open`을 발행한 뒤 씬을 pause하고, React 팝업의 닫기 버튼이나 점프 입력이 `resume-game`을 발행해 다시 진행합니다. 새 닫기 동작을 추가할 때는 `activeMilestone` 상태와 Phaser pause/resume이 같은 이벤트에 묶여 있는지 확인하세요.
+- 모바일 조작은 `TouchControls`가 전역 `touch-control` 이벤트를 발행하고 `PortfolioScene`이 pressed 상태를 보관합니다. pointer cancel/leave를 누락하면 모바일에서 이동키가 계속 눌린 상태로 남을 수 있습니다.
+
+### Phaser 물리와 타일맵 주의사항
+- 보이는 타일과 실제 Arcade 충돌체는 분리되어 있습니다. `drawKenneySampleChunk()`는 렌더링만 담당하고, `createSamplePhysics()`가 `isWalkableFrame`, `isLadderFrame`, `isSpringFrame`, `isSampleCollectibleFrame` 기준으로 보이지 않는 충돌체를 만듭니다.
+- 사다리는 개별 타일 충돌체가 아니라 `createMergedLadders()`에서 같은 x축 타일을 긴 감지 영역으로 병합합니다. 사다리 꼭대기 점프/아래쪽 진입 판정이 흔들리면 병합 영역의 `top`, `bottom`, `centerX` 값을 먼저 확인하세요.
+- 몬스터는 `hazards` 그룹의 동적 body이며 `minX`, `maxX`, `speed`, `direction` data 값을 기준으로 순찰합니다. 타일 충돌 범위를 바꾸면 몬스터가 떨어지거나 벽에 박힐 수 있으니 `updateHazards()` 리스폰 조건도 같이 확인하세요.
+
+### 데이터/배포 주의사항
+- 이력 문구와 챕터 순서는 `portfolioTimeline`이 원본입니다. 챕터를 추가하면 `getSegmentLayout()` profile 반복, 수집 skill index, contact 링크 팝업 노출까지 함께 점검하세요.
+- GitHub Pages 배포는 `npm run build`로 만든 `dist/` 정적 파일을 `gh-pages` 브랜치에 반영하는 흐름입니다. Vite base path나 privacy policy 경로를 바꾸면 실제 Pages URL에서 새로고침 진입도 확인하세요.
+- 빠른 검증은 `npm run typecheck`, `npm run lint`, `npm run build` 순서가 좋습니다. Phaser 화면/모바일 조작 변경이 있으면 브라우저에서 데스크톱과 모바일 폭을 모두 확인하세요.
 이 프로젝트는 React UI 위에 Phaser 게임 레이어를 얹은 포트폴리오입니다.
 수작업으로 수정할 때는 먼저 데이터, UI, 게임 물리를 분리해서 생각하면 훨씬 덜 꼬입니다.
 
