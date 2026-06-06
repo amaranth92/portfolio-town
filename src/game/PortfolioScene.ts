@@ -391,6 +391,7 @@ export class PortfolioScene extends Phaser.Scene {
         if (frame < 0) return;
         const col = tileIndex % sampleMap.width;
         const row = Math.floor(tileIndex / sampleMap.width);
+        if (this.shouldHideSampleFrame(frame, col, row)) return;
         const image = this.add
           .image(originX + col * sampleMap.tileWidth * scale, originY + row * sampleMap.tileHeight * scale, 'tilemap:tiles', frame)
           .setOrigin(0, 0)
@@ -401,6 +402,22 @@ export class PortfolioScene extends Phaser.Scene {
         }
       });
     });
+
+    this.drawSampleVisualFixups(sampleMap, originX, originY, sampleMap.tileWidth * scale);
+  }
+
+  private shouldHideSampleFrame(frame: number, col: number, row: number) {
+    // 샘플맵 왼쪽 천장 아래에 떠 있는 새싹 장식은 사용자가 직접 표시한 어색한 구간이라 렌더링하지 않습니다.
+    return (frame === 124 || frame === 125) && col <= 2 && row <= 7;
+  }
+
+  private drawSampleVisualFixups(sampleMap: KenneySampleMap, originX: number, originY: number, tileSize: number) {
+    if (sampleMap !== kenneySampleMaps.sampleA) return;
+
+    // 샘플 A의 중앙 나무 가지가 중간에 비어 보이는 부분만 얇은 픽셀 라인으로 보강합니다.
+    // 큰 타일을 얹으면 과하게 뭉개져 보여서, 장식용 rectangle만 사용하고 물리는 부여하지 않습니다.
+    this.add.rectangle(originX + 14.9 * tileSize, originY + 8.42 * tileSize, tileSize * 1.3, 5, 0x8a5a44).setDepth(-4);
+    this.add.rectangle(originX + 14.25 * tileSize, originY + 8.2 * tileSize, tileSize * 0.75, 5, 0x8a5a44).setDepth(-4);
   }
 
   private createSamplePhysics(
@@ -456,10 +473,10 @@ export class PortfolioScene extends Phaser.Scene {
           return;
         }
 
-        if (!this.isWalkableFrame(frame) || this.hasWalkableAbove(sampleMap, col, row)) return;
+        if (!this.isWalkableFrame(frame, row) || this.hasWalkableAbove(sampleMap, col, row)) return;
 
         const platform = solids.create(x + tileSize / 2, y + 6, 'tile:block') as Phaser.Physics.Arcade.Image;
-        platform.setDisplaySize(tileSize, 12).setVisible(false).refreshBody();
+        platform.setDisplaySize(tileSize * 0.78, 9).setVisible(false).refreshBody();
         const body = platform.body as Phaser.Physics.Arcade.StaticBody;
         body.checkCollision.down = false;
         body.checkCollision.left = false;
@@ -549,10 +566,10 @@ export class PortfolioScene extends Phaser.Scene {
 
   private hasWalkableAbove(sampleMap: KenneySampleMap, col: number, row: number) {
     if (row <= 0) return false;
-    return sampleMap.layers.some((layer) => this.isWalkableFrame(layer.tiles[(row - 1) * sampleMap.width + col]));
+    return sampleMap.layers.some((layer) => this.isWalkableFrame(layer.tiles[(row - 1) * sampleMap.width + col], row - 1));
   }
 
-  private isWalkableFrame(frame: number) {
+  private isWalkableFrame(frame: number, row = 0) {
     // 밟을 수 있는 타일 frame만 아주 보수적으로 등록합니다.
     // 범위를 넓게 잡으면 문, 줄, 장식, 아이템까지 바닥처럼 인식될 수 있으니 한 번에 많이 추가하지 마세요.
     return (
@@ -560,6 +577,7 @@ export class PortfolioScene extends Phaser.Scene {
       (frame >= 20 && frame <= 25) ||
       (frame >= 40 && frame <= 43) ||
       (frame >= 60 && frame <= 63) ||
+      (row >= 8 && frame >= 121 && frame <= 123) ||
       frame === 96 ||
       frame === 97 ||
       (frame >= 153 && frame <= 156)
