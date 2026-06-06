@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>개인정보처리방침 - Car Park Dash</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.8;
+      color: #333;
+      background: #f8f9fa;
+      padding: 20px;
+    }
+    .container {
+      max-width: 840px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 40px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    .lang-bar { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 32px; }
+    .lang-btn {
+      padding: 6px 16px;
+      border: 2px solid #4ecdc4;
+      background: transparent;
+      color: #14958d;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 13px;
+      font-family: inherit;
+      transition: background 0.15s, color 0.15s;
+    }
+    .lang-btn:hover,
+    .lang-btn.active { background: #4ecdc4; color: #fff; }
+    h1 {
+      color: #1a1a2e;
+      font-size: 28px;
+      margin-bottom: 10px;
+      border-bottom: 3px solid #4ecdc4;
+      padding-bottom: 15px;
+    }
+    h2 { color: #1a1a2e; font-size: 20px; margin-top: 30px; margin-bottom: 15px; }
+    p { margin-bottom: 15px; color: #555; }
+    ul { margin-left: 20px; margin-bottom: 15px; }
+    li { margin-bottom: 8px; color: #555; }
+    a { color: #14958d; font-weight: 700; }
+    .app-name { color: #14958d; font-weight: bold; }
+    .date { color: #888; font-size: 14px; margin-bottom: 30px; }
+    .contact { background: #eefcfb; padding: 20px; border-radius: 8px; margin-top: 20px; }
+    .copyright { text-align: center; margin-top: 40px; color: #888; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="lang-bar">
+      <button class="lang-btn" data-lang="ko">한국어</button>
+      <button class="lang-btn" data-lang="en">English</button>
+      <button class="lang-btn" data-lang="es">Español</button>
+      <button class="lang-btn" data-lang="pt">Português</button>
+      <button class="lang-btn" data-lang="fr">Français</button>
+      <button class="lang-btn" data-lang="ja">日本語</button>
+    </div>
+    <div id="content"></div>
+  </div>
+
+  <script>
+    const APP = 'Car Park Dash';
+    const EMAIL = 'mingles2222@gmail.com';
+    const UPDATED = 'June 6, 2026';
+
+    const T = {
+      ko: {
+        htmlLang: 'ko',
+        pageTitle: '개인정보처리방침 - ' + APP,
+        h1: '개인정보처리방침',
+        effectiveDate: '시행일: 2026년 6월 6일',
+        intro: APP + '(이하 "본 앱")은 이용자의 개인정보를 중요하게 생각합니다. 본 앱은 별도의 회원가입을 요구하지 않으며, 이름, 전화번호, 이메일 주소와 같은 직접 식별 정보를 자체 서버에 저장하지 않습니다.',
+        sections: [
+          { title: '1. 수집 또는 처리될 수 있는 정보', items: [
+            '광고 식별자, 기기 정보, 운영체제 버전, 앱 버전',
+            '광고 노출, 광고 클릭, 보상형 광고 완료 기록',
+            '앱 상호작용, 진단 정보, 오류 또는 성능 관련 정보',
+            '게임 진행도, 설정, 보유 아이템, 사운드 설정 등 기기 내 로컬 게임 데이터'
+          ] },
+          { title: '2. 이용 목적', items: [
+            'Google AdMob 및 Google Mobile Ads를 통한 광고 제공',
+            '광고 성과 측정 및 보상형 광고 완료에 따른 게임 내 보상 지급',
+            '게임 진행 저장, 환경설정 유지, 오류 해결 및 품질 개선'
+          ] },
+          { title: '3. 제3자 서비스', text: '본 앱은 광고 제공을 위해 Google AdMob / Google Mobile Ads를 사용할 수 있습니다. Google의 개인정보처리방침은 <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">여기</a>에서 확인할 수 있습니다.' },
+          { title: '4. 보유 및 삭제', text: '당사는 개인 정보를 자체 외부 서버에 저장하지 않습니다. 기기 내 로컬 게임 데이터는 앱 삭제 또는 앱 저장공간 삭제를 통해 제거할 수 있습니다. 광고 제공자가 처리하는 데이터는 해당 제공자의 정책에 따라 보관 및 삭제됩니다.' },
+          { title: '5. 아동 개인정보 보호', text: '본 앱은 13세 미만 아동을 대상으로 하지 않으며, 13세 미만 아동의 개인정보를 고의로 수집하지 않습니다.' },
+          { title: '6. 이용자의 선택', text: '이용자는 기기 설정에서 광고 식별자를 재설정하거나 맞춤형 광고를 제한할 수 있으며, 앱 권한을 변경하거나 앱을 삭제할 수 있습니다.' },
+          { title: '7. 문의', isContact: true, text: '개인정보와 관련된 문의는 아래 이메일로 연락해 주세요.', emailLabel: '이메일:' }
+        ],
+        copyright: '© 2026 ' + APP + '. All rights reserved.'
+      },
+      en: {
+        htmlLang: 'en',
+        pageTitle: 'Privacy Policy - ' + APP,
+        h1: 'Privacy Policy',
+        effectiveDate: 'Effective Date: ' + UPDATED,
+        intro: APP + ' ("the App") respects your privacy. The App does not require account registration and does not store directly identifying information such as your name, phone number, or email address on servers operated by us.',
+        sections: [
+          { title: '1. Information That May Be Collected or Processed', items: [
+            'Advertising ID, device information, operating system version, and app version',
+            'Ad impressions, ad clicks, and rewarded-ad completion records',
+            'App interactions, diagnostics, crash logs, and performance information',
+            'Local game data such as stage progress, settings, owned items, and sound preferences'
+          ] },
+          { title: '2. How Information Is Used', items: [
+            'To provide advertising through Google AdMob and Google Mobile Ads',
+            'To measure ad performance and grant rewards for rewarded advertisements',
+            'To save game progress, keep preferences, troubleshoot issues, and improve gameplay quality'
+          ] },
+          { title: '3. Third-Party Services', text: 'The App may use Google AdMob / Google Mobile Ads for advertising. Google processes data according to the <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">Google Privacy Policy</a>.' },
+          { title: '4. Retention and Deletion', text: 'We do not store personal information on our own external servers. Local game data can be removed by uninstalling the App or clearing app storage. Data processed by advertising providers is retained and deleted according to their policies.' },
+          { title: '5. Children', text: 'The App is not directed to children under 13 and does not knowingly collect personal information from children under 13.' },
+          { title: '6. Your Choices', text: 'You can reset your advertising identifier, limit personalized ads, change app permissions, or uninstall the App through your device settings.' },
+          { title: '7. Contact Us', isContact: true, text: 'If you have questions about privacy, please contact us:', emailLabel: 'Email:' }
+        ],
+        copyright: '© 2026 ' + APP + '. All rights reserved.'
+      }
+    };
+
+    T.es = {
+      ...T.en,
+      htmlLang: 'es',
+      pageTitle: 'Política de privacidad - ' + APP,
+      h1: 'Política de privacidad',
+      effectiveDate: 'Fecha de entrada en vigor: 6 de junio de 2026'
+    };
+    T.pt = {
+      ...T.en,
+      htmlLang: 'pt-BR',
+      pageTitle: 'Política de Privacidade - ' + APP,
+      h1: 'Política de Privacidade',
+      effectiveDate: 'Data de vigência: 6 de junho de 2026'
+    };
+    T.fr = {
+      ...T.en,
+      htmlLang: 'fr',
+      pageTitle: 'Politique de confidentialité - ' + APP,
+      h1: 'Politique de confidentialité',
+      effectiveDate: 'Date d’entrée en vigueur : 6 juin 2026'
+    };
+    T.ja = {
+      ...T.en,
+      htmlLang: 'ja',
+      pageTitle: 'プライバシーポリシー - ' + APP,
+      h1: 'プライバシーポリシー',
+      effectiveDate: '施行日: 2026年6月6日'
+    };
+
+    function render(lang) {
+      const d = T[lang] || T.en;
+      document.documentElement.lang = d.htmlLang;
+      document.title = d.pageTitle;
+      document.querySelectorAll('.lang-btn').forEach((button) => {
+        button.classList.toggle('active', button.dataset.lang === lang);
+      });
+
+      let html = `<h1>${d.h1}</h1><p class="date">${d.effectiveDate}</p><p><span class="app-name">${APP}</span> ${d.intro.replace(APP, '')}</p>`;
+      d.sections.forEach((section) => {
+        html += `<h2>${section.title}</h2>`;
+        if (section.text) html += `<p>${section.text}</p>`;
+        if (section.items) html += `<ul>${section.items.map((item) => `<li>${item}</li>`).join('')}</ul>`;
+        if (section.isContact) html += `<div class="contact"><p>${section.text}</p><p><strong>${section.emailLabel}</strong> <a href="mailto:${EMAIL}">${EMAIL}</a></p></div>`;
+      });
+      html += `<p class="copyright">${d.copyright}</p>`;
+      document.getElementById('content').innerHTML = html;
+    }
+
+    document.querySelectorAll('.lang-btn').forEach((button) => {
+      button.addEventListener('click', () => render(button.dataset.lang));
+    });
+
+    const initial = (navigator.language || 'en').slice(0, 2);
+    render(T[initial] ? initial : 'en');
+  </script>
+</body>
+</html>
