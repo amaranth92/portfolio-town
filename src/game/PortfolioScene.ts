@@ -49,6 +49,7 @@ export class PortfolioScene extends Phaser.Scene {
   private portalOpen = false;
   private milestoneOpen = false;
   private justOpenedAt = 0;
+  private lastHazardHitAt = -Infinity;
   private squashUntil = 0;
   private shadow?: Phaser.GameObjects.Ellipse;
 
@@ -74,7 +75,7 @@ export class PortfolioScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-UP', () => this.jump());
     this.input.keyboard?.on('keydown-W', () => this.jump());
 
-    this.physics.world.gravity.y = 1350;
+    this.physics.world.gravity.y = 1120;
     this.physics.world.setBounds(0, 0, worldWidth, viewHeight);
     this.cameras.main.setBounds(0, 0, worldWidth, viewHeight);
     this.cameras.main.setDeadzone(92, 90);
@@ -117,7 +118,6 @@ export class PortfolioScene extends Phaser.Scene {
       this.player.setVelocity(0, 0);
     }
 
-    this.checkForgivingBlockHit();
     this.animatePlayer(time, grounded, left, right);
     this.wasGrounded = grounded;
 
@@ -138,7 +138,7 @@ export class PortfolioScene extends Phaser.Scene {
 
   private performJump() {
     if (!this.player) return;
-    this.player.setVelocityY(-675);
+    this.player.setVelocityY(-900);
     this.jumpQueuedAt = -Infinity;
     this.squashUntil = this.time.now + 120;
     this.addJumpPuff(this.player.x, this.player.y + 30);
@@ -288,7 +288,7 @@ export class PortfolioScene extends Phaser.Scene {
     this.add.image(98, 462, 'tile:plantA').setScale(2.2);
     this.add.image(126, 462, 'tile:plantB').setScale(2.2);
     this.add.image(232, 462, 'tile:plantC').setScale(2.1);
-    this.add.image(520, 462, 'tile:arrow').setScale(2.2);
+    this.add.image(520, 462, 'tile:arrow').setScale(2.2).setFlipX(true);
     const key = collectibles.create(812, 378, 'tile:key') as Phaser.Physics.Arcade.Image;
     key.setScale(2.1).setData('kind', 'key').refreshBody();
     layout.coins.forEach((coin, index) => {
@@ -297,15 +297,22 @@ export class PortfolioScene extends Phaser.Scene {
     });
     if (theme === 'lab') {
       const hazard = hazards.create(layout.enemy.x, layout.enemy.y, 'char:robotA') as Phaser.Physics.Arcade.Image;
-      hazard.setScale(2.4).refreshBody();
+      this.configureHazard(hazard, 2.4);
       this.add.image(284, 294, 'tile:gem').setScale(2.3);
     } else if (theme === 'modern') {
       this.add.image(286, 456, 'tile:pipeTopLeft').setScale(2.6);
       this.add.image(328, 456, 'tile:pipeTopRight').setScale(2.6);
     } else {
       const hazard = hazards.create(layout.enemy.x, layout.enemy.y, theme === 'australia' ? 'char:enemyB' : 'char:enemyA') as Phaser.Physics.Arcade.Image;
-      hazard.setScale(2.2).refreshBody();
+      this.configureHazard(hazard, 2.2);
     }
+  }
+
+  private configureHazard(hazard: Phaser.Physics.Arcade.Image, scale: number) {
+    hazard.setScale(scale);
+    hazard.setSize(12, 12);
+    hazard.setOffset(4, 6);
+    hazard.refreshBody();
   }
 
   private tryOpenMilestone() {
@@ -314,19 +321,14 @@ export class PortfolioScene extends Phaser.Scene {
     const now = this.time.now;
     if (now - this.justOpenedAt < 900) return;
     const body = this.player.body as Phaser.Physics.Arcade.Body;
-    const headHit = body.velocity.y < 0 && this.player.y > this.block.y + 20;
+    const blockBody = this.block.body as Phaser.Physics.Arcade.StaticBody;
+    const centeredUnderBlock = Math.abs(this.player.x - this.block.x) < 28;
+    const headReachedBlock = body.top <= blockBody.bottom + 6;
+    const playerIsBelowBlock = body.center.y > blockBody.center.y + 10;
+    const headHit = centeredUnderBlock && headReachedBlock && playerIsBelowBlock && (body.blocked.up || body.touching.up || body.velocity.y <= 0);
     if (!headHit) return;
 
     this.openMilestone();
-  }
-
-  private checkForgivingBlockHit() {
-    if (!this.player || !this.block) return;
-    if (this.milestoneOpen || this.scene.isPaused()) return;
-    const body = this.player.body as Phaser.Physics.Arcade.Body;
-    const closeX = Math.abs(this.player.x - this.block.x) < 44;
-    const underBlock = this.player.y > this.block.y + 24 && this.player.y < this.block.y + 118;
-    if (closeX && underBlock && body.velocity.y < -160) this.openMilestone();
   }
 
   private collectSkillItem: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = (_playerObject, itemObject) => {
@@ -351,9 +353,12 @@ export class PortfolioScene extends Phaser.Scene {
 
   private hitHazard: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = () => {
     if (!this.player || this.milestoneOpen || this.scene.isPaused()) return;
+    const now = this.time.now;
+    if (now - this.lastHazardHitAt < 900) return;
+    this.lastHazardHitAt = now;
     this.addJumpPuff(this.player.x, this.player.y + 24);
-    this.player.setPosition(Math.max(64, this.player.x - 140), 454);
-    this.player.setVelocity(0, -220);
+    this.floatLabel(this.player.x - 42, this.player.y - 42, '장애물에 조심하세요');
+    this.player.setVelocityY(Math.min(-180, (this.player.body as Phaser.Physics.Arcade.Body).velocity.y));
   };
 
   private openMilestone() {

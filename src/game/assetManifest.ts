@@ -11,7 +11,7 @@ export const assetManifest = {
     dirtB: `${base}/Tiles/tile_0121.png`,
     dirtC: `${base}/Tiles/tile_0122.png`,
     dirtD: `${base}/Tiles/tile_0123.png`,
-    question: `${base}/Tiles/tile_0010.png`,
+    question: `${base}/Tiles/tile_0028.png`,
     questionUsed: `${base}/Tiles/tile_0011.png`,
     block: `${base}/Tiles/tile_0009.png`,
     coinA: `${base}/Tiles/tile_0151.png`,

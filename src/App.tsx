@@ -8,10 +8,7 @@ import { PhaserGame } from './game/PhaserGame';
 import { gameEvents, type MilestoneOpenEvent, type SkillsEvent } from './game/gameEvents';
 
 function App() {
-  if (window.location.pathname.replace(/\/+$/, '') === '/privacy-policy-car-park-dash') {
-    return <PrivacyPolicy />;
-  }
-
+  const isPrivacyPolicy = window.location.pathname.replace(/\/+$/, '') === '/privacy-policy-car-park-dash';
   const [activeMilestone, setActiveMilestone] = useState<PortfolioMilestone | null>(null);
   const [skills, setSkills] = useState<string[]>([]);
   const [chapterIndex, setChapterIndex] = useState(0);
@@ -62,6 +59,10 @@ function App() {
     };
   }, [activeMilestone]);
 
+  if (isPrivacyPolicy) {
+    return <PrivacyPolicy />;
+  }
+
   return (
     <div className="app-shell">
       <Hud
@@ -76,7 +77,7 @@ function App() {
         <main className="game-layout">
           <PhaserGame />
           <TouchControls />
-          <p className="control-hint">Hit the ? block from below. Read, continue, then enter the portal.</p>
+          <p className="control-hint">Hit the ! block from below. Read, continue, then enter the portal.</p>
         </main>
       )}
       <PortfolioPopup milestone={activeMilestone} />
