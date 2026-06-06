@@ -1,19 +1,38 @@
 import { portfolioTimeline, profile } from '../data/portfolioTimeline';
 
-export function RecruiterMode() {
+type Props = {
+  isKorean: boolean;
+};
+
+export function RecruiterMode({ isKorean }: Props) {
   const allSkills = [...new Set(portfolioTimeline.flatMap((item) => item.skills))];
+  const profileText = isKorean
+    ? {
+        name: profile.ko.name,
+        headline: profile.ko.headline,
+        location: profile.ko.location,
+        experience: profile.ko.experience,
+        note: profile.ko.contactNote
+      }
+    : {
+        name: profile.name,
+        headline: profile.headline,
+        location: profile.location,
+        experience: profile.experience,
+        note: profile.contact.note
+      };
 
   return (
     <main className="recruiter-mode">
       <section className="recruiter-hero">
-        <p>{profile.location}</p>
-        <h1>{profile.name}</h1>
-        <strong>{profile.headline}</strong>
-        <span>{profile.experience}</span>
+        <p>{profileText.location}</p>
+        <h1>{profileText.name}</h1>
+        <strong>{profileText.headline}</strong>
+        <span>{profileText.experience}</span>
       </section>
 
       <section>
-        <h2>Core skills</h2>
+        <h2>{isKorean ? '주요 기술' : 'Core skills'}</h2>
         <div className="recruiter-skills">
           {allSkills.map((skill) => (
             <span key={skill}>{skill}</span>
@@ -22,27 +41,30 @@ export function RecruiterMode() {
       </section>
 
       <section>
-        <h2>Timeline</h2>
+        <h2>{isKorean ? '타임라인' : 'Timeline'}</h2>
         <div className="recruiter-timeline">
-          {portfolioTimeline.map((item) => (
-            <article key={item.id}>
-              <span>{item.year}</span>
-              <h3>{item.title}</h3>
-              <strong>{item.subtitle}</strong>
-              <p>{item.summary}</p>
-              <ul>
-                {item.details.map((detail) => (
-                  <li key={detail}>{detail}</li>
-                ))}
-              </ul>
-            </article>
-          ))}
+          {portfolioTimeline.map((item) => {
+            const content = isKorean && item.ko ? item.ko : item;
+            return (
+              <article key={item.id}>
+                <span>{item.year}</span>
+                <h3>{content.title}</h3>
+                <strong>{content.subtitle}</strong>
+                <p>{content.summary}</p>
+                <ul>
+                  {content.details.map((detail) => (
+                    <li key={detail}>{detail}</li>
+                  ))}
+                </ul>
+              </article>
+            );
+          })}
         </div>
       </section>
 
       <section>
-        <h2>Contact</h2>
-        <p>{profile.contact.note}</p>
+        <h2>{isKorean ? '연락처' : 'Contact'}</h2>
+        <p>{profileText.note}</p>
         <a href={`mailto:${profile.contact.email}`}>{profile.contact.email}</a>
       </section>
     </main>

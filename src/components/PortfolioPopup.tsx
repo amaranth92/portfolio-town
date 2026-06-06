@@ -9,14 +9,16 @@ type Props = {
 export function PortfolioPopup({ milestone, isKorean }: Props) {
   if (!milestone) return null;
 
+  const content = isKorean && milestone.ko ? milestone.ko : milestone;
+
   return (
     <div className="popup-backdrop" role="presentation">
       <article className="portfolio-popup" role="dialog" aria-modal="true" aria-labelledby="popup-title">
         <span>{milestone.year}</span>
-        <h2 id="popup-title">{milestone.title}</h2>
-        <p>{milestone.summary}</p>
+        <h2 id="popup-title">{content.title}</h2>
+        <p>{content.summary}</p>
         <ul>
-          {milestone.details.map((detail) => (
+          {content.details.map((detail) => (
             <li key={detail}>{detail}</li>
           ))}
         </ul>

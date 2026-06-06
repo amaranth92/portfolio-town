@@ -67,6 +67,7 @@ export class PortfolioScene extends Phaser.Scene {
   private isClimbing = false;
   private lastSpringAt = -Infinity;
   private lastSafePosition = { ...spawnPoint };
+  private locale: 'en' | 'ko' = navigator.language.toLowerCase().startsWith('ko') ? 'ko' : 'en';
 
   constructor() {
     super('PortfolioScene');
@@ -106,6 +107,7 @@ export class PortfolioScene extends Phaser.Scene {
     this.buildTimelineWorld();
 
     gameEvents.addEventListener('resume-game', this.resumeFromPopup);
+    gameEvents.addEventListener('language-change', this.handleLanguageChange as EventListener);
     window.addEventListener('touch-control', this.handleTouchControl as EventListener);
     this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanupListeners());
     this.events.once(Phaser.Scenes.Events.DESTROY, () => this.cleanupListeners());
@@ -137,6 +139,7 @@ export class PortfolioScene extends Phaser.Scene {
       this.player.setVelocityX(Phaser.Math.Linear(body.velocity.x, 0, grounded ? 0.22 : 0.08));
       if (Math.abs(body.velocity.x) < 8) this.player.setVelocityX(0);
     }
+    this.player.x = Phaser.Math.Clamp(this.player.x, 18, worldWidth - 18);
 
     body.allowGravity = !ladderLocksPlayer;
     if (ladderLocksPlayer) {
@@ -161,11 +164,7 @@ export class PortfolioScene extends Phaser.Scene {
       this.lastSafePosition = { x: this.player.x, y: this.player.y - 8 };
     }
 
-    if (this.player.y > 620) {
-      this.player.setPosition(this.lastSafePosition.x, this.lastSafePosition.y);
-      this.player.setVelocity(0, 0);
-      body.allowGravity = true;
-    }
+    if (this.player.y > viewHeight + 80) this.respawnPlayer();
 
     this.updateCurrentMilestone();
     this.animatePlayer(time, grounded, left, right);
@@ -256,7 +255,7 @@ export class PortfolioScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(spawnPoint.x, spawnPoint.y, 'char:player').setScale(2.25).setDepth(10);
     this.player.setSize(17, 21);
     this.player.setOffset(3, 2);
-    this.player.setCollideWorldBounds(true);
+    this.player.setCollideWorldBounds(false);
     this.cameras.main.startFollow(this.player, true, 0.12, 0);
     this.cameras.main.scrollX = 0;
 
@@ -413,7 +412,7 @@ export class PortfolioScene extends Phaser.Scene {
 
         if (this.isLadderFrame(frame)) {
           const ladder = ladders.create(x + tileSize / 2, y + tileSize / 2, 'tile:block') as Phaser.Physics.Arcade.Image;
-          ladder.setDisplaySize(tileSize * 0.62, tileSize).setVisible(false).refreshBody();
+          ladder.setDisplaySize(tileSize * 0.95, tileSize * 1.12).setVisible(false).refreshBody();
           return;
         }
 
@@ -476,14 +475,9 @@ export class PortfolioScene extends Phaser.Scene {
       (frame >= 0 && frame <= 3) ||
       (frame >= 20 && frame <= 23) ||
       (frame >= 40 && frame <= 43) ||
-      (frame >= 49 && frame <= 53) ||
       (frame >= 60 && frame <= 63) ||
-      (frame >= 80 && frame <= 83) ||
-      (frame >= 89 && frame <= 91) ||
       (frame >= 96 && frame <= 99) ||
-      (frame >= 100 && frame <= 103) ||
-      (frame >= 129 && frame <= 132) ||
-      (frame >= 149 && frame <= 151)
+      (frame >= 153 && frame <= 156)
     );
   }
 
@@ -496,7 +490,7 @@ export class PortfolioScene extends Phaser.Scene {
   }
 
   private isSampleCollectibleFrame(frame: number) {
-    return frame === 27 || frame === 67 || frame === 151 || frame === 152 || frame === 153;
+    return frame === 27 || frame === 67 || frame === 151 || frame === 152;
   }
 
   private getSampleCollectibleKind(frame: number) {
@@ -586,7 +580,7 @@ export class PortfolioScene extends Phaser.Scene {
     this.player.setVelocityY(-900 * 2.5);
     this.squashUntil = now + 150;
     this.addJumpPuff(this.player.x, this.player.y + 30);
-    this.floatLabel(this.player.x - 20, this.player.y - 52, navigator.language.toLowerCase().startsWith('ko') ? '점프 부스트' : 'Jump boost');
+    this.floatLabel(this.player.x - 20, this.player.y - 52, this.locale === 'ko' ? '점프 부스트' : 'Jump boost');
   };
 
   private hitHazard: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = () => {
@@ -600,7 +594,16 @@ export class PortfolioScene extends Phaser.Scene {
   };
 
   private hazardMessage() {
-    return navigator.language.toLowerCase().startsWith('ko') ? '장애물에 조심하세요' : 'Watch out for obstacles';
+    return this.locale === 'ko' ? '장애물에 조심하세요' : 'Watch out for obstacles';
+  }
+
+  private respawnPlayer() {
+    if (!this.player) return;
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    this.player.setPosition(this.lastSafePosition.x, this.lastSafePosition.y);
+    this.player.setVelocity(0, 0);
+    body.allowGravity = true;
+    this.addJumpPuff(this.player.x, this.player.y + 30);
   }
 
   private openMilestone(block: Phaser.Physics.Arcade.Image) {
@@ -715,6 +718,10 @@ export class PortfolioScene extends Phaser.Scene {
     this.scene.resume();
   };
 
+  private handleLanguageChange = (event: Event) => {
+    this.locale = (event as CustomEvent<'en' | 'ko'>).detail;
+  };
+
   private emitSkills() {
     gameEvents.emitSkills({
       skills: [...this.skills],
@@ -725,6 +732,7 @@ export class PortfolioScene extends Phaser.Scene {
 
   private cleanupListeners() {
     gameEvents.removeEventListener('resume-game', this.resumeFromPopup);
+    gameEvents.removeEventListener('language-change', this.handleLanguageChange as EventListener);
     window.removeEventListener('touch-control', this.handleTouchControl as EventListener);
   }
 

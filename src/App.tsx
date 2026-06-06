@@ -5,11 +5,12 @@ import { RecruiterMode } from './components/RecruiterMode';
 import { TouchControls } from './components/TouchControls';
 import type { PortfolioMilestone } from './data/portfolioTimeline';
 import { PhaserGame } from './game/PhaserGame';
-import { gameEvents, type MilestoneOpenEvent, type SkillsEvent } from './game/gameEvents';
+import { gameEvents, type Locale, type MilestoneOpenEvent, type SkillsEvent } from './game/gameEvents';
 
 function App() {
   const isPrivacyPolicy = window.location.pathname.replace(/\/+$/, '') === '/privacy-policy-car-park-dash';
-  const isKorean = navigator.language.toLowerCase().startsWith('ko');
+  const [locale, setLocale] = useState<Locale>(navigator.language.toLowerCase().startsWith('ko') ? 'ko' : 'en');
+  const isKorean = locale === 'ko';
   const [activeMilestone, setActiveMilestone] = useState<PortfolioMilestone | null>(null);
   const [skills, setSkills] = useState<string[]>([]);
   const [chapterIndex, setChapterIndex] = useState(0);
@@ -42,6 +43,10 @@ function App() {
   }, []);
 
   useEffect(() => {
+    gameEvents.emitLanguageChange(locale);
+  }, [locale]);
+
+  useEffect(() => {
     if (!activeMilestone) return undefined;
 
     const closeWithKey = (event: KeyboardEvent) => {
@@ -60,9 +65,7 @@ function App() {
     };
   }, [activeMilestone]);
 
-  if (isPrivacyPolicy) {
-    return <PrivacyPolicy />;
-  }
+  if (isPrivacyPolicy) return <PrivacyPolicy />;
 
   return (
     <div className="app-shell">
@@ -71,10 +74,12 @@ function App() {
         chapterIndex={chapterIndex}
         recruiterMode={recruiterMode}
         onToggleMode={() => setRecruiterMode((value) => !value)}
+        locale={locale}
+        onToggleLocale={() => setLocale((value) => (value === 'ko' ? 'en' : 'ko'))}
         isKorean={isKorean}
       />
       {recruiterMode ? (
-        <RecruiterMode />
+        <RecruiterMode isKorean={isKorean} />
       ) : (
         <main className="game-layout">
           <PhaserGame />
