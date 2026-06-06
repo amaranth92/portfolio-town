@@ -2,6 +2,7 @@
 import { portfolioTimeline } from '../data/portfolioTimeline';
 import { assetManifest } from './assetManifest';
 import { gameEvents } from './gameEvents';
+import { kenneySampleMaps, type KenneySampleMap } from './kenneySampleMaps';
 
 type Theme = {
   sky: number;
@@ -54,6 +55,7 @@ export class PortfolioScene extends Phaser.Scene {
   private lastHazardHitAt = -Infinity;
   private squashUntil = 0;
   private shadow?: Phaser.GameObjects.Ellipse;
+  private renderedSampleChunks = new Set<number>();
 
   constructor() {
     super('PortfolioScene');
@@ -63,6 +65,10 @@ export class PortfolioScene extends Phaser.Scene {
     Object.entries(assetManifest.tiles).forEach(([key, path]) => this.load.image(`tile:${key}`, path));
     Object.entries(assetManifest.characters).forEach(([key, path]) => this.load.image(`char:${key}`, path));
     Object.entries(assetManifest.backgrounds).forEach(([key, path]) => this.load.image(`bg:${key}`, path));
+    this.load.spritesheet('tilemap:tiles', `${assetManifest.base}/Tilemap/tilemap_packed.png`, {
+      frameWidth: 18,
+      frameHeight: 18
+    });
   }
 
   create() {
@@ -149,6 +155,7 @@ export class PortfolioScene extends Phaser.Scene {
   private buildTimelineWorld() {
     this.physics.world.colliders.destroy();
     this.children.removeAll();
+    this.renderedSampleChunks.clear();
 
     const solids = this.physics.add.staticGroup();
     const platforms = this.physics.add.staticGroup();
@@ -159,7 +166,7 @@ export class PortfolioScene extends Phaser.Scene {
     portfolioTimeline.forEach((milestone, index) => {
       const layout = this.getSegmentLayout(index);
       const theme = themes[milestone.chapterTheme];
-      this.drawSegmentBackground(theme, milestone.chapterTheme, layout, index);
+      this.drawSegmentBackground(theme, milestone.chapterTheme, layout);
       this.drawSegmentGround(solids, platforms, layout, index);
       this.drawSegmentDecor(milestone.chapterTheme, layout, collectibles, hazards, index);
 
@@ -214,7 +221,7 @@ export class PortfolioScene extends Phaser.Scene {
     };
   }
 
-  private drawSegmentBackground(theme: Theme, name: string, layout: SegmentLayout, index: number) {
+  private drawSegmentBackground(theme: Theme, name: string, layout: SegmentLayout) {
     const isAustralia = name === 'australia';
     const sky = isAustralia ? theme.sky : baseBackdrop.sky;
     const haze = isAustralia ? theme.haze : baseBackdrop.haze;
@@ -231,90 +238,31 @@ export class PortfolioScene extends Phaser.Scene {
       this.add.image(x + 108, 122 + (cloudIndex % 2) * 34, 'tile:cloudRight').setScale(3);
     });
 
-    if (isAustralia) {
-      this.drawAustraliaBackdrop(layout);
-      return;
-    }
-
-    this.drawKenneySampleBackdrop(layout, index);
-    if (index === 0) this.add.image(layout.startX + 252, 176, 'tile:cloudLeft').setScale(2.5);
+    this.drawKenneySampleChunk(layout, isAustralia ? kenneySampleMaps.sampleB : kenneySampleMaps.sampleA, isAustralia);
   }
 
-  private drawKenneySampleBackdrop(layout: SegmentLayout, index: number) {
-    if (index % 3 === 0) {
-      this.drawFloatingDirt(layout.startX + 18, 24, 4, 2);
-      this.add.image(layout.startX + 50, 176, 'tile:trunkA').setScale(2.4);
-      this.add.image(layout.startX + 50, 226, 'tile:trunkB').setScale(2.4);
-      this.add.image(layout.startX + 84, 198, 'tile:plantB').setScale(2.1);
-    }
+  private drawKenneySampleChunk(layout: SegmentLayout, sampleMap: KenneySampleMap, isAustralia: boolean) {
+    const chunkIndex = Math.floor(layout.startX / (segmentWidth * 2));
+    const chunkKey = chunkIndex * 10 + (isAustralia ? 1 : 0);
+    if (this.renderedSampleChunks.has(chunkKey)) return;
+    this.renderedSampleChunks.add(chunkKey);
 
-    if (index % 2 === 0) {
-      this.drawTree(layout.centerX + 36, 414);
-      this.add.image(layout.centerX - 118, 290, 'tile:crate').setScale(2);
-      this.add.image(layout.centerX + 158, 356, 'tile:rock').setScale(1.8);
-      this.add.image(layout.centerX + 220, 404, 'tile:crate').setScale(2.1);
-    } else {
-      this.drawRedPlatform(layout.centerX - 120, 332, 3);
-      this.add.image(layout.centerX - 118, 386, 'tile:trunkA').setScale(2.4);
-      this.add.image(layout.centerX - 118, 438, 'tile:trunkB').setScale(2.4);
-      this.add.image(layout.centerX + 94, 306, 'tile:crate').setScale(1.9);
-      this.add.image(layout.centerX + 188, 368, 'tile:springA').setScale(1.9);
-    }
+    const scale = 2;
+    const originX = chunkIndex * segmentWidth * 2 + 18;
+    const originY = 10;
 
-    if (index % 4 === 1) {
-      this.drawBluePipe(layout.startX + 396, 176);
-    }
-  }
-
-  private drawAustraliaBackdrop(layout: SegmentLayout) {
-    this.add.circle(layout.centerX + 150, 86, 30, 0xf6c453).setStrokeStyle(4, 0x2d2630);
-    this.add.rectangle(layout.centerX - 80, 456, 220, 30, 0xfff3d2, 0.42);
-    this.add.rectangle(layout.centerX + 180, 438, 220, 30, 0xfff3d2, 0.42);
-    this.drawBluePipe(layout.startX + 38, 126);
-    this.drawBluePipe(layout.startX + 38, 210);
-    this.drawRedPlatform(layout.centerX - 94, 328, 4);
-    this.drawRedPlatform(layout.centerX + 118, 400, 3);
-    this.add.image(layout.centerX - 40, 250, 'tile:crate').setScale(1.8);
-    this.add.image(layout.centerX + 182, 304, 'tile:rock').setScale(1.7);
-    this.add.image(layout.centerX + 250, 374, 'tile:crate').setScale(2.1);
-    this.add.image(layout.centerX - 188, 462, 'tile:plantB').setScale(2.5);
-    this.add.image(layout.centerX + 228, 462, 'tile:plantC').setScale(2.4);
-    this.add.image(layout.centerX + 256, 456, 'tile:waterfall').setScale(3.1, 4.2).setAlpha(0.82);
-    this.add.image(layout.centerX + 256, 514, 'tile:waterTop').setScale(3.1);
-  }
-
-  private drawFloatingDirt(x: number, y: number, width: number, height: number) {
-    for (let row = 0; row < height; row += 1) {
-      for (let col = 0; col < width; col += 1) {
-        const tile = row === 0 ? (col === 0 ? 'tile:grassLeft' : col === width - 1 ? 'tile:grassRight' : 'tile:grassMidA') : 'tile:dirtA';
-        this.add.image(x + col * 54, y + row * 54, tile).setScale(3).setDepth(-8);
-      }
-    }
-  }
-
-  private drawTree(x: number, groundY: number) {
-    this.add.image(x, groundY - 24, 'tile:trunkA').setScale(2.35);
-    this.add.image(x, groundY - 76, 'tile:trunkB').setScale(2.35);
-    this.add.image(x, groundY - 128, 'tile:trunkC').setScale(2.35);
-    this.add.image(x - 38, groundY - 162, 'tile:treeTop').setScale(3);
-    this.add.image(x + 22, groundY - 194, 'tile:treeTop').setScale(3.1);
-    this.add.image(x + 82, groundY - 162, 'tile:treeTop').setScale(3);
-    this.add.image(x + 24, groundY - 106, 'tile:treeFruitA').setScale(2);
-    this.add.image(x - 32, groundY - 56, 'tile:treeFruitB').setScale(2);
-  }
-
-  private drawRedPlatform(x: number, y: number, width: number) {
-    for (let col = 0; col < width; col += 1) {
-      const tile = col === 0 ? 'tile:redPlatformLeft' : col === width - 1 ? 'tile:redPlatformRight' : 'tile:redPlatformMid';
-      this.add.image(x + col * 54, y, tile).setScale(3);
-    }
-  }
-
-  private drawBluePipe(x: number, y: number) {
-    this.add.image(x, y, 'tile:bluePipeLeft').setScale(2.4);
-    this.add.image(x + 42, y, 'tile:bluePipeMidA').setScale(2.4);
-    this.add.image(x + 84, y, 'tile:bluePipeMidB').setScale(2.4);
-    this.add.image(x + 126, y, 'tile:bluePipeEnd').setScale(2.4);
+    sampleMap.layers.forEach((layer, layerIndex) => {
+      layer.tiles.forEach((frame, tileIndex) => {
+        if (frame < 0) return;
+        const col = tileIndex % sampleMap.width;
+        const row = Math.floor(tileIndex / sampleMap.width);
+        this.add
+          .image(originX + col * sampleMap.tileWidth * scale, originY + row * sampleMap.tileHeight * scale, 'tilemap:tiles', frame)
+          .setOrigin(0, 0)
+          .setScale(scale)
+          .setDepth(-9 + layerIndex);
+      });
+    });
   }
 
   private drawSegmentGround(
@@ -604,3 +552,4 @@ export class PortfolioScene extends Phaser.Scene {
     this.cleanupListeners();
   }
 }
+

@@ -417,7 +417,7 @@ button {
     top: 18px;
     left: 24px;
     right: 24px;
-    grid-template-columns: minmax(250px, 0.5fr) minmax(220px, 1fr) auto minmax(280px, 0.8fr);
+    grid-template-columns: minmax(250px, 0.5fr) minmax(220px, 1fr) auto;
     align-items: center;
     gap: 12px;
     padding: 10px 12px;
@@ -440,20 +440,22 @@ button {
   }
 
   .hud-skills {
-    position: static;
-    grid-column: 4;
-    grid-row: auto;
+    position: fixed;
+    left: 50%;
+    right: auto;
+    bottom: 18px;
+    width: min(720px, calc(100vw - 48px));
     max-width: none;
-    margin: 0;
-    box-shadow: none;
-    background: transparent;
-    padding: 0;
-    border: 0;
+    transform: translateX(-50%);
+    border: 3px solid var(--line);
+    background: rgba(255, 251, 238, 0.94);
+    box-shadow: 4px 4px 0 var(--line);
+    padding: 8px 10px 9px;
   }
 
   .game-layout {
     min-height: 100dvh;
-    padding: 104px 24px 68px;
+    padding: 104px 24px 112px;
   }
 
   .game-host {
@@ -475,7 +477,7 @@ button {
 
   .control-hint {
     top: auto;
-    bottom: 20px;
+    bottom: 78px;
     font-size: 13px;
   }
 }

@@ -5,12 +5,12 @@ Portfolio stage art is built in `src/game/PortfolioScene.ts`.
 ## Main Editing Points
 
 - `getSegmentLayout(index)`: milestone block, ledge, hazard, and skill item positions.
-- `drawSegmentBackground(theme, name, layout, index)`: sky, haze, water, clouds, and chapter backdrop.
-- `drawKenneySampleBackdrop(layout, index)`: normal chapter background decorations.
-- `drawAustraliaBackdrop(layout)`: Australia chapter decorations only.
+- `drawSegmentBackground(theme, name, layout)`: sky, haze, water, and sample-map backdrop.
+- `drawKenneySampleChunk(layout, sampleMap, isAustralia)`: renders the Kenney TMX sample map.
 - `drawSegmentGround(...)`: solid ground, ledges, and cloud platforms with collision.
 - `drawSegmentDecor(...)`: signs, plants, collectible items, hazards, contact label.
 - `src/game/assetManifest.ts`: friendly names mapped to real Kenney tile files.
+- `src/game/kenneySampleMaps.ts`: generated tile data from Kenney `tilemap-example-a.tmx` and `tilemap-example-b.tmx`.
 
 ## Coordinate Rules
 
@@ -49,7 +49,12 @@ Common tiles:
 
 ## Safe Way To Edit
 
-If you want to move one decoration:
+The current backdrop is no longer hand-composed. It renders Kenney's sample TMX maps.
+
+- Normal chapters use `kenneySampleMaps.sampleA`.
+- The Australia chapter uses `kenneySampleMaps.sampleB`.
+
+If you want to move one gameplay item:
 
 ```ts
 this.add.image(layout.centerX + 220, 404, 'tile:crate').setScale(2.1);
@@ -65,4 +70,3 @@ layout.centerX + 220 // horizontal position
 
 If you want a decoration to affect gameplay, add it in `drawSegmentGround` or the relevant physics group.
 If it is only visual, add it in `drawKenneySampleBackdrop`, `drawAustraliaBackdrop`, or `drawSegmentDecor`.
-
