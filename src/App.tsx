@@ -16,7 +16,7 @@ function App() {
   useEffect(() => {
     const open = (event: Event) => {
       const detail = (event as CustomEvent<MilestoneOpenEvent>).detail;
-      setActiveMilestone(detail.milestone);
+      setActiveMilestone((current) => current ?? detail.milestone);
       setChapterIndex(detail.index);
     };
     const skillChange = (event: Event) => {

@@ -17,7 +17,11 @@ type ChapterLayout = {
   ledge: ScenePoint;
   coins: ScenePoint[];
   enemy: ScenePoint;
+  portalX: number;
 };
+
+const worldWidth = 960;
+const viewHeight = 640;
 
 const themes: Record<string, Theme> = {
   campus: { sky: 0xd9f2f1, haze: 0xffffff, accent: 0x58a65c, water: 0x69c8dd },
@@ -43,6 +47,7 @@ export class PortfolioScene extends Phaser.Scene {
   private viewedIds = new Set<string>();
   private skills = new Set<string>();
   private portalOpen = false;
+  private milestoneOpen = false;
   private justOpenedAt = 0;
   private squashUntil = 0;
   private shadow?: Phaser.GameObjects.Ellipse;
@@ -70,12 +75,17 @@ export class PortfolioScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-W', () => this.jump());
 
     this.physics.world.gravity.y = 1450;
-    this.physics.world.setBounds(0, 0, 360, 640);
+    this.physics.world.setBounds(0, 0, worldWidth, viewHeight);
+    this.cameras.main.setBounds(0, 0, worldWidth, viewHeight);
+    this.cameras.main.setDeadzone(92, 90);
+    this.cameras.main.setFollowOffset(-28, 0);
     this.loadChapter(0);
 
-    gameEvents.addEventListener('resume-game', () => this.resumeFromPopup());
-    gameEvents.addEventListener('next-chapter', () => this.nextChapter());
+    gameEvents.addEventListener('resume-game', this.resumeFromPopup);
+    gameEvents.addEventListener('next-chapter', this.nextChapter);
     window.addEventListener('touch-control', this.handleTouchControl as EventListener);
+    this.events.once(Phaser.Scenes.Events.SHUTDOWN, () => this.cleanupListeners());
+    this.events.once(Phaser.Scenes.Events.DESTROY, () => this.cleanupListeners());
   }
 
   update(time: number, delta: number) {
@@ -111,7 +121,7 @@ export class PortfolioScene extends Phaser.Scene {
     this.animatePlayer(time, grounded, left, right);
     this.wasGrounded = grounded;
 
-    if (this.portalOpen && this.player.x > 302 && body.blocked.down) this.nextChapter();
+    if (this.portalOpen && this.player.x > this.getLayout(portfolioTimeline[this.chapterIndex].chapterTheme).portalX - 28 && body.blocked.down) this.nextChapter();
   }
 
   private handleTouchControl = (event: Event) => {
@@ -137,6 +147,7 @@ export class PortfolioScene extends Phaser.Scene {
   private loadChapter(index: number) {
     this.chapterIndex = Math.min(index, portfolioTimeline.length - 1);
     this.portalOpen = false;
+    this.milestoneOpen = false;
     this.clearSceneObjects();
 
     const milestone = portfolioTimeline[this.chapterIndex];
@@ -159,17 +170,19 @@ export class PortfolioScene extends Phaser.Scene {
     this.player.setSize(17, 21);
     this.player.setOffset(3, 2);
     this.player.setCollideWorldBounds(true);
+    this.cameras.main.startFollow(this.player, true, 0.12, 0.12);
+    this.cameras.main.scrollX = 0;
 
     this.physics.add.collider(this.player, solids);
     this.physics.add.collider(this.player, this.block, () => this.tryOpenMilestone(), undefined, this);
 
-    this.add.text(16, 18, `${milestone.year}`, {
+    this.add.text(22, 22, `${milestone.year}`, {
       fontFamily: 'Arial',
       fontSize: '16px',
       fontStyle: '900',
       color: '#2d2630'
     });
-    this.add.text(16, 38, milestone.title, {
+    this.add.text(22, 42, milestone.title, {
       fontFamily: 'Arial',
       fontSize: '14px',
       fontStyle: '900',
@@ -187,52 +200,63 @@ export class PortfolioScene extends Phaser.Scene {
 
   private getLayout(name: string): ChapterLayout {
     const layouts: Record<string, ChapterLayout> = {
-      campus: { block: { x: 184, y: 320 }, ledge: { x: 76, y: 410 }, coins: [{ x: 244, y: 334 }, { x: 294, y: 334 }], enemy: { x: 300, y: 462 } },
-      office: { block: { x: 188, y: 312 }, ledge: { x: 82, y: 396 }, coins: [{ x: 238, y: 318 }, { x: 288, y: 350 }], enemy: { x: 298, y: 462 } },
-      australia: { block: { x: 176, y: 334 }, ledge: { x: 84, y: 424 }, coins: [{ x: 230, y: 346 }, { x: 282, y: 346 }], enemy: { x: 302, y: 462 } },
-      lab: { block: { x: 188, y: 304 }, ledge: { x: 70, y: 410 }, coins: [{ x: 246, y: 316 }, { x: 298, y: 316 }], enemy: { x: 300, y: 456 } },
-      modern: { block: { x: 182, y: 322 }, ledge: { x: 92, y: 402 }, coins: [{ x: 240, y: 330 }, { x: 294, y: 330 }], enemy: { x: 302, y: 462 } },
-      contact: { block: { x: 180, y: 318 }, ledge: { x: 82, y: 408 }, coins: [{ x: 246, y: 330 }, { x: 296, y: 330 }], enemy: { x: 302, y: 462 } }
+      campus: { block: { x: 392, y: 320 }, ledge: { x: 154, y: 410 }, coins: [{ x: 456, y: 334 }, { x: 506, y: 334 }, { x: 604, y: 286 }], enemy: { x: 658, y: 462 }, portalX: 876 },
+      office: { block: { x: 420, y: 312 }, ledge: { x: 186, y: 396 }, coins: [{ x: 484, y: 318 }, { x: 548, y: 350 }, { x: 704, y: 300 }], enemy: { x: 672, y: 462 }, portalX: 876 },
+      australia: { block: { x: 404, y: 334 }, ledge: { x: 172, y: 424 }, coins: [{ x: 470, y: 346 }, { x: 536, y: 346 }, { x: 706, y: 326 }], enemy: { x: 690, y: 462 }, portalX: 876 },
+      lab: { block: { x: 412, y: 304 }, ledge: { x: 160, y: 410 }, coins: [{ x: 476, y: 316 }, { x: 542, y: 316 }, { x: 690, y: 292 }], enemy: { x: 680, y: 456 }, portalX: 876 },
+      modern: { block: { x: 396, y: 322 }, ledge: { x: 184, y: 402 }, coins: [{ x: 462, y: 330 }, { x: 532, y: 330 }, { x: 728, y: 310 }], enemy: { x: 680, y: 462 }, portalX: 876 },
+      contact: { block: { x: 408, y: 318 }, ledge: { x: 172, y: 408 }, coins: [{ x: 476, y: 330 }, { x: 546, y: 330 }, { x: 720, y: 314 }], enemy: { x: 686, y: 462 }, portalX: 876 }
     };
     return layouts[name] ?? layouts.campus;
   }
 
   private drawBackground(theme: Theme, name: string) {
-    this.add.rectangle(180, 470, 360, 120, theme.haze, 0.38);
+    this.add.rectangle(worldWidth / 2, 470, worldWidth, 120, theme.haze, 0.38);
     if (name === 'australia') {
-      this.add.circle(290, 86, 30, 0xf6c453).setStrokeStyle(4, 0x2d2630);
-      this.add.rectangle(70, 456, 150, 30, 0xfff3d2, 0.5);
-      this.add.rectangle(260, 438, 160, 30, 0xfff3d2, 0.5);
+      this.add.circle(780, 86, 30, 0xf6c453).setStrokeStyle(4, 0x2d2630);
+      this.add.rectangle(130, 456, 220, 30, 0xfff3d2, 0.5);
+      this.add.rectangle(520, 438, 280, 30, 0xfff3d2, 0.5);
+      this.add.rectangle(820, 456, 180, 30, 0xfff3d2, 0.5);
     } else if (name === 'office' || name === 'modern') {
-      for (let i = 0; i < 4; i += 1) {
-        this.add.rectangle(52 + i * 86, 414 - (i % 2) * 24, 46, 160, theme.haze, 0.32);
+      for (let i = 0; i < 10; i += 1) {
+        this.add.rectangle(52 + i * 92, 414 - (i % 2) * 24, 46, 160, theme.haze, 0.32);
       }
     } else {
-      this.add.image(70, 122, 'tile:cloudLeft').setScale(3);
-      this.add.image(124, 122, 'tile:cloudMidA').setScale(3);
-      this.add.image(178, 122, 'tile:cloudRight').setScale(3);
-      this.add.image(248, 166, 'tile:cloudLeft').setScale(2.5);
-      this.add.image(294, 166, 'tile:cloudRight').setScale(2.5);
+      [70, 390, 720].forEach((x, index) => {
+        this.add.image(x, 122 + (index % 2) * 34, 'tile:cloudLeft').setScale(3);
+        this.add.image(x + 54, 122 + (index % 2) * 34, 'tile:cloudMidA').setScale(3);
+        this.add.image(x + 108, 122 + (index % 2) * 34, 'tile:cloudRight').setScale(3);
+      });
+      this.add.image(252, 176, 'tile:cloudLeft').setScale(2.5);
+      this.add.image(298, 176, 'tile:cloudRight').setScale(2.5);
     }
-    this.add.rectangle(180, 620, 360, 40, theme.water);
+    this.add.rectangle(worldWidth / 2, 620, worldWidth, 40, theme.water);
   }
 
   private drawGround(solids: Phaser.Physics.Arcade.StaticGroup, layout: ChapterLayout) {
-    for (let x = 18; x < 360; x += 54) {
+    for (let x = 18; x < worldWidth; x += 54) {
       solids.create(x, 514, 'tile:grassMidA').setScale(3).refreshBody();
       solids.create(x, 568, 'tile:dirtA').setScale(3).refreshBody();
     }
     solids.create(layout.ledge.x - 54, layout.ledge.y, 'tile:grassLeft').setScale(3).refreshBody();
     solids.create(layout.ledge.x, layout.ledge.y, 'tile:grassMidB').setScale(3).refreshBody();
     solids.create(layout.ledge.x + 54, layout.ledge.y, 'tile:grassRight').setScale(3).refreshBody();
-    solids.create(248, 390, 'tile:cloudLeft').setScale(3).refreshBody();
-    solids.create(302, 390, 'tile:cloudRight').setScale(3).refreshBody();
+    solids.create(284, 390, 'tile:cloudLeft').setScale(3).refreshBody();
+    solids.create(338, 390, 'tile:cloudRight').setScale(3).refreshBody();
+    solids.create(566, 356, 'tile:cloudLeft').setScale(3).refreshBody();
+    solids.create(620, 356, 'tile:cloudRight').setScale(3).refreshBody();
+    solids.create(740, 430, 'tile:grassLeft').setScale(3).refreshBody();
+    solids.create(794, 430, 'tile:grassMidB').setScale(3).refreshBody();
+    solids.create(848, 430, 'tile:grassRight').setScale(3).refreshBody();
   }
 
   private drawSceneDecor(theme: string, layout: ChapterLayout) {
     this.add.image(42, 460, 'tile:sign').setScale(2.5);
     this.add.image(98, 462, 'tile:plantA').setScale(2.2);
     this.add.image(126, 462, 'tile:plantB').setScale(2.2);
+    this.add.image(232, 462, 'tile:plantC').setScale(2.1);
+    this.add.image(520, 462, 'tile:arrow').setScale(2.2);
+    this.add.image(812, 378, 'tile:key').setScale(2.1);
     layout.coins.forEach((coin, index) => this.add.image(coin.x, coin.y, index % 2 ? 'tile:coinB' : 'tile:coinA').setScale(2.2));
     if (theme === 'lab') {
       this.add.image(layout.enemy.x, layout.enemy.y, 'char:robotA').setScale(2.4);
@@ -247,8 +271,9 @@ export class PortfolioScene extends Phaser.Scene {
 
   private tryOpenMilestone() {
     if (!this.player || !this.block) return;
+    if (this.milestoneOpen || this.scene.isPaused()) return;
     const now = this.time.now;
-    if (now - this.justOpenedAt < 500) return;
+    if (now - this.justOpenedAt < 900) return;
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     const headHit = body.velocity.y < 0 || this.player.y > this.block.y + 20;
     if (!headHit) return;
@@ -258,6 +283,7 @@ export class PortfolioScene extends Phaser.Scene {
 
   private checkForgivingBlockHit() {
     if (!this.player || !this.block) return;
+    if (this.milestoneOpen || this.scene.isPaused()) return;
     const body = this.player.body as Phaser.Physics.Arcade.Body;
     const closeX = Math.abs(this.player.x - this.block.x) < 44;
     const underBlock = this.player.y > this.block.y + 24 && this.player.y < this.block.y + 118;
@@ -266,9 +292,11 @@ export class PortfolioScene extends Phaser.Scene {
 
   private openMilestone() {
     if (!this.block) return;
+    if (this.milestoneOpen || this.scene.isPaused()) return;
     const now = this.time.now;
-    if (now - this.justOpenedAt < 500) return;
+    if (now - this.justOpenedAt < 900) return;
     this.justOpenedAt = now;
+    this.milestoneOpen = true;
     const milestone = portfolioTimeline[this.chapterIndex];
     milestone.skills.forEach((skill) => this.skills.add(skill));
     this.viewedIds.add(milestone.id);
@@ -282,9 +310,10 @@ export class PortfolioScene extends Phaser.Scene {
     if (this.portalOpen) return;
     this.portalOpen = true;
     const group = this.add.group();
-    group.add(this.add.rectangle(324, 458, 38, 74, 0x2d2630));
-    group.add(this.add.rectangle(324, 458, 24, 56, 0xf6c453));
-    group.add(this.add.text(306, 398, 'NEXT', { fontFamily: 'Arial', fontSize: '11px', fontStyle: '900', color: '#2d2630' }));
+    const portalX = this.getLayout(portfolioTimeline[this.chapterIndex].chapterTheme).portalX;
+    group.add(this.add.rectangle(portalX, 458, 38, 74, 0x2d2630));
+    group.add(this.add.rectangle(portalX, 458, 24, 56, 0xf6c453));
+    group.add(this.add.text(portalX - 18, 398, 'NEXT', { fontFamily: 'Arial', fontSize: '11px', fontStyle: '900', color: '#2d2630' }));
     gameEvents.emitPortalReady(this.chapterIndex);
   }
 
@@ -337,14 +366,15 @@ export class PortfolioScene extends Phaser.Scene {
     }
   }
 
-  private resumeFromPopup() {
+  private resumeFromPopup = () => {
+    this.milestoneOpen = false;
     this.scene.resume();
     this.openPortal();
-  }
+  };
 
-  private nextChapter() {
+  private nextChapter = () => {
     this.loadChapter(this.chapterIndex + 1);
-  }
+  };
 
   private emitSkills() {
     gameEvents.emitSkills({
@@ -354,7 +384,13 @@ export class PortfolioScene extends Phaser.Scene {
     });
   }
 
-  destroy() {
+  private cleanupListeners() {
+    gameEvents.removeEventListener('resume-game', this.resumeFromPopup);
+    gameEvents.removeEventListener('next-chapter', this.nextChapter);
     window.removeEventListener('touch-control', this.handleTouchControl as EventListener);
+  }
+
+  destroy() {
+    this.cleanupListeners();
   }
 }
