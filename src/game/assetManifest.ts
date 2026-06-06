@@ -35,6 +35,9 @@ export const assetManifest = {
   },
   characters: {
     player: `${base}/Tiles/Characters/tile_0000.png`,
+    playerWalkA: `${base}/Tiles/Characters/tile_0001.png`,
+    playerWalkB: `${base}/Tiles/Characters/tile_0002.png`,
+    playerJump: `${base}/Tiles/Characters/tile_0003.png`,
     enemyA: `${base}/Tiles/Characters/tile_0015.png`,
     enemyB: `${base}/Tiles/Characters/tile_0017.png`,
     robotA: `${base}/Tiles/Characters/tile_0018.png`

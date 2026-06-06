@@ -5,18 +5,32 @@ function emit(control: string, pressed: boolean) {
 export function TouchControls() {
   return (
     <div className="touch-controls" aria-label="Touch movement controls">
-      {['left', 'jump', 'right'].map((control) => (
-        <button
-          key={control}
-          type="button"
-          onPointerDown={() => emit(control, true)}
-          onPointerUp={() => emit(control, false)}
-          onPointerCancel={() => emit(control, false)}
-          onPointerLeave={() => emit(control, false)}
-        >
-          {control === 'left' ? 'Left' : control === 'right' ? 'Right' : 'Jump'}
-        </button>
-      ))}
+      <div className="move-pad">
+        {['left', 'right'].map((control) => (
+          <button
+            key={control}
+            type="button"
+            aria-label={`Move ${control}`}
+            onPointerDown={() => emit(control, true)}
+            onPointerUp={() => emit(control, false)}
+            onPointerCancel={() => emit(control, false)}
+            onPointerLeave={() => emit(control, false)}
+          >
+            {control === 'left' ? 'Left' : 'Right'}
+          </button>
+        ))}
+      </div>
+      <button
+        className="jump-button"
+        type="button"
+        aria-label="Jump"
+        onPointerDown={() => emit('jump', true)}
+        onPointerUp={() => emit('jump', false)}
+        onPointerCancel={() => emit('jump', false)}
+        onPointerLeave={() => emit('jump', false)}
+      >
+        Jump
+      </button>
     </div>
   );
 }

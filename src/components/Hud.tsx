@@ -13,7 +13,7 @@ export function Hud({ skills, chapterIndex, recruiterMode, onToggleMode }: Props
 
   return (
     <header className="hud">
-      <div>
+      <div className="hud-title">
         <span>Chapter {chapterIndex + 1} / {portfolioTimeline.length}</span>
         <strong>{chapter.year}</strong>
         <small>{chapter.title}</small>
@@ -21,17 +21,16 @@ export function Hud({ skills, chapterIndex, recruiterMode, onToggleMode }: Props
       <div className="hud-progress" aria-label="Portfolio progress">
         <i style={{ width: `${progress}%` }} />
       </div>
-      <section>
-        <span>Skills</span>
+      <button type="button" onClick={onToggleMode} aria-label={recruiterMode ? 'Switch to game mode' : 'Open recruiter mode'}>
+        {recruiterMode ? 'Game' : 'Resume'}
+      </button>
+      <section className="hud-skills">
         <div className="skill-chips">
           {(skills.length ? skills : ['Ready']).map((skill) => (
             <em key={skill}>{skill}</em>
           ))}
         </div>
       </section>
-      <button type="button" onClick={onToggleMode}>
-        {recruiterMode ? 'Game Mode' : 'Recruiter Mode'}
-      </button>
     </header>
   );
 }
