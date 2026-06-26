@@ -1,156 +1,159 @@
-import { useEffect, useState } from 'react';
-import { Hud } from './components/Hud';
-import { PortfolioPopup } from './components/PortfolioPopup';
-import { RecruiterMode } from './components/RecruiterMode';
-import { TouchControls } from './components/TouchControls';
-import type { PortfolioMilestone } from './data/portfolioTimeline';
-import { PhaserGame } from './game/PhaserGame';
-import { gameEvents, type Locale, type MilestoneOpenEvent, type SkillsEvent } from './game/gameEvents';
+const publicProjects = [
+  {
+    name: 'springBootProject',
+    url: 'https://github.com/amaranth92/springBootProject',
+    role: 'Java/Spring 백엔드 초기 구성',
+    scenario: '서비스 뼈대를 안전하게 시작할 수 있는 구조 정리',
+    proof: '의존성, 실행/빌드 라인, 코드 정합성이 어떻게 맞물리는지 확인',
+  },
+  {
+    name: 'freelec-springboot2-webservice',
+    url: 'https://github.com/amaranth92/freelec-springboot2-webservice',
+    role: '웹서비스 베이스 정비',
+    scenario: '확장 가능한 백엔드 베이스 구성과 유지보수 흐름 점검',
+    proof: '설정 정리 방식과 구조 기준으로 판단 근거가 남는지 확인',
+  },
+  {
+    name: 'portfolio-town',
+    url: 'https://github.com/amaranth92/portfolio-town',
+    role: '개발 환경/배포 흐름 정리',
+    scenario: 'React + Vite 기반 정적 전달 구조 정리',
+    proof: '프론트엔드 전달 포인트를 함께 관리할 수 있는지 확인',
+  },
+  {
+    name: 'posture-debt-cam',
+    url: 'https://github.com/amaranth92/posture-debt-cam',
+    role: '패키징·릴리즈 흐름 정돈',
+    scenario: '배포·정리 루틴의 일관성을 보여주는 산출물',
+    proof: '최종 결과보다 전달/운영 루틴이 남는지 확인',
+  },
+];
 
-function App() {
-  const isPrivacyPolicy = window.location.pathname.replace(/\/+$/, '') === '/privacy-policy-car-park-dash';
-  const [locale, setLocale] = useState<Locale>(navigator.language.toLowerCase().startsWith('ko') ? 'ko' : 'en');
-  const isKorean = locale === 'ko';
-  const [activeMilestone, setActiveMilestone] = useState<PortfolioMilestone | null>(null);
-  const [skills, setSkills] = useState<string[]>([]);
-  const [chapterIndex, setChapterIndex] = useState(0);
-  const [recruiterMode, setRecruiterMode] = useState(false);
+const privateProjects = [
+  {
+    name: '직무형 운영 서비스 리팩터링',
+    period: '2022.01 ~ 2022.12',
+    scope: '비공개',
+    role: '백엔드 운영/개선',
+    summary:
+      'C# 중심의 내부 시스템 환경에서 Java를 함께 운영하며, 유지보수 이슈가 반복되는 기능을 선별해 안정성 기준으로 분리·재설계했습니다.',
+  },
+  {
+    name: '운영 서버 안정화 프로젝트',
+    period: '2023.02 ~ 2024.05',
+    scope: '비공개',
+    role: '배포·장애 대응',
+    summary:
+      '개발/운영 서버 배포 흐름을 정리하고, 배포 전 체크리스트·로그 점검·후속 정리 루틴을 실제 업무로 정착시켰습니다.',
+  },
+  {
+    name: '문서·정합성 개선 작업',
+    period: '2024.06 ~ 2025.01',
+    scope: '비공개',
+    role: '백엔드 연동/협업',
+    summary:
+      '문서 기반 흐름을 개선해 현업 전달 속도와 문제 재발 방지 기준을 맞췄습니다.',
+  },
+];
 
-  useEffect(() => {
-    // Phaser가 milestone-open을 보내면 React가 팝업을 그리고,
-    // resume-game을 받으면 같은 통로로 팝업 상태를 비워 씬 재개와 UI 상태가 어긋나지 않게 합니다.
-    const open = (event: Event) => {
-      const detail = (event as CustomEvent<MilestoneOpenEvent>).detail;
-      setActiveMilestone((current) => current ?? detail.milestone);
-      setChapterIndex(detail.index);
-    };
-    const skillChange = (event: Event) => {
-      const detail = (event as CustomEvent<SkillsEvent>).detail;
-      setSkills(detail.skills);
-      setChapterIndex(detail.chapterIndex);
-    };
-    const chapterChange = (event: Event) => setChapterIndex((event as CustomEvent<number>).detail);
-    const resume = () => setActiveMilestone(null);
+const principles = [
+  '설명보다 설득: 어떤 문제를 어떻게 풀었는지 중심으로 구성',
+  '간결함: 한 화면에 한 번에 판단 가능한 핵심만 표시',
+  '링크 관리: 상태가 불명확한 링크는 제외',
+  '회사 맞춤: 지원하는 직무의 역량 순서대로 강조점 조정',
+];
 
-    gameEvents.addEventListener('milestone-open', open);
-    gameEvents.addEventListener('skills-change', skillChange);
-    gameEvents.addEventListener('chapter-change', chapterChange);
-    gameEvents.addEventListener('resume-game', resume);
-    return () => {
-      gameEvents.removeEventListener('milestone-open', open);
-      gameEvents.removeEventListener('skills-change', skillChange);
-      gameEvents.removeEventListener('chapter-change', chapterChange);
-      gameEvents.removeEventListener('resume-game', resume);
-    };
-  }, []);
-
-  useEffect(() => {
-    gameEvents.emitLanguageChange(locale);
-  }, [locale]);
-
-  useEffect(() => {
-    if (!activeMilestone) return undefined;
-
-    // 팝업이 열린 동안에는 키보드/터치 점프를 "닫기" 입력으로도 받습니다.
-    // TouchControls의 pointer 해제 이벤트는 그대로 Scene에 전달되므로, 닫은 직후 점프가 눌린 채 남지 않게 pressed=true만 처리합니다.
-    const closeWithKey = (event: KeyboardEvent) => {
-      if (event.code === 'Space' || event.code === 'Enter') gameEvents.resumeGame();
-    };
-    const closeWithJump = (event: Event) => {
-      const detail = (event as CustomEvent<{ control: string; pressed: boolean }>).detail;
-      if (detail.control === 'jump' && detail.pressed) gameEvents.resumeGame();
-    };
-
-    window.addEventListener('keydown', closeWithKey);
-    window.addEventListener('touch-control', closeWithJump as EventListener);
-    return () => {
-      window.removeEventListener('keydown', closeWithKey);
-      window.removeEventListener('touch-control', closeWithJump as EventListener);
-    };
-  }, [activeMilestone]);
-
-  if (isPrivacyPolicy) return <PrivacyPolicy />;
-
+function ProjectCard({ project }: { project: (typeof publicProjects)[number] }) {
   return (
-    <div className="app-shell">
-      <Hud
-        skills={skills}
-        chapterIndex={chapterIndex}
-        recruiterMode={recruiterMode}
-        onToggleMode={() => setRecruiterMode((value) => !value)}
-        locale={locale}
-        onToggleLocale={() => setLocale((value) => (value === 'ko' ? 'en' : 'ko'))}
-        isKorean={isKorean}
-      />
-      {recruiterMode ? (
-        <RecruiterMode isKorean={isKorean} />
-      ) : (
-        <main className="game-layout">
-          <PhaserGame />
-          <TouchControls />
-          <p className="control-hint">
-            {isKorean ? '! 블록을 아래에서 치고 오른쪽으로 계속 이동하세요.' : 'Hit ! blocks from below, then keep moving right.'}
-          </p>
-        </main>
-      )}
-      <PortfolioPopup milestone={activeMilestone} isKorean={isKorean} />
-    </div>
+    <article className="card">
+      <h3>{project.name}</h3>
+      <p>
+        <strong>역할</strong> {project.role}
+      </p>
+      <p>
+        <strong>상황</strong> {project.scenario}
+      </p>
+      <p>
+        <strong>확인 근거</strong> {project.proof}
+      </p>
+      <a href={project.url} target="_blank" rel="noreferrer">
+        저장소 보기
+      </a>
+    </article>
   );
 }
 
-function PrivacyPolicy() {
+function PrivateCard({
+  project,
+}: {
+  project: (typeof privateProjects)[number];
+}) {
   return (
-    <main className="privacy-page">
-      <section className="privacy-card">
-        <p className="privacy-kicker">Aussie Pus Studio</p>
-        <h1>Car Park Dash Privacy Policy</h1>
-        <p className="privacy-date">Last updated: June 6, 2026</p>
-        <p>
-          Car Park Dash respects your privacy. The game does not require account registration and does not collect or store
-          directly identifying information such as your name, phone number, or email address on servers operated by us.
+    <article className="card card--private">
+      <div className="private-badge">Private</div>
+      <h3>{project.name}</h3>
+      <p>
+        <strong>기간</strong> {project.period}
+      </p>
+      <p>
+        <strong>범위</strong> {project.scope}
+      </p>
+      <p>
+        <strong>역할</strong> {project.role}
+      </p>
+      <p>{project.summary}</p>
+    </article>
+  );
+}
+
+function App() {
+  return (
+    <main className="portfolio-page">
+      <section className="hero">
+        <p className="eyebrow">Java/Spring Backend Developer</p>
+        <h1>실서비스 운영을 끝까지 보는 Java 웹 개발자 포트폴리오</h1>
+        <p className="hero-copy">
+          개발·배포·운영·장애 정리까지 한 흐름으로 보여주는 형태로 다시 구성했습니다.
+          공개 저장소뿐 아니라 비공개 실무 프로젝트도 함께 공개 가능한 범위 안에서 정리했습니다.
         </p>
-
-        <h2>Information That May Be Processed</h2>
-        <ul>
-          <li>Advertising identifier, device information, OS version, app version, ad impressions, ad clicks, and rewarded-ad completion records.</li>
-          <li>Local game data such as settings, stage progress, owned items, sound preferences, and tutorial state.</li>
-          <li>Crash logs or performance diagnostics when provided by the platform or SDK providers.</li>
-        </ul>
-
-        <h2>How Information Is Used</h2>
-        <ul>
-          <li>To provide advertising through Google AdMob and Google Mobile Ads.</li>
-          <li>To measure ad performance and grant rewards for rewarded advertisements.</li>
-          <li>To save game progress, keep preferences, improve gameplay quality, and troubleshoot issues.</li>
-        </ul>
-
-        <h2>Third-Party Services</h2>
-        <p>
-          The game may use Google AdMob / Google Mobile Ads for advertising. Google processes data according to the
-          <a href="https://policies.google.com/privacy"> Google Privacy Policy</a>.
-        </p>
-
-        <h2>Retention And Deletion</h2>
-        <p>
-          We do not store personal information on our own servers. Local game data can be removed by uninstalling the app
-          or clearing app storage. Data processed by advertising providers is retained and deleted according to their policies.
-        </p>
-
-        <h2>Children</h2>
-        <p>
-          The game is not directed to children under 13. If a parent or guardian has questions about a child&apos;s data,
-          please use the support contact shown on the app store listing.
-        </p>
-
-        <h2>Your Choices</h2>
-        <p>
-          You can reset your advertising identifier, limit personalized ads, change app permissions, or uninstall the app
-          through your device settings. Where required by region, you may choose or change ad consent in the consent screen.
-        </p>
-
-        <h2>Contact</h2>
-        <p>Please use the developer support contact shown on the Google Play or App Store listing.</p>
       </section>
+
+      <section className="card-band">
+        <h2>포트폴리오 설계 기준</h2>
+        <ul>
+          {principles.map((item) => (
+            <li key={item}>{item}</li>
+          ))}
+        </ul>
+      </section>
+
+      <section className="grid">
+        <h2>Public Project Evidence (검증 가능한 링크)</h2>
+        <div className="card-grid">
+          {publicProjects.map((project) => (
+            <ProjectCard key={project.name} project={project} />
+          ))}
+        </div>
+      </section>
+
+      <section className="grid">
+        <h2>Private Projects (비공개 실무 프로젝트)</h2>
+        <p className="section-note">
+          비공개 저장소는 링크를 공개하지 않고, 수행 범위와 판단 근거 중심으로 정리했습니다.
+        </p>
+        <div className="card-grid">
+          {privateProjects.map((project) => (
+            <PrivateCard key={`${project.name}-${project.period}`} project={project} />
+          ))}
+        </div>
+      </section>
+
+      <footer className="footer">
+        <p>
+          GitHub: <a href="https://github.com/amaranth92">https://github.com/amaranth92</a>
+        </p>
+        <p>Target: Australia (Perth)</p>
+      </footer>
     </main>
   );
 }
