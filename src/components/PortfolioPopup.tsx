@@ -1,4 +1,4 @@
-import { profile, type PortfolioMilestone } from '../data/portfolioTimeline';
+﻿import { profile, type PortfolioMilestone } from '../data/portfolioTimeline';
 import { gameEvents } from '../game/gameEvents';
 
 type Props = {
@@ -9,7 +9,14 @@ type Props = {
 export function PortfolioPopup({ milestone, isKorean }: Props) {
   if (!milestone) return null;
 
-  const content = isKorean && milestone.ko ? milestone.ko : milestone;
+  const isReadableKo = (value: string | undefined) => value !== undefined && /[가-힣]/.test(value);
+  const hasKoText =
+    isKorean &&
+    isReadableKo(milestone.ko?.title) &&
+    isReadableKo(milestone.ko?.summary) &&
+    (milestone.ko?.details ?? []).every((detail) => isReadableKo(detail));
+
+  const content = hasKoText && milestone.ko ? milestone.ko : milestone;
 
   return (
     <div className="popup-backdrop" role="presentation">
@@ -37,7 +44,7 @@ export function PortfolioPopup({ milestone, isKorean }: Props) {
           </div>
         ) : null}
         <button type="button" onClick={() => gameEvents.resumeGame()}>
-          {isKorean ? '닫고 계속하기' : 'Close and Resume'}
+          {isKorean ? '팝업 닫기' : 'Close and resume'}
         </button>
       </article>
     </div>

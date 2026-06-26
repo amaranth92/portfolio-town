@@ -37,6 +37,10 @@ const timelineWorldWidth = 280 + portfolioTimeline.length * segmentWidth;
 const worldWidth = Math.ceil(timelineWorldWidth / sampleChunkWidth) * sampleChunkWidth;
 const baseBackdrop = { sky: 0xd9f2f1, haze: 0xffffff, water: 0x69c8dd };
 const spawnPoint = { x: 126, y: 250 };
+const playerJumpVelocity = -1250;
+const playerMoveSpeed = 250;
+const playerAccel = 1800;
+const ladderMoveSpeed = 165;
 
 const themes: Record<string, Theme> = {
   campus: { sky: 0xd9f2f1, haze: 0xffffff, accent: 0x58a65c, water: 0x69c8dd },
@@ -75,6 +79,8 @@ export class PortfolioScene extends Phaser.Scene {
   private lastSafePosition = { ...spawnPoint };
   private locale: 'en' | 'ko' = navigator.language.toLowerCase().startsWith('ko') ? 'ko' : 'en';
   private hazards?: Phaser.Physics.Arcade.Group;
+  private debugWatchEnabled = new URL(window.location.href).searchParams.get('qa') === '1';
+  private debugMilestoneBlocks: Array<{ x: number; y: number; index: number; chunkIndex: number; fallback: boolean }> = [];
 
   constructor() {
     super('PortfolioScene');
@@ -104,7 +110,7 @@ export class PortfolioScene extends Phaser.Scene {
     this.input.keyboard?.on('keydown-UP', () => this.jump());
     this.input.keyboard?.on('keydown-W', () => this.jump());
 
-    this.physics.world.gravity.y = 1120;
+    this.physics.world.gravity.y = 1220;
     this.physics.world.setBounds(0, 0, worldWidth, viewHeight);
     this.cameras.main.setBounds(0, 0, worldWidth, viewHeight);
     this.cameras.main.setBackgroundColor(themes.campus.sky);
@@ -112,6 +118,9 @@ export class PortfolioScene extends Phaser.Scene {
     this.cameras.main.setFollowOffset(-28, 0);
 
     this.buildTimelineWorld();
+    if (this.debugWatchEnabled) {
+      (window as Window & { __portfolioDebug?: Record<string, unknown> }).__portfolioDebug = { ready: true };
+    }
 
     gameEvents.addEventListener('resume-game', this.resumeFromPopup);
     gameEvents.addEventListener('language-change', this.handleLanguageChange as EventListener);
@@ -123,61 +132,80 @@ export class PortfolioScene extends Phaser.Scene {
   update(time: number, delta: number) {
     if (!this.player || !this.cursors || !this.keys) return;
     this.cameras.main.scrollY = 0;
-    // 프레임 시간이 튀어도 물리 이동이 과하게 점프하지 않도록 dt 상한을 둡니다.
-    const left = this.cursors.left.isDown || this.keys.left.isDown || this.moveLeft;
-    const right = this.cursors.right.isDown || this.keys.right.isDown || this.moveRight;
     const body = this.player.body as Phaser.Physics.Arcade.Body;
+
+    const moveLeftInput = this.cursors.left.isDown || this.keys.left.isDown || this.moveLeft;
+    const moveRightInput = this.cursors.right.isDown || this.keys.right.isDown || this.moveRight;
+    const wantsJump = this.keys.jump.isDown || this.jumpHeld;
+    const jumpPressedOnLadder = wantsJump || this.cursors.up.isDown;
     const dt = Math.min(delta / 1000, 0.033);
     const grounded = body.blocked.down || body.touching.down;
     const activeLadder = this.getActiveLadderInfo();
     const onLadder = !!activeLadder;
-    const ladderTopJumpable = this.isAtLadderTop(activeLadder);
-    const ladderLocksPlayer = onLadder && !ladderTopJumpable;
-    const climbUp = ladderLocksPlayer && (this.cursors.up.isDown || this.keys.jump.isDown || this.jumpHeld);
-    const climbDown = onLadder && this.cursors.down.isDown;
-    this.isClimbing = climbUp || climbDown;
+    const atLadderTop = this.isAtLadderTop(activeLadder);
+    const ladderDownInput = this.cursors.down.isDown;
+    const ladderClimbMode = onLadder && (!grounded && (!atLadderTop || ladderDownInput));
+    const left = moveLeftInput;
+    const right = moveRightInput;
 
-    // 사다리 위에서는 중력을 꺼서 미끄러짐을 막고, 꼭대기에 도달하면 다시 일반 점프/낙하 물리로 넘깁니다.
-    // top/bottom 임계값을 바꾸면 아래 isAtLadderTop/isAtLadderBottom 판정과 함께 조정해야 합니다.
-    if (left) {
-      this.player.setVelocityX(Math.max(body.velocity.x - 1550 * dt, -250));
-      this.player.setFlipX(true);
-    } else if (right) {
-      this.player.setVelocityX(Math.min(body.velocity.x + 1550 * dt, 250));
-      this.player.setFlipX(false);
-    } else {
-      this.player.setVelocityX(Phaser.Math.Linear(body.velocity.x, 0, grounded ? 0.22 : 0.08));
-      if (Math.abs(body.velocity.x) < 8) this.player.setVelocityX(0);
-    }
-    this.player.x = Phaser.Math.Clamp(this.player.x, 18, worldWidth - 18);
+    if (ladderClimbMode) {
+      body.allowGravity = false;
+      if (activeLadder) {
+        this.player.setX(Phaser.Math.Clamp(activeLadder.centerX, activeLadder.centerX - 2, activeLadder.centerX + 2));
+      }
 
-    body.allowGravity = !ladderLocksPlayer;
-    if (ladderLocksPlayer) {
-      if (climbUp) {
-        if (activeLadder && body.bottom <= activeLadder.top + 26) {
-          this.player.setPosition(activeLadder.centerX, activeLadder.top - 26);
-          this.player.setVelocityY(0);
-          this.lastGroundedAt = time;
-        } else {
-          this.player.setVelocityY(-135);
-        }
-        this.jumpQueuedAt = -Infinity;
-      } else if (climbDown) {
-        this.player.setVelocityY(this.isAtLadderBottom(activeLadder) ? 0 : 120);
+      if (this.cursors.up.isDown) {
+        this.player.setVelocityY(-ladderMoveSpeed);
+      } else if (ladderDownInput) {
+        this.player.setVelocityY(this.isAtLadderBottom(activeLadder) ? 0 : 130);
       } else {
         this.player.setVelocityY(0);
       }
+
+      this.player.setVelocityX(0);
+      this.isClimbing = true;
+    } else {
+      body.allowGravity = true;
+      this.isClimbing = false;
+      if (left) {
+        this.player.setVelocityX(Math.max(body.velocity.x - playerAccel * dt, -playerMoveSpeed));
+        this.player.setFlipX(true);
+      } else if (right) {
+        this.player.setVelocityX(Math.min(body.velocity.x + playerAccel * dt, playerMoveSpeed));
+        this.player.setFlipX(false);
+      } else {
+        this.player.setVelocityX(Phaser.Math.Linear(body.velocity.x, 0, grounded ? 0.22 : 0.08));
+        if (Math.abs(body.velocity.x) < 8) this.player.setVelocityX(0);
+      }
+
+      if (atLadderTop && jumpPressedOnLadder && time - this.jumpQueuedAt < 220) {
+        this.performJump();
+      }
+
+      if (grounded) this.lastGroundedAt = time;
+      if (time - this.jumpQueuedAt < 190 && time - this.lastGroundedAt < 170) this.performJump();
     }
 
-    if (grounded) this.lastGroundedAt = time;
-    if (!ladderLocksPlayer) {
-      if (this.jumpHeld && time - this.jumpQueuedAt > 260) this.jumpQueuedAt = time;
-      if (time - this.jumpQueuedAt < 180 && time - this.lastGroundedAt < 130) this.performJump();
-      if (!grounded && body.velocity.y < -80 && !this.jumpHeld) this.player.setVelocityY(body.velocity.y * 0.94);
-    }
+    this.player.x = Phaser.Math.Clamp(this.player.x, 18, worldWidth - 18);
 
     if (grounded && this.player.y < 590) {
-      this.lastSafePosition = { x: this.player.x, y: Math.max(80, this.player.y - 84) };
+      this.lastSafePosition = { x: this.player.x, y: Math.max(120, this.player.y - 150) };
+    }
+    if (this.debugWatchEnabled && this.player) {
+      const body = this.player.body as Phaser.Physics.Arcade.Body;
+      (window as Window & { __portfolioDebug?: Record<string, unknown> }).__portfolioDebug = {
+        x: Math.round(this.player.x),
+        y: Math.round(this.player.y),
+        vx: Math.round(body.velocity.x),
+        vy: Math.round(body.velocity.y),
+        grounded,
+        onLadder: this.isPlayerOnLadder(),
+        chapterIndex: this.chapterIndex,
+        skills: [...this.skills],
+        milestoneOpen: this.milestoneOpen,
+        wasGrounded: this.wasGrounded,
+        milestoneBlocks: this.debugMilestoneBlocks
+      };
     }
 
     if (this.player.y > viewHeight + 80) this.respawnPlayer();
@@ -195,16 +223,18 @@ export class PortfolioScene extends Phaser.Scene {
   private getActiveLadderInfo(): LadderInfo | null {
     if (!this.player || !this.ladders) return null;
     const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
-    const playerRect = new Phaser.Geom.Rectangle(playerBody.x, playerBody.y, playerBody.width, playerBody.height);
     const ladders = this.ladders.getChildren()
       .map((ladder) => {
         const ladderBody = (ladder as Phaser.Physics.Arcade.Image).body as Phaser.Physics.Arcade.StaticBody;
         const ladderRect = new Phaser.Geom.Rectangle(ladderBody.x, ladderBody.y, ladderBody.width, ladderBody.height);
         return { ladder, ladderBody, ladderRect };
       })
-      .filter(({ ladderBody, ladderRect }) => {
-        const centerInsideLadder = playerBody.center.x >= ladderBody.left - 4 && playerBody.center.x <= ladderBody.right + 4;
-        return centerInsideLadder && Phaser.Geom.Intersects.RectangleToRectangle(playerRect, ladderRect);
+      .filter(({ ladderRect }) => {
+        const xAligned = Math.abs(playerBody.center.x - ladderRect.centerX) <= ladderRect.width / 2 + 7;
+        const yOverlaps =
+          playerBody.bottom >= ladderRect.top - 8 &&
+          playerBody.top <= ladderRect.bottom + 8;
+        return xAligned && yOverlaps;
       })
       .sort((a, b) => Math.abs(a.ladderBody.center.x - playerBody.center.x) - Math.abs(b.ladderBody.center.x - playerBody.center.x));
 
@@ -221,13 +251,13 @@ export class PortfolioScene extends Phaser.Scene {
   private isAtLadderTop(ladderInfo = this.getActiveLadderInfo()) {
     if (!this.player || !ladderInfo) return false;
     const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
-    return playerBody.bottom <= ladderInfo.top + 20;
+    return playerBody.bottom >= ladderInfo.top - 14 && playerBody.bottom <= ladderInfo.top + 16;
   }
 
   private isAtLadderBottom(ladderInfo = this.getActiveLadderInfo()) {
     if (!this.player || !ladderInfo) return false;
     const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
-    return playerBody.bottom >= ladderInfo.bottom - 12;
+    return playerBody.top >= ladderInfo.bottom - 20 && playerBody.top <= ladderInfo.bottom + 8;
   }
 
   private handleTouchControl = (event: Event) => {
@@ -246,7 +276,8 @@ export class PortfolioScene extends Phaser.Scene {
 
   private performJump() {
     if (!this.player) return;
-    this.player.setVelocityY(-900);
+    if (this.scene.isPaused()) return;
+    this.player.setVelocityY(playerJumpVelocity);
     this.jumpQueuedAt = -Infinity;
     this.squashUntil = this.time.now + 120;
     this.addJumpPuff(this.player.x, this.player.y + 30);
@@ -259,6 +290,7 @@ export class PortfolioScene extends Phaser.Scene {
     this.renderedSampleChunks.clear();
     this.physicsSampleChunks.clear();
     this.sampleCollectibleVisuals.clear();
+    this.debugMilestoneBlocks = [];
 
     const solids = this.physics.add.staticGroup();
     const ladders = this.physics.add.staticGroup();
@@ -294,6 +326,7 @@ export class PortfolioScene extends Phaser.Scene {
     this.player = this.physics.add.sprite(spawnPoint.x, spawnPoint.y, 'char:player').setScale(2.25).setDepth(10);
     this.player.setSize(17, 21);
     this.player.setOffset(3, 2);
+    this.player.setFlipX(false);
     this.player.setCollideWorldBounds(false);
     this.cameras.main.startFollow(this.player, true, 0.12, 0);
     this.cameras.main.scrollX = 0;
@@ -447,6 +480,7 @@ export class PortfolioScene extends Phaser.Scene {
     const ladderTiles: Array<{ x: number; y: number }> = [];
 
     sampleMap.layers.forEach((layer, layerIndex) => {
+      if (!this.isWalkableLayer(layer.name)) return;
       layer.tiles.forEach((frame, tileIndex) => {
         if (frame < 0) return;
         const col = tileIndex % sampleMap.width;
@@ -478,10 +512,10 @@ export class PortfolioScene extends Phaser.Scene {
           return;
         }
 
-        if (!this.isWalkableFrame(frame) || this.hasWalkableAbove(sampleMap, col, row)) return;
+        if (!this.isWalkableFrame(frame, row) || this.hasWalkableAbove(sampleMap, col, row, layerIndex)) return;
 
-        const platform = solids.create(x + tileSize / 2, y + 6, 'tile:block') as Phaser.Physics.Arcade.Image;
-        platform.setDisplaySize(tileSize * 0.78, 9).setVisible(false).refreshBody();
+        const platform = solids.create(x + tileSize / 2, y + tileSize - 2, 'tile:block') as Phaser.Physics.Arcade.Image;
+        platform.setDisplaySize(tileSize * 0.98, 9).setVisible(false).refreshBody();
         const body = platform.body as Phaser.Physics.Arcade.StaticBody;
         body.checkCollision.down = false;
         body.checkCollision.left = false;
@@ -540,52 +574,95 @@ export class PortfolioScene extends Phaser.Scene {
   ) {
     // 샘플맵의 ! 블록 위치를 찾아 보이지 않는 Arcade 충돌체로 등록합니다.
     const blockPosition = this.findSampleFramePosition(layout, sampleMap, 10);
-    if (!blockPosition) return;
+    const fallbackX = layout.blockX;
+    const fallbackY = layout.blockY;
+    const candidateX = blockPosition?.x ?? fallbackX;
+    const candidateY = blockPosition?.y ?? fallbackY;
+    const hasCollisionWithExisting = this.debugMilestoneBlocks.some((existing) => {
+      if (Math.abs(existing.x - candidateX) > 20) return false;
+      return Math.abs(existing.y - candidateY) < 24;
+    });
+    const useFallback = !blockPosition || hasCollisionWithExisting;
+    const x = useFallback ? fallbackX : candidateX;
+    const y = useFallback ? fallbackY : candidateY;
 
-    const block = blocks.create(blockPosition.x, blockPosition.y, 'tile:question') as Phaser.Physics.Arcade.Image;
+    const block = blocks.create(x, y, 'tile:question') as Phaser.Physics.Arcade.Image;
     block.setDisplaySize(42, 42).setVisible(false).setData('milestoneIndex', milestoneIndex).refreshBody();
+    if (this.debugWatchEnabled) {
+      this.debugMilestoneBlocks.push({
+        x,
+        y,
+        index: milestoneIndex,
+        chunkIndex: this.getSampleChunkIndex(x),
+        fallback: useFallback
+      });
+    }
   }
 
   private findSampleFramePosition(layout: SegmentLayout, sampleMap: KenneySampleMap, frameToFind: number) {
-    const chunkIndex = this.getSampleChunkIndex(layout.startX);
+    const centerX = layout.startX + segmentWidth * 0.5;
+    const targetChunk = this.getSampleChunkIndex(centerX);
+    const minChunk = Math.max(0, targetChunk - 1);
+    const maxChunk = targetChunk + 1;
     const scale = sampleScale;
     const tileSize = sampleMap.tileWidth * scale;
-    const originX = chunkIndex * sampleChunkWidth + 18;
-    const originY = 10;
     const candidates: Array<{ x: number; y: number; distance: number }> = [];
 
-    sampleMap.layers.forEach((layer) => {
-      layer.tiles.forEach((frame, tileIndex) => {
-        if (frame !== frameToFind) return;
-        const col = tileIndex % sampleMap.width;
-        const row = Math.floor(tileIndex / sampleMap.width);
-        const x = originX + col * tileSize + tileSize / 2;
-        const y = originY + row * tileSize + tileSize / 2;
-        const inSegment = x >= layout.startX && x < layout.startX + segmentWidth;
-        candidates.push({ x, y, distance: Math.abs(x - layout.blockX) + (inSegment ? 0 : segmentWidth) });
+    for (let chunkIndex = minChunk; chunkIndex <= maxChunk; chunkIndex += 1) {
+      const originX = chunkIndex * sampleChunkWidth + 18;
+      const originY = 10;
+
+      sampleMap.layers.forEach((layer) => {
+        layer.tiles.forEach((frame, tileIndex) => {
+          if (frame !== frameToFind) return;
+          const col = tileIndex % sampleMap.width;
+          const row = Math.floor(tileIndex / sampleMap.width);
+          const x = originX + col * tileSize + tileSize / 2;
+          const y = originY + row * tileSize + tileSize / 2;
+          const inSegment = x >= layout.startX && x < layout.startX + segmentWidth;
+          const distance = Math.abs(x - layout.blockX) + (inSegment ? 0 : segmentWidth * 0.75);
+          candidates.push({ x, y, distance });
+        });
       });
-    });
+    }
 
     return candidates.sort((a, b) => a.distance - b.distance)[0];
   }
 
-  private hasWalkableAbove(sampleMap: KenneySampleMap, col: number, row: number) {
+  private hasWalkableAbove(sampleMap: KenneySampleMap, col: number, row: number, layerIndex: number) {
     if (row <= 0) return false;
-    return sampleMap.layers.some((layer) => this.isWalkableFrame(layer.tiles[(row - 1) * sampleMap.width + col]));
+    const above = sampleMap.layers[layerIndex]?.tiles[(row - 1) * sampleMap.width + col];
+    if (above === undefined || above === -1) return false;
+    return this.isWalkableFrame(above, row - 1);
   }
 
-  private isWalkableFrame(frame: number) {
-    // 밟을 수 있는 타일 frame만 아주 보수적으로 등록합니다.
-    // 범위를 넓게 잡으면 문, 줄, 장식, 아이템까지 바닥처럼 인식될 수 있으니 한 번에 많이 추가하지 마세요.
-    return (
-      (frame >= 0 && frame <= 3) ||
-      (frame >= 20 && frame <= 25) ||
-      (frame >= 40 && frame <= 43) ||
-      (frame >= 60 && frame <= 63) ||
-      frame === 96 ||
-      frame === 97 ||
-      (frame >= 153 && frame <= 156)
-    );
+  private isWalkableLayer(layerName: string) {
+    const normalized = layerName.toLowerCase();
+    return normalized.includes('tiles');
+  }
+
+  private isWalkableFrame(frame: number, row = 10) {
+    if (frame < 0 || frame > 200) return false;
+    if (row <= 1) return false;
+    if (
+      this.isLadderFrame(frame) ||
+      this.isSpringFrame(frame) ||
+      this.isSampleCollectibleFrame(frame) ||
+      this.isDoorOrPropFrame(frame) ||
+      this.isCloudOrFloatingFrame(frame)
+    ) {
+      return false;
+    }
+    return frame !== 12 && frame !== 13 && frame !== 14 && frame !== 15;
+  }
+
+  private isCloudOrFloatingFrame(frame: number) {
+    return (frame >= 153 && frame <= 156) || frame === 181 || frame === 182 || frame === 183;
+  }
+
+  private isDoorOrPropFrame(frame: number) {
+    // 자주 착시를 유발하는 경계/장식 프레임은 바닥 판정에서 제외합니다.
+    return frame >= 4 && frame <= 11;
   }
 
   private isLadderFrame(frame: number) {
@@ -681,11 +758,11 @@ export class PortfolioScene extends Phaser.Scene {
     const block = blockObject as Phaser.Physics.Arcade.Image;
     const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
     const blockBody = block.body as Phaser.Physics.Arcade.StaticBody;
-    // 옆에서 스치면 열리지 않고, 플레이어 머리가 아래에서 블록을 친 경우에만 팝업을 엽니다.
-    const horizontallyTouchingBlock = playerBody.right > blockBody.left + 4 && playerBody.left < blockBody.right - 4;
-    const headReachedBlock = playerBody.top <= blockBody.bottom + 6;
-    const playerIsBelowBlock = playerBody.center.y > blockBody.center.y + 10;
-    const headHit = horizontallyTouchingBlock && headReachedBlock && playerIsBelowBlock && (playerBody.blocked.up || playerBody.touching.up || playerBody.velocity.y <= 0);
+    // 아래쪽에서 블록을 치고 올라가게 될 때만 열립니다. x축 위치는 조금 여유있게 허용합니다.
+    const overlapX = playerBody.center.x > blockBody.left + 6 && playerBody.center.x < blockBody.right - 6;
+    const nearBottomFace = Math.abs(playerBody.bottom - blockBody.top) <= 12;
+    const approachingFromBelow = playerBody.velocity.y >= 0 || playerBody.blocked.up || playerBody.touching.up;
+    const headHit = overlapX && nearBottomFace && approachingFromBelow;
 
     if (!headHit) return;
     this.openMilestone(block);
@@ -787,7 +864,7 @@ export class PortfolioScene extends Phaser.Scene {
 
     if (this.isClimbing) {
       this.player.setTexture(time % 260 < 130 ? 'char:playerWalkA' : 'char:playerWalkB');
-      this.player.rotation = Math.PI;
+      this.player.rotation = 0;
       this.player.scaleX = 2.25;
       this.player.scaleY = 2.25;
       if (this.shadow) this.shadow.setScale(0.5, 1);
