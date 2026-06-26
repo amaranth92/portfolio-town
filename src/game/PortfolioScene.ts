@@ -36,8 +36,8 @@ const sampleChunkWidth = kenneySampleMaps.sampleA.width * kenneySampleMaps.sampl
 const timelineWorldWidth = 280 + portfolioTimeline.length * segmentWidth;
 const worldWidth = Math.ceil(timelineWorldWidth / sampleChunkWidth) * sampleChunkWidth;
 const baseBackdrop = { sky: 0xd9f2f1, haze: 0xffffff, water: 0x69c8dd };
-const spawnPoint = { x: 126, y: 250 };
-const playerJumpVelocity = -1250;
+const spawnPoint = { x: 126, y: 350 };
+const playerJumpVelocity = -2350;
 const playerMoveSpeed = 250;
 const playerAccel = 1800;
 const ladderMoveSpeed = 165;
@@ -61,10 +61,16 @@ export class PortfolioScene extends Phaser.Scene {
   private moveRight = false;
   private jumpHeld = false;
   private jumpQueuedAt = -Infinity;
-  private lastGroundedAt = 0;
+  private jumpPressedThisFrame = false;
+  private lastJumpInputAt = -Infinity;
+  private isJumping = false;
+  private lastGroundedAt = -Infinity;
   private wasGrounded = false;
+  private previousPlayerY = spawnPoint.y;
+  private pausedAt = { x: 0, y: 0 };
   private viewedIds = new Set<string>();
   private skills = new Set<string>();
+  private milestoneBlocks: Phaser.Physics.Arcade.Image[] = [];
   private milestoneOpen = false;
   private justOpenedAt = 0;
   private lastHazardHitAt = -Infinity;
@@ -79,8 +85,18 @@ export class PortfolioScene extends Phaser.Scene {
   private lastSafePosition = { ...spawnPoint };
   private locale: 'en' | 'ko' = navigator.language.toLowerCase().startsWith('ko') ? 'ko' : 'en';
   private hazards?: Phaser.Physics.Arcade.Group;
-  private debugWatchEnabled = new URL(window.location.href).searchParams.get('qa') === '1';
+  private debugWatchEnabled = false;
   private debugMilestoneBlocks: Array<{ x: number; y: number; index: number; chunkIndex: number; fallback: boolean }> = [];
+  private debugMilestoneProbe: {
+    blockIndex?: number;
+    nearHorizontal?: boolean;
+    nearTop?: boolean;
+    jumpIntent?: boolean;
+    upwardContact?: boolean;
+    verticalGap?: number;
+    open?: boolean;
+  } = {};
+  private readonly jumpBufferMs = 700;
 
   constructor() {
     super('PortfolioScene');
@@ -98,6 +114,7 @@ export class PortfolioScene extends Phaser.Scene {
   }
 
   create() {
+    this.debugWatchEnabled = new URL(window.location.href).searchParams.get('qa') === '1';
     // 키보드와 모바일 터치 입력을 같은 이동 플래그로 합쳐 update 루프에서 동일하게 처리합니다.
     this.cursors = this.input.keyboard?.createCursorKeys();
     this.keys = this.input.keyboard?.addKeys({
@@ -106,9 +123,7 @@ export class PortfolioScene extends Phaser.Scene {
       jump: Phaser.Input.Keyboard.KeyCodes.W
     }) as Record<'left' | 'right' | 'jump', Phaser.Input.Keyboard.Key>;
 
-    this.input.keyboard?.on('keydown-SPACE', () => this.jump());
-    this.input.keyboard?.on('keydown-UP', () => this.jump());
-    this.input.keyboard?.on('keydown-W', () => this.jump());
+    this.input.keyboard?.on('keydown', this.handleGameKeyDown as (event: KeyboardEvent) => void);
 
     this.physics.world.gravity.y = 1220;
     this.physics.world.setBounds(0, 0, worldWidth, viewHeight);
@@ -118,7 +133,7 @@ export class PortfolioScene extends Phaser.Scene {
     this.cameras.main.setFollowOffset(-28, 0);
 
     this.buildTimelineWorld();
-    if (this.debugWatchEnabled) {
+    if (this.debugWatchEnabled || import.meta.env.DEV) {
       (window as Window & { __portfolioDebug?: Record<string, unknown> }).__portfolioDebug = { ready: true };
     }
 
@@ -133,22 +148,36 @@ export class PortfolioScene extends Phaser.Scene {
     if (!this.player || !this.cursors || !this.keys) return;
     this.cameras.main.scrollY = 0;
     const body = this.player.body as Phaser.Physics.Arcade.Body;
+    const currentPlayerY = this.player.y;
+    if (this.milestoneOpen) {
+      body.setVelocity(0, 0);
+      if (this.shadow) {
+        this.shadow.setPosition(this.player.x, this.player.y + 40);
+      }
+      return;
+    }
 
     const moveLeftInput = this.cursors.left.isDown || this.keys.left.isDown || this.moveLeft;
     const moveRightInput = this.cursors.right.isDown || this.keys.right.isDown || this.moveRight;
-    const wantsJump = this.keys.jump.isDown || this.jumpHeld;
-    const jumpPressedOnLadder = wantsJump || this.cursors.up.isDown;
     const dt = Math.min(delta / 1000, 0.033);
     const grounded = body.blocked.down || body.touching.down;
     const activeLadder = this.getActiveLadderInfo();
     const onLadder = !!activeLadder;
     const atLadderTop = this.isAtLadderTop(activeLadder);
+    const ladderUpInput = this.cursors.up.isDown;
     const ladderDownInput = this.cursors.down.isDown;
-    const ladderClimbMode = onLadder && (!grounded && (!atLadderTop || ladderDownInput));
+    const ladderClimbMode = onLadder && !grounded && (ladderUpInput || ladderDownInput);
     const left = moveLeftInput;
     const right = moveRightInput;
+    const canJumpNow = grounded || atLadderTop || onLadder || this.time.now - this.lastGroundedAt < 120;
+    const jumpQueued = time - this.jumpQueuedAt < this.jumpBufferMs && canJumpNow;
+    const recentJumpInput = this.time.now - this.lastJumpInputAt < this.jumpBufferMs || this.isJumping;
 
-    if (ladderClimbMode) {
+    if (jumpQueued) {
+      this.performJump();
+    }
+
+    if (ladderClimbMode && !jumpQueued) {
       body.allowGravity = false;
       if (activeLadder) {
         this.player.setX(Phaser.Math.Clamp(activeLadder.centerX, activeLadder.centerX - 2, activeLadder.centerX + 2));
@@ -178,19 +207,15 @@ export class PortfolioScene extends Phaser.Scene {
         if (Math.abs(body.velocity.x) < 8) this.player.setVelocityX(0);
       }
 
-      if (atLadderTop && jumpPressedOnLadder && time - this.jumpQueuedAt < 220) {
-        this.performJump();
-      }
-
-      if (grounded) this.lastGroundedAt = time;
-      if (time - this.jumpQueuedAt < 190 && time - this.lastGroundedAt < 170) this.performJump();
     }
 
     this.player.x = Phaser.Math.Clamp(this.player.x, 18, worldWidth - 18);
 
     if (grounded && this.player.y < 590) {
-      this.lastSafePosition = { x: this.player.x, y: Math.max(120, this.player.y - 150) };
+      this.lastSafePosition = { x: this.player.x, y: Math.max(210, this.player.y - 120) };
+      this.isJumping = false;
     }
+    if (grounded) this.lastGroundedAt = time;
     if (this.debugWatchEnabled && this.player) {
       const body = this.player.body as Phaser.Physics.Arcade.Body;
       (window as Window & { __portfolioDebug?: Record<string, unknown> }).__portfolioDebug = {
@@ -204,16 +229,68 @@ export class PortfolioScene extends Phaser.Scene {
         skills: [...this.skills],
         milestoneOpen: this.milestoneOpen,
         wasGrounded: this.wasGrounded,
-        milestoneBlocks: this.debugMilestoneBlocks
+        milestoneBlocks: this.debugMilestoneBlocks,
+        jumpQueuedMs: Math.round(this.time.now - this.jumpQueuedAt),
+        jumpPressedThisFrame: this.jumpPressedThisFrame,
+        canJumpNow,
+        lastMilestoneProbe: this.debugMilestoneProbe
       };
     }
 
     if (this.player.y > viewHeight + 80) this.respawnPlayer();
+    if (this.player.y < 110) {
+      this.player.setY(110);
+      body.setVelocityY(Math.max(0, body.velocity.y));
+      this.jumpQueuedAt = -Infinity;
+      this.jumpPressedThisFrame = false;
+    }
 
     this.updateHazards();
+    this.tryOpenMilestoneByProximity(recentJumpInput);
     this.updateCurrentMilestone();
     this.animatePlayer(time, grounded, left, right);
+    this.jumpPressedThisFrame = false;
+    this.previousPlayerY = currentPlayerY;
     this.wasGrounded = grounded;
+  }
+
+  private tryOpenMilestoneByProximity(recentJumpInput: boolean) {
+    if (!this.player || this.milestoneOpen || this.scene.isPaused() || !recentJumpInput) return;
+    if (this.time.now - this.justOpenedAt < 900) return;
+
+    const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
+    let foundCandidate: Phaser.Physics.Arcade.Image | null = null;
+    let candidateProbe: typeof this.debugMilestoneProbe | null = null;
+
+    for (const block of this.milestoneBlocks) {
+      if (block.getData('used')) continue;
+      const blockBody = block.body as Phaser.Physics.Arcade.StaticBody;
+      const nearHorizontal = Math.abs(playerBody.center.x - blockBody.center.x) <= 22;
+      const nearTop = playerBody.bottom >= blockBody.top - 14 && playerBody.bottom <= blockBody.top + 14;
+
+      const probe = {
+        blockIndex: block.getData('milestoneIndex') as number | undefined,
+        nearHorizontal,
+        nearTop: nearTop,
+        jumpIntent: true,
+        upwardContact: playerBody.velocity.y < -20 || this.previousPlayerY - this.player!.y > 6,
+        verticalGap: playerBody.bottom - blockBody.top,
+        open: nearHorizontal && nearTop && recentJumpInput
+      };
+
+      if (nearHorizontal && nearTop) {
+        foundCandidate = block;
+        candidateProbe = probe;
+        break;
+      }
+
+      this.debugMilestoneProbe = probe;
+    }
+
+    if (candidateProbe) this.debugMilestoneProbe = candidateProbe;
+    if (!foundCandidate) return;
+
+    this.openMilestone(foundCandidate);
   }
 
   private isPlayerOnLadder() {
@@ -230,9 +307,9 @@ export class PortfolioScene extends Phaser.Scene {
         return { ladder, ladderBody, ladderRect };
       })
       .filter(({ ladderRect }) => {
-        const xAligned = Math.abs(playerBody.center.x - ladderRect.centerX) <= ladderRect.width / 2 + 7;
+        const xAligned = Math.abs(playerBody.center.x - ladderRect.centerX) <= ladderRect.width / 2 + 12;
         const yOverlaps =
-          playerBody.bottom >= ladderRect.top - 8 &&
+          playerBody.bottom >= ladderRect.top - 12 &&
           playerBody.top <= ladderRect.bottom + 8;
         return xAligned && yOverlaps;
       })
@@ -251,13 +328,22 @@ export class PortfolioScene extends Phaser.Scene {
   private isAtLadderTop(ladderInfo = this.getActiveLadderInfo()) {
     if (!this.player || !ladderInfo) return false;
     const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
-    return playerBody.bottom >= ladderInfo.top - 14 && playerBody.bottom <= ladderInfo.top + 16;
+    const alignedToLadder =
+      playerBody.center.x >= ladderInfo.centerX - 18 && playerBody.center.x <= ladderInfo.centerX + 18;
+    // 사다리 정상에서는 유저가 1-2픽셀 정도 어긋나도 탑점프가 되도록 너비를 넉넉히 둡니다.
+    const nearTop = playerBody.bottom >= ladderInfo.top - 34 && playerBody.bottom <= ladderInfo.top + 30;
+    return alignedToLadder && nearTop;
   }
 
   private isAtLadderBottom(ladderInfo = this.getActiveLadderInfo()) {
     if (!this.player || !ladderInfo) return false;
     const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
-    return playerBody.top >= ladderInfo.bottom - 20 && playerBody.top <= ladderInfo.bottom + 8;
+    return (
+      playerBody.center.x >= ladderInfo.centerX - 18 &&
+      playerBody.center.x <= ladderInfo.centerX + 18 &&
+      playerBody.top >= ladderInfo.bottom - 34 &&
+      playerBody.top <= ladderInfo.bottom + 16
+    );
   }
 
   private handleTouchControl = (event: Event) => {
@@ -266,18 +352,29 @@ export class PortfolioScene extends Phaser.Scene {
     this.moveLeft = detail.control === 'left' ? detail.pressed : this.moveLeft;
     this.moveRight = detail.control === 'right' ? detail.pressed : this.moveRight;
     this.jumpHeld = detail.control === 'jump' ? detail.pressed : this.jumpHeld;
-    if (detail.control === 'jump' && detail.pressed) this.jumpQueuedAt = this.time.now;
+    if (detail.control === 'jump' && detail.pressed) {
+      this.jumpQueuedAt = this.time.now;
+      this.jumpPressedThisFrame = true;
+    }
+  };
+
+  private handleGameKeyDown = (event: KeyboardEvent) => {
+    if (event.code === 'Space' || event.code === 'ArrowUp' || event.code === 'KeyW') {
+      this.jump();
+    }
   };
 
   private jump() {
-    if (this.isPlayerOnLadder() && !this.isAtLadderTop()) return;
     this.jumpQueuedAt = this.time.now;
+    this.jumpPressedThisFrame = true;
+    this.lastJumpInputAt = this.time.now;
   }
 
   private performJump() {
     if (!this.player) return;
     if (this.scene.isPaused()) return;
     this.player.setVelocityY(playerJumpVelocity);
+    this.isJumping = true;
     this.jumpQueuedAt = -Infinity;
     this.squashUntil = this.time.now + 120;
     this.addJumpPuff(this.player.x, this.player.y + 30);
@@ -290,6 +387,7 @@ export class PortfolioScene extends Phaser.Scene {
     this.renderedSampleChunks.clear();
     this.physicsSampleChunks.clear();
     this.sampleCollectibleVisuals.clear();
+    this.milestoneBlocks = [];
     this.debugMilestoneBlocks = [];
 
     const solids = this.physics.add.staticGroup();
@@ -572,7 +670,7 @@ export class PortfolioScene extends Phaser.Scene {
     sampleMap: KenneySampleMap,
     milestoneIndex: number
   ) {
-    // 샘플맵의 ! 블록 위치를 찾아 보이지 않는 Arcade 충돌체로 등록합니다.
+    // 샘플맵의 ! 블록 위치를 찾아 표시 가능한 충돌체로 등록합니다.
     const blockPosition = this.findSampleFramePosition(layout, sampleMap, 10);
     const fallbackX = layout.blockX;
     const fallbackY = layout.blockY;
@@ -582,12 +680,21 @@ export class PortfolioScene extends Phaser.Scene {
       if (Math.abs(existing.x - candidateX) > 20) return false;
       return Math.abs(existing.y - candidateY) < 24;
     });
-    const useFallback = !blockPosition || hasCollisionWithExisting;
+    const useFallback =
+      !blockPosition || hasCollisionWithExisting || candidateY < 270 || candidateY > 520;
     const x = useFallback ? fallbackX : candidateX;
     const y = useFallback ? fallbackY : candidateY;
 
     const block = blocks.create(x, y, 'tile:question') as Phaser.Physics.Arcade.Image;
-    block.setDisplaySize(42, 42).setVisible(false).setData('milestoneIndex', milestoneIndex).refreshBody();
+    block
+      .setDisplaySize(36, 36)
+      .setVisible(true)
+      .setData('milestoneIndex', milestoneIndex)
+      .refreshBody();
+    const blockBody = block.body as Phaser.Physics.Arcade.StaticBody;
+    blockBody.checkCollision.left = false;
+    blockBody.checkCollision.right = false;
+    this.milestoneBlocks.push(block);
     if (this.debugWatchEnabled) {
       this.debugMilestoneBlocks.push({
         x,
@@ -757,15 +864,33 @@ export class PortfolioScene extends Phaser.Scene {
 
     const block = blockObject as Phaser.Physics.Arcade.Image;
     const playerBody = this.player.body as Phaser.Physics.Arcade.Body;
-    const blockBody = block.body as Phaser.Physics.Arcade.StaticBody;
-    // 아래쪽에서 블록을 치고 올라가게 될 때만 열립니다. x축 위치는 조금 여유있게 허용합니다.
-    const overlapX = playerBody.center.x > blockBody.left + 6 && playerBody.center.x < blockBody.right - 6;
-    const nearBottomFace = Math.abs(playerBody.bottom - blockBody.top) <= 12;
-    const approachingFromBelow = playerBody.velocity.y >= 0 || playerBody.blocked.up || playerBody.touching.up;
-    const headHit = overlapX && nearBottomFace && approachingFromBelow;
+    if (block.getData('used')) return;
 
-    if (!headHit) return;
-    this.openMilestone(block);
+    const blockBody = block.body as Phaser.Physics.Arcade.StaticBody;
+    const withinHorizontal =
+      playerBody.center.x > blockBody.left - 10 && playerBody.center.x < blockBody.right + 10;
+    const nearTopFace = playerBody.bottom >= blockBody.top - 18 && playerBody.bottom <= blockBody.top + 16;
+    const jumpNow =
+      this.jumpPressedThisFrame || this.isJumping || now - this.jumpQueuedAt < this.jumpBufferMs || now - this.lastJumpInputAt < this.jumpBufferMs;
+    const upwardContact =
+      playerBody.blocked.up ||
+      playerBody.touching.up ||
+      playerBody.velocity.y < -20 ||
+      (this.previousPlayerY - this.player.y > 6 && playerBody.top <= blockBody.bottom + 14);
+    const verticalGap = playerBody.bottom - blockBody.top;
+    this.debugMilestoneProbe = {
+      blockIndex: block.getData('milestoneIndex') as number | undefined,
+      nearHorizontal: withinHorizontal,
+      nearTop: nearTopFace,
+      jumpIntent: jumpNow,
+      upwardContact,
+      verticalGap,
+      open: withinHorizontal && nearTopFace && jumpNow
+    };
+
+    if (withinHorizontal && nearTopFace && jumpNow) {
+      this.openMilestone(block);
+    }
   };
 
   private collectSkillItem: Phaser.Types.Physics.Arcade.ArcadePhysicsCallback = (_playerObject, itemObject) => {
@@ -822,7 +947,10 @@ export class PortfolioScene extends Phaser.Scene {
     // 리스폰이 낮으면 update()의 lastSafePosition y 보정값을 더 키우세요.
     if (!this.player) return;
     const body = this.player.body as Phaser.Physics.Arcade.Body;
-    this.player.setPosition(this.lastSafePosition.x, this.lastSafePosition.y);
+    this.player.setPosition(
+      Phaser.Math.Clamp(this.lastSafePosition.x, 40, worldWidth - 40),
+      Phaser.Math.Clamp(this.lastSafePosition.y, 190, 250)
+    );
     this.player.setVelocity(0, 0);
     body.allowGravity = true;
     this.addJumpPuff(this.player.x, this.player.y + 30);
@@ -832,6 +960,8 @@ export class PortfolioScene extends Phaser.Scene {
     if (this.milestoneOpen || this.scene.isPaused()) return;
     const now = this.time.now;
     if (now - this.justOpenedAt < 900) return;
+    if (!this.player) return;
+    if (block.getData('used')) return;
     this.justOpenedAt = now;
     this.milestoneOpen = true;
 
@@ -839,14 +969,24 @@ export class PortfolioScene extends Phaser.Scene {
     const milestone = portfolioTimeline[milestoneIndex];
     milestone.skills.forEach((skill) => this.skills.add(skill));
     this.viewedIds.add(milestone.id);
+    block.setData('used', true);
     block.setVisible(true).setTexture('tile:questionUsed');
+    this.player.setVelocity(0, 0);
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
+    body.setVelocity(0, 0);
+    body.allowGravity = false;
+    this.isJumping = false;
+    this.pausedAt = {
+      x: this.player.x,
+      y: this.player.y
+    };
     this.chapterIndex = milestoneIndex;
     // 팝업이 열리면 React가 표시를 맡고 Phaser 씬은 일시정지합니다.
     // React가 resume-game을 돌려보내기 전까지 물리 update가 멈추므로, 팝업 중 중복 충돌/중복 open을 피할 수 있습니다.
     this.emitSkills();
     gameEvents.emitChapter(milestoneIndex);
     gameEvents.emitMilestoneOpen({ milestone, index: milestoneIndex });
-    this.scene.pause();
+    this.physics.world.pause();
   }
 
   private updateCurrentMilestone() {
@@ -937,8 +1077,23 @@ export class PortfolioScene extends Phaser.Scene {
   }
 
   private resumeFromPopup = () => {
+    if (!this.player) return;
+
+    const body = this.player.body as Phaser.Physics.Arcade.Body;
     this.milestoneOpen = false;
-    this.scene.resume();
+    body.allowGravity = true;
+    this.player.setPosition(
+      Phaser.Math.Clamp(this.pausedAt.x, 40, worldWidth - 40),
+      Phaser.Math.Clamp(this.pausedAt.y, 130, 600)
+    );
+    this.player.setVelocity(0, 0);
+    this.jumpQueuedAt = -Infinity;
+    this.jumpPressedThisFrame = false;
+    this.jumpHeld = false;
+    this.moveLeft = false;
+    this.moveRight = false;
+    this.isJumping = false;
+    this.physics.world.resume();
   };
 
   private handleLanguageChange = (event: Event) => {
@@ -956,6 +1111,7 @@ export class PortfolioScene extends Phaser.Scene {
   private cleanupListeners() {
     gameEvents.removeEventListener('resume-game', this.resumeFromPopup);
     gameEvents.removeEventListener('language-change', this.handleLanguageChange as EventListener);
+    this.input.keyboard?.off('keydown', this.handleGameKeyDown as (event: KeyboardEvent) => void);
     window.removeEventListener('touch-control', this.handleTouchControl as EventListener);
   }
 

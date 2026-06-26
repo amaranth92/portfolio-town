@@ -47,8 +47,8 @@ export function Hud({
       ? '이력서 스택'
       : 'Resume stack'
     : isKorean
-      ? '획득 스킬'
-      : 'Collected skills';
+      ? '게임 획득 스킬'
+      : 'Acquired game skills';
 
   const localeLabel = locale === 'ko' ? 'Switch to English' : '한국어로 보기';
 
@@ -96,7 +96,7 @@ export function Hud({
         </aside>
       )}
 
-      <section className="hud-skills" aria-label={isKorean ? '보유 스킬' : 'Skill list'}>
+  <section className="hud-skills" aria-label={isKorean ? '보유 스킬' : 'Skill list'}>
         <span>
           {modeTitle} - {skillsLabel}
         </span>

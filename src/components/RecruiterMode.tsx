@@ -1,57 +1,61 @@
 ﻿import { profile, portfolioTimeline } from '../data/portfolioTimeline';
 import type { Locale } from '../game/gameEvents';
-import type { PortfolioMilestone } from '../data/portfolioTimeline';
 
 type Props = {
   locale: Locale;
   onExitToGame: () => void;
 };
 
-type ResumeLang = {
+type RecruiterLabels = {
+  title: string;
+  subtitle: string;
   navSummary: string;
   navSkills: string;
   navTimeline: string;
   navContact: string;
   summary: string;
-  skillTitle: string;
-  timelineTitle: string;
+  resumeSkillTitle: string;
+  gameSkillTitle: string;
+  navGameSkills: string;
   contactTitle: string;
-  linksTitle: string;
-  backToGame: string;
 };
 
-const LABELS: Record<Locale, ResumeLang> = {
-  ko: {
-    navSummary: '요약',
-    navSkills: '이력서 스택',
-    navTimeline: '경력',
-    navContact: '연락처',
-    summary:
-      '이력서 모드에서는 게임 없이 순차적으로 전체 경력을 읽을 수 있습니다. 좌측 하단의 누적 스택은 게임 진행에서 수집된 모든 항목입니다.',
-    skillTitle: '누적 스킬',
-    timelineTitle: '경력 타임라인',
-    contactTitle: '연락처',
-    linksTitle: '링크',
-    backToGame: '게임으로 돌아가기'
-  },
+const LABELS: Record<Locale, RecruiterLabels> = {
   en: {
+    title: 'Resume mode',
+    subtitle: 'Timeline, skill stacks, and summary that are easier to read on desktop and mobile.',
     navSummary: 'Summary',
-    navSkills: 'Resume stack',
+    navSkills: 'Skills',
     navTimeline: 'Timeline',
     navContact: 'Contact',
-    summary:
-      'Resume mode shows the complete portfolio in one scrollable page without gameplay. Collected skills are merged with all milestones for quick scan.',
-    skillTitle: 'Resume stack',
-    timelineTitle: 'Career timeline',
-    contactTitle: 'Contact',
-    linksTitle: 'Links',
-    backToGame: 'Back to game'
+    summary: 'This page summarizes my profile for quick review.',
+    resumeSkillTitle: 'Resume skills',
+    gameSkillTitle: 'Game mode skills',
+    navGameSkills: 'Game skills',
+    contactTitle: 'Links'
+  },
+  ko: {
+    title: 'Resume mode',
+    subtitle: '데스크톱/모바일에서 보기 쉬운 이력 요약입니다.',
+    navSummary: '요약',
+    navSkills: '스킬',
+    navTimeline: '타임라인',
+    navContact: '연락',
+    summary: '채용자가 빠르게 훑어볼 수 있도록 정리한 이력입니다.',
+    resumeSkillTitle: '이력 기반 스킬',
+    gameSkillTitle: '게임 플레이 스킬',
+    navGameSkills: '게임 스킬',
+    contactTitle: '링크'
   }
 };
 
-const hasReadableKorean = (text: string) => /[가-힣]/.test(text);
+function isReadableKorean(text: string | undefined) {
+  if (!text) return false;
+  return /[가-힣]/.test(text);
+}
 
-function chooseLocalized(locale: Locale, milestone: PortfolioMilestone): Pick<PortfolioMilestone, 'title' | 'subtitle' | 'summary' | 'details'> {
+function getLocalizedMilestone(locale: Locale, index: number) {
+  const milestone = portfolioTimeline[index];
   if (locale !== 'ko' || !milestone.ko) {
     return {
       title: milestone.title,
@@ -62,15 +66,8 @@ function chooseLocalized(locale: Locale, milestone: PortfolioMilestone): Pick<Po
   }
 
   const ko = milestone.ko;
-  const hasValidKorean = [ko.title, ko.subtitle, ko.summary, ...(ko.details ?? [])].every(hasReadableKorean);
-  if (!hasValidKorean) {
-    return {
-      title: milestone.title,
-      subtitle: milestone.subtitle,
-      summary: milestone.summary,
-      details: milestone.details
-    };
-  }
+  const hasKorean = [ko.title, ko.subtitle, ko.summary, ...(ko.details ?? [])].every(isReadableKorean);
+  if (!hasKorean) return getLocalizedMilestone('en', index);
 
   return {
     title: ko.title,
@@ -80,48 +77,19 @@ function chooseLocalized(locale: Locale, milestone: PortfolioMilestone): Pick<Po
   };
 }
 
-function isReadableProfile(locale: Locale) {
-  if (locale === 'en') {
-    return {
-      name: profile.name,
-      headline: profile.headline,
-      location: profile.location,
-      experience: profile.experience,
-      note: profile.contact.note
-    };
-  }
-
-  if (!profile.ko || !hasReadableKorean(profile.ko.name)) {
-    return {
-      name: profile.name,
-      headline: profile.headline,
-      location: profile.location,
-      experience: profile.experience,
-      note: profile.contact.note
-    };
-  }
-
-  return {
-    name: profile.ko.name,
-    headline: profile.ko.headline,
-    location: profile.ko.location,
-    experience: profile.ko.experience,
-    note: profile.ko.contactNote
-  };
-}
-
-function MilestoneCard({ milestone, locale }: { milestone: PortfolioMilestone; locale: Locale }) {
-  const content = chooseLocalized(locale, milestone);
+function MilestoneCard({ milestone, locale }: { milestone: (typeof portfolioTimeline)[number]; locale: Locale }) {
+  const index = portfolioTimeline.indexOf(milestone);
+  const content = getLocalizedMilestone(locale, index);
 
   return (
     <article className="recruiter-card">
       <header className="recruiter-card-head">
-        <span>{milestone.year}</span>
+        <span className="recruiter-year">{milestone.year}</span>
         <h3>{content.title}</h3>
       </header>
       <p className="recruiter-subtitle">{content.subtitle}</p>
-      <p>{content.summary}</p>
-      <ul>
+      <p className="recruiter-note">{content.summary}</p>
+      <ul className="recruiter-details">
         {content.details.map((detail) => (
           <li key={detail}>{detail}</li>
         ))}
@@ -138,17 +106,26 @@ function MilestoneCard({ milestone, locale }: { milestone: PortfolioMilestone; l
 export function RecruiterMode({ locale, onExitToGame }: Props) {
   const labels = LABELS[locale];
   const allSkills = [...new Set(portfolioTimeline.flatMap((milestone) => milestone.skills))];
-  const profileText = isReadableProfile(locale);
+  const gameModeSkills = [
+    'Platforming',
+    'Physics',
+    'Collision handling',
+    'State routing',
+    'UI transitions',
+    'Popup controls',
+    'Asset-driven mapping'
+  ];
 
   return (
     <main className="recruiter-mode">
       <div className="recruiter-actions">
         <button type="button" onClick={onExitToGame} className="recruiter-back">
-          {labels.backToGame}
+          {locale === 'ko' ? '게임 모드로' : 'Back to game'}
         </button>
       </div>
 
-      <nav className="recruiter-nav" aria-label={locale === 'ko' ? '이력서 네비게이션' : 'Resume navigation'}>
+      <div className="recruiter-badge">{locale === 'ko' ? '이력 모드' : 'Resume mode'}</div>
+      <nav className="recruiter-nav" aria-label={locale === 'ko' ? '이력 탐색' : 'Resume navigation'}>
         <a href="#resume-summary">{labels.navSummary}</a>
         <a href="#resume-skills">{labels.navSkills}</a>
         <a href="#resume-timeline">{labels.navTimeline}</a>
@@ -156,17 +133,15 @@ export function RecruiterMode({ locale, onExitToGame }: Props) {
       </nav>
 
       <section className="recruiter-hero" id="resume-summary">
-        <p>{labels.navSummary}</p>
-        <h1>{profileText.name}</h1>
-        <strong>{profileText.headline}</strong>
-        <p>{profileText.location}</p>
-        <p>{profileText.experience}</p>
+        <p className="recruiter-kicker">{profile.name}</p>
+        <h1>{labels.title}</h1>
+        <p className="recruiter-subtitle">{labels.subtitle}</p>
         <p className="recruiter-note">{labels.summary}</p>
       </section>
 
       <section id="resume-skills">
-        <h2>{labels.skillTitle}</h2>
-        <div className="recruiter-skill-grid">
+        <h2>{labels.resumeSkillTitle}</h2>
+        <div className="recruiter-skill-grid recruiter-skill-grid--compact">
           {allSkills.map((skill) => (
             <span key={skill}>{skill}</span>
           ))}
@@ -174,7 +149,7 @@ export function RecruiterMode({ locale, onExitToGame }: Props) {
       </section>
 
       <section id="resume-timeline">
-        <h2>{labels.timelineTitle}</h2>
+        <h2>{labels.navTimeline}</h2>
         <div className="recruiter-timeline">
           {portfolioTimeline.map((milestone) => (
             <MilestoneCard key={milestone.id} milestone={milestone} locale={locale} />
@@ -182,13 +157,20 @@ export function RecruiterMode({ locale, onExitToGame }: Props) {
         </div>
       </section>
 
-      <section id="resume-contact">
+      <section id="resume-game-skills">
+        <h2>{labels.navGameSkills}</h2>
+        <div className="recruiter-skill-grid recruiter-skill-grid--compact">
+          {gameModeSkills.map((skill) => (
+            <span key={skill}>{skill}</span>
+          ))}
+        </div>
+      </section>
+
+      <section id="resume-contact" className="recruiter-contact">
         <h2>{labels.contactTitle}</h2>
-        <h3>{labels.linksTitle}</h3>
-        <p>{profileText.note}</p>
         <div className="recruiter-links">
           {profile.links.map((link) => (
-            <a key={link.url} href={link.url} target="_blank" rel="noreferrer">
+            <a key={link.label} href={link.url} target="_blank" rel="noreferrer">
               {link.label}
             </a>
           ))}
