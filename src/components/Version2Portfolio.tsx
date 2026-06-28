@@ -44,9 +44,11 @@ type FluidParticle = {
   vx: number;
   vy: number;
   radius: number;
-  life: number;
+  age: number;
   maxLife: number;
-  color: string;
+  r: number;
+  g: number;
+  b: number;
 };
 
 const assetBaseUrl = window.location.pathname.startsWith('/portfolio-town/') ? '/portfolio-town/' : '/';
@@ -274,8 +276,15 @@ function ArrowIcon() {
 function useFluidCanvas(canvasRef: RefObject<HTMLCanvasElement | null>) {
   useEffect(() => {
     const canvas = canvasRef.current;
-    const context = canvas?.getContext('2d', { alpha: true });
-    if (!canvas || !context) return undefined;
+    const gl = canvas?.getContext('webgl', {
+      alpha: true,
+      antialias: false,
+      depth: false,
+      stencil: false,
+      powerPreference: 'high-performance',
+      preserveDrawingBuffer: false
+    });
+    if (!canvas || !gl) return undefined;
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
@@ -284,91 +293,190 @@ function useFluidCanvas(canvasRef: RefObject<HTMLCanvasElement | null>) {
     let animationId = 0;
     let width = 0;
     let height = 0;
+    let renderRatio = 1;
     let lastX = window.innerWidth / 2;
     let lastY = window.innerHeight / 2;
     let hue = 195;
     const particles: FluidParticle[] = [];
 
-    const resize = () => {
-      const ratio = Math.min(window.devicePixelRatio || 1, 2);
-      width = window.innerWidth;
-      height = window.innerHeight;
-      canvas.width = Math.floor(width * ratio);
-      canvas.height = Math.floor(height * ratio);
-      canvas.style.width = `${width}px`;
-      canvas.style.height = `${height}px`;
-      context.setTransform(ratio, 0, 0, ratio, 0, 0);
-      context.clearRect(0, 0, width, height);
+    const vertexShaderSource = `
+      attribute vec2 a_position;
+      attribute float a_size;
+      attribute vec4 a_color;
+      uniform vec2 u_resolution;
+      varying vec4 v_color;
+      void main() {
+        vec2 zeroToOne = a_position / u_resolution;
+        vec2 clipSpace = zeroToOne * 2.0 - 1.0;
+        gl_Position = vec4(clipSpace * vec2(1.0, -1.0), 0.0, 1.0);
+        gl_PointSize = a_size;
+        v_color = a_color;
+      }
+    `;
+
+    const fragmentShaderSource = `
+      precision mediump float;
+      varying vec4 v_color;
+      void main() {
+        vec2 point = gl_PointCoord - vec2(0.5);
+        float distanceFromCenter = length(point) * 2.0;
+        float body = smoothstep(1.0, 0.05, distanceFromCenter);
+        float rim = smoothstep(0.98, 0.72, distanceFromCenter) * smoothstep(0.38, 0.82, distanceFromCenter);
+        float core = smoothstep(0.42, 0.0, distanceFromCenter);
+        float alpha = v_color.a * (body * 0.34 + rim * 0.72 + core * 0.12);
+        gl_FragColor = vec4(v_color.rgb, alpha);
+      }
+    `;
+
+    const compileShader = (type: number, source: string) => {
+      const shader = gl.createShader(type);
+      if (!shader) return null;
+      gl.shaderSource(shader, source);
+      gl.compileShader(shader);
+      if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+        gl.deleteShader(shader);
+        return null;
+      }
+      return shader;
     };
 
-    const addSplat = (x: number, y: number, dx: number, dy: number) => {
-      const speed = Math.min(Math.hypot(dx, dy), 80);
-      hue = (hue + 8) % 360;
+    const vertexShader = compileShader(gl.VERTEX_SHADER, vertexShaderSource);
+    const fragmentShader = compileShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
+    if (!vertexShader || !fragmentShader) return undefined;
 
-      for (let index = 0; index < 9; index += 1) {
+    const program = gl.createProgram();
+    if (!program) return undefined;
+    gl.attachShader(program, vertexShader);
+    gl.attachShader(program, fragmentShader);
+    gl.linkProgram(program);
+    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) return undefined;
+
+    const positionLocation = gl.getAttribLocation(program, 'a_position');
+    const sizeLocation = gl.getAttribLocation(program, 'a_size');
+    const colorLocation = gl.getAttribLocation(program, 'a_color');
+    const resolutionLocation = gl.getUniformLocation(program, 'u_resolution');
+    const positionBuffer = gl.createBuffer();
+    const sizeBuffer = gl.createBuffer();
+    const colorBuffer = gl.createBuffer();
+    if (!positionBuffer || !sizeBuffer || !colorBuffer || !resolutionLocation) return undefined;
+
+    const hueToRgb = (hueValue: number) => {
+      const chroma = 0.58;
+      const x = chroma * (1 - Math.abs(((hueValue / 60) % 2) - 1));
+      const match = 0.34;
+      const sector = Math.floor(hueValue / 60) % 6;
+      const [r, g, b] =
+        sector === 0 ? [chroma, x, 0] :
+        sector === 1 ? [x, chroma, 0] :
+        sector === 2 ? [0, chroma, x] :
+        sector === 3 ? [0, x, chroma] :
+        sector === 4 ? [x, 0, chroma] :
+        [chroma, 0, x];
+      return [r + match, g + match, b + match] as const;
+    };
+
+    const resize = () => {
+      renderRatio = Math.min(window.devicePixelRatio || 1, 1.25);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = Math.floor(width * renderRatio);
+      canvas.height = Math.floor(height * renderRatio);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      gl.viewport(0, 0, canvas.width, canvas.height);
+    };
+
+    const addSplat = (x: number, y: number, dx: number, dy: number, intensity = 1) => {
+      const speed = Math.min(Math.hypot(dx, dy), 110);
+      hue = (hue + 17) % 360;
+
+      for (let index = 0; index < 7 * intensity; index += 1) {
         const angle = Math.random() * Math.PI * 2;
-        const spread = 0.6 + Math.random() * 1.8;
+        const flowAngle = Math.atan2(dy || 1, dx || 1) + (Math.random() - 0.5) * 2.8;
+        const spread = 0.35 + Math.random() * 1.55;
+        const [r, g, b] = hueToRgb((hue + index * 14 + Math.random() * 22) % 360);
         particles.push({
-          x: x + (Math.random() - 0.5) * 18,
-          y: y + (Math.random() - 0.5) * 18,
-          vx: dx * 0.028 + Math.cos(angle) * spread,
-          vy: dy * 0.028 + Math.sin(angle) * spread,
-          radius: 34 + speed * 0.6 + Math.random() * 56,
-          life: 0,
-          maxLife: 44 + Math.random() * 34,
-          color: `hsla(${(hue + index * 18) % 360}, 86%, 58%, 0.22)`
+          x: x + (Math.random() - 0.5) * 32,
+          y: y + (Math.random() - 0.5) * 32,
+          vx: dx * 0.01 + Math.cos(flowAngle) * spread + Math.cos(angle) * 0.22,
+          vy: dy * 0.01 + Math.sin(flowAngle) * spread + Math.sin(angle) * 0.22,
+          radius: (118 + speed * 1.15 + Math.random() * 122) * renderRatio,
+          age: 0,
+          maxLife: 132 + Math.random() * 88,
+          r,
+          g,
+          b
         });
       }
 
-      if (particles.length > 240) particles.splice(0, particles.length - 240);
+      if (particles.length > 680) particles.splice(0, particles.length - 680);
     };
 
     const handlePointerMove = (event: PointerEvent) => {
       const dx = event.clientX - lastX;
       const dy = event.clientY - lastY;
+      const distance = Math.hypot(dx, dy);
       lastX = event.clientX;
       lastY = event.clientY;
+      if (distance < 5) return;
       addSplat(event.clientX, event.clientY, dx, dy);
     };
 
     const handlePointerDown = (event: PointerEvent) => {
-      addSplat(event.clientX, event.clientY, 48 * (Math.random() - 0.5), 48 * (Math.random() - 0.5));
+      addSplat(event.clientX, event.clientY, 72 * (Math.random() - 0.5), 72 * (Math.random() - 0.5), 1.8);
     };
 
     const render = () => {
-      context.globalCompositeOperation = 'source-over';
-      context.fillStyle = 'rgba(255, 255, 255, 0.075)';
-      context.fillRect(0, 0, width, height);
-      context.globalCompositeOperation = 'lighter';
-      context.filter = 'blur(10px)';
-
+      const positions: number[] = [];
+      const sizes: number[] = [];
+      const colors: number[] = [];
       for (let index = particles.length - 1; index >= 0; index -= 1) {
         const particle = particles[index];
-        particle.life += 1;
+        particle.age += 1;
         particle.x += particle.vx;
         particle.y += particle.vy;
-        particle.vx *= 0.985;
-        particle.vy *= 0.985;
-        particle.radius *= 0.992;
+        const curl = Math.sin((particle.age + particle.x * 0.012 + particle.y * 0.009) * 0.08) * 0.045;
+        const nextVx = particle.vx * Math.cos(curl) - particle.vy * Math.sin(curl);
+        const nextVy = particle.vx * Math.sin(curl) + particle.vy * Math.cos(curl);
+        particle.vx = nextVx * 0.986;
+        particle.vy = nextVy * 0.986;
+        particle.radius *= 0.996;
 
-        const progress = particle.life / particle.maxLife;
+        const progress = particle.age / particle.maxLife;
         if (progress >= 1 || particle.radius < 3) {
           particles.splice(index, 1);
           continue;
         }
 
-        const alpha = Math.max(0, 1 - progress);
-        const gradient = context.createRadialGradient(particle.x, particle.y, 0, particle.x, particle.y, particle.radius);
-        gradient.addColorStop(0, particle.color.replace('0.22', `${0.34 * alpha}`));
-        gradient.addColorStop(0.42, particle.color.replace('0.22', `${0.16 * alpha}`));
-        gradient.addColorStop(1, 'rgba(255,255,255,0)');
-        context.fillStyle = gradient;
-        context.beginPath();
-        context.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
-        context.fill();
+        const alpha = Math.sin((1 - progress) * Math.PI * 0.5) * 0.46;
+        positions.push(particle.x, particle.y);
+        sizes.push(particle.radius);
+        colors.push(particle.r, particle.g, particle.b, alpha);
       }
 
-      context.filter = 'none';
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      gl.useProgram(program);
+      gl.uniform2f(resolutionLocation, width, height);
+      gl.enable(gl.BLEND);
+      gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.DYNAMIC_DRAW);
+      gl.enableVertexAttribArray(positionLocation);
+      gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, sizeBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sizes), gl.DYNAMIC_DRAW);
+      gl.enableVertexAttribArray(sizeLocation);
+      gl.vertexAttribPointer(sizeLocation, 1, gl.FLOAT, false, 0, 0);
+
+      gl.bindBuffer(gl.ARRAY_BUFFER, colorBuffer);
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(colors), gl.DYNAMIC_DRAW);
+      gl.enableVertexAttribArray(colorLocation);
+      gl.vertexAttribPointer(colorLocation, 4, gl.FLOAT, false, 0, 0);
+
+      gl.drawArrays(gl.POINTS, 0, sizes.length);
       animationId = window.requestAnimationFrame(render);
     };
 
