@@ -49,7 +49,7 @@ type FluidParticle = {
   color: string;
 };
 
-const assetBaseUrl = import.meta.env.BASE_URL;
+const assetBaseUrl = window.location.pathname.startsWith('/portfolio-town/') ? '/portfolio-town/' : '/';
 const avatarUrl = `${assetBaseUrl}assets/github-avatar.jpg`;
 const travelPhotoUrl = `${assetBaseUrl}assets/patagonia-wallpaper.jpg`;
 const topicOrder: Topic[] = ['about', 'career', 'side', 'skills', 'fun', 'contact'];
