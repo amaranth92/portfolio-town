@@ -361,9 +361,9 @@ function useFluidCanvas(canvasRef: RefObject<HTMLCanvasElement | null>) {
     if (!positionBuffer || !sizeBuffer || !colorBuffer || !resolutionLocation) return undefined;
 
     const hueToRgb = (hueValue: number) => {
-      const chroma = 0.58;
+      const chroma = 0.42;
       const x = chroma * (1 - Math.abs(((hueValue / 60) % 2) - 1));
-      const match = 0.34;
+      const match = 0.46;
       const sector = Math.floor(hueValue / 60) % 6;
       const [r, g, b] =
         sector === 0 ? [chroma, x, 0] :
@@ -390,7 +390,7 @@ function useFluidCanvas(canvasRef: RefObject<HTMLCanvasElement | null>) {
       const speed = Math.min(Math.hypot(dx, dy), 110);
       hue = (hue + 17) % 360;
 
-      for (let index = 0; index < 7 * intensity; index += 1) {
+      for (let index = 0; index < 5 * intensity; index += 1) {
         const angle = Math.random() * Math.PI * 2;
         const flowAngle = Math.atan2(dy || 1, dx || 1) + (Math.random() - 0.5) * 2.8;
         const spread = 0.35 + Math.random() * 1.55;
@@ -400,16 +400,16 @@ function useFluidCanvas(canvasRef: RefObject<HTMLCanvasElement | null>) {
           y: y + (Math.random() - 0.5) * 32,
           vx: dx * 0.01 + Math.cos(flowAngle) * spread + Math.cos(angle) * 0.22,
           vy: dy * 0.01 + Math.sin(flowAngle) * spread + Math.sin(angle) * 0.22,
-          radius: (118 + speed * 1.15 + Math.random() * 122) * renderRatio,
+          radius: (92 + speed * 0.72 + Math.random() * 86) * renderRatio,
           age: 0,
-          maxLife: 132 + Math.random() * 88,
+          maxLife: 96 + Math.random() * 62,
           r,
           g,
           b
         });
       }
 
-      if (particles.length > 680) particles.splice(0, particles.length - 680);
+      if (particles.length > 420) particles.splice(0, particles.length - 420);
     };
 
     const handlePointerMove = (event: PointerEvent) => {
@@ -448,7 +448,7 @@ function useFluidCanvas(canvasRef: RefObject<HTMLCanvasElement | null>) {
           continue;
         }
 
-        const alpha = Math.sin((1 - progress) * Math.PI * 0.5) * 0.46;
+        const alpha = Math.sin((1 - progress) * Math.PI * 0.5) * 0.28;
         positions.push(particle.x, particle.y);
         sizes.push(particle.radius);
         colors.push(particle.r, particle.g, particle.b, alpha);
@@ -753,7 +753,7 @@ export function Version2Portfolio({ locale, onToggleLocale }: Props) {
 
   return (
     <main className={`v2-aaabad ${activeTopic ? 'is-chat-open' : ''}`}>
-      <canvas ref={fluidCanvasRef} className="v2-fluid-canvas" aria-hidden="true" />
+      {!activeTopic && <canvas ref={fluidCanvasRef} className="v2-fluid-canvas" aria-hidden="true" />}
       {!activeTopic && (
         <section className="v2-landing" aria-label="Portfolio landing">
           <div className="v2-topbar">
