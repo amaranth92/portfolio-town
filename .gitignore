@@ -12,3 +12,4 @@ pnpm-debug.log*
 screenshot-*.png
 sample-*.png
 tilemap-upscaled.png
+.tmp-dev-server2.log

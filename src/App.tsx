@@ -1,84 +1,35 @@
-﻿import { useEffect, useState } from 'react';
-import { Hud } from './components/Hud';
+import { useEffect, useState } from 'react';
 import { PortfolioPopup } from './components/PortfolioPopup';
-import { RecruiterMode } from './components/RecruiterMode';
-import { TouchControls } from './components/TouchControls';
-import { portfolioTimeline } from './data/portfolioTimeline';
+import { Version2Portfolio } from './components/Version2Portfolio';
 import type { PortfolioMilestone } from './data/portfolioTimeline';
-import { PhaserGame } from './game/PhaserGame';
-import { gameEvents, type Locale, type MilestoneOpenEvent, type SkillsEvent } from './game/gameEvents';
+import { gameEvents, type Locale, type MilestoneOpenEvent } from './game/gameEvents';
 
 function App() {
   const isPrivacyPolicy = window.location.pathname.replace(/\/+$/, '') === '/privacy-policy-car-park-dash';
-  const [locale, setLocale] = useState<Locale>(navigator.language.toLowerCase().startsWith('ko') ? 'ko' : 'en');
+  const [locale, setLocale] = useState<Locale>(() => {
+    const saved = window.localStorage.getItem('portfolio-locale');
+    return saved === 'ko' || saved === 'en' ? saved : 'en';
+  });
   const isKorean = locale === 'ko';
   const [activeMilestone, setActiveMilestone] = useState<PortfolioMilestone | null>(null);
-  const [skills, setSkills] = useState<string[]>([]);
-  const [chapterIndex, setChapterIndex] = useState(0);
-  const [recruiterMode, setRecruiterMode] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const resumeSkills = [...new Set(portfolioTimeline.flatMap((milestone) => milestone.skills))];
-
-  const applyModeToUrl = (value: boolean, anchor: string) => {
-    const url = new URL(window.location.href);
-    if (value) {
-      url.searchParams.set('resume', '1');
-      url.hash = anchor;
-    } else {
-      url.searchParams.delete('resume');
-      url.hash = '';
-    }
-    window.history.replaceState({}, '', url);
-  };
-
-  const setResumeMode = (value: boolean, anchor = '') => {
-    setRecruiterMode(value);
-    setMenuOpen(false);
-    setActiveMilestone(null);
-    applyModeToUrl(value, value ? anchor : '');
-  };
 
   useEffect(() => {
     const open = (event: Event) => {
       const detail = (event as CustomEvent<MilestoneOpenEvent>).detail;
-      setActiveMilestone((current) => current ?? detail.milestone);
-      setChapterIndex(detail.index);
+      setActiveMilestone((current: PortfolioMilestone | null) => current ?? detail.milestone);
     };
-    const skillChange = (event: Event) => {
-      const detail = (event as CustomEvent<SkillsEvent>).detail;
-      setSkills(detail.skills);
-      setChapterIndex(detail.chapterIndex);
-    };
-    const chapterChange = (event: Event) => setChapterIndex((event as CustomEvent<number>).detail);
     const resume = () => setActiveMilestone(null);
 
     gameEvents.addEventListener('milestone-open', open);
-    gameEvents.addEventListener('skills-change', skillChange);
-    gameEvents.addEventListener('chapter-change', chapterChange);
     gameEvents.addEventListener('resume-game', resume);
     return () => {
       gameEvents.removeEventListener('milestone-open', open);
-      gameEvents.removeEventListener('skills-change', skillChange);
-      gameEvents.removeEventListener('chapter-change', chapterChange);
       gameEvents.removeEventListener('resume-game', resume);
     };
   }, []);
 
   useEffect(() => {
-    const syncModeFromUrl = () => {
-      const params = new URLSearchParams(window.location.search);
-      setRecruiterMode(params.get('resume') === '1');
-      if (params.get('resume') === '1') {
-        setActiveMilestone(null);
-      }
-    };
-
-    syncModeFromUrl();
-    window.addEventListener('popstate', syncModeFromUrl);
-    return () => window.removeEventListener('popstate', syncModeFromUrl);
-  }, []);
-
-  useEffect(() => {
+    window.localStorage.setItem('portfolio-locale', locale);
     gameEvents.emitLanguageChange(locale);
   }, [locale]);
 
@@ -88,16 +39,10 @@ function App() {
     const closeWithKey = (event: KeyboardEvent) => {
       if (event.code === 'Space' || event.code === 'Enter') gameEvents.resumeGame();
     };
-    const closeWithJump = (event: Event) => {
-      const detail = (event as CustomEvent<{ control: string; pressed: boolean }>).detail;
-      if (detail.control === 'jump' && detail.pressed) gameEvents.resumeGame();
-    };
 
     window.addEventListener('keydown', closeWithKey);
-    window.addEventListener('touch-control', closeWithJump as EventListener);
     return () => {
       window.removeEventListener('keydown', closeWithKey);
-      window.removeEventListener('touch-control', closeWithJump as EventListener);
     };
   }, [activeMilestone]);
 
@@ -105,36 +50,10 @@ function App() {
 
   return (
     <div className="app-shell">
-      <Hud
-        skills={recruiterMode ? resumeSkills : skills}
-        chapterIndex={chapterIndex}
-        recruiterMode={recruiterMode}
-        onToggleMode={() => {
-          const nextMode = !recruiterMode;
-          setResumeMode(nextMode, nextMode ? 'summary' : '');
-        }}
-        onOpenResume={() => setResumeMode(true, 'summary')}
-        onOpenGame={() => setResumeMode(false)}
-        menuOpen={menuOpen}
-        onToggleMenu={() => setMenuOpen((value) => !value)}
-        onCloseMenu={() => setMenuOpen(false)}
+      <Version2Portfolio
         locale={locale}
         onToggleLocale={() => setLocale((value) => (value === 'ko' ? 'en' : 'ko'))}
-        isKorean={isKorean}
       />
-      {recruiterMode ? (
-        <RecruiterMode locale={locale} onExitToGame={() => setResumeMode(false)} />
-      ) : (
-        <main className="game-layout">
-          <PhaserGame />
-          <TouchControls />
-          <p className="control-hint">
-            {isKorean
-              ? '“!” 블록은 아래에서 맞춰야 열립니다. 닫기는 점프/Space/Enter로 해주세요.'
-              : 'Hit ! blocks from below to read portfolio details. Close with jump, Space, or Enter.'}
-          </p>
-        </main>
-      )}
       <PortfolioPopup milestone={activeMilestone} isKorean={isKorean} />
     </div>
   );

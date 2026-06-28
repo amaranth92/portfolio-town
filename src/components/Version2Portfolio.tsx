@@ -1,0 +1,873 @@
+import { useEffect, useRef, useState } from 'react';
+import type { RefObject } from 'react';
+import { personalProjects, portfolioTimeline, profile, type PersonalProject, type PortfolioMilestone } from '../data/portfolioTimeline';
+import type { Locale } from '../game/gameEvents';
+
+type Props = {
+  locale: Locale;
+  onToggleLocale?: () => void;
+};
+
+type Topic = 'about' | 'career' | 'side' | 'skills' | 'fun' | 'contact';
+
+type TopicCopy = {
+  label: string;
+  question: string;
+  title: string;
+  answer: string;
+  bullets: string[];
+};
+
+type Copy = {
+  greeting: string;
+  role: string;
+  watermark: string;
+  searchPlaceholder: string;
+  cta: string;
+  back: string;
+  portfolioTitle: string;
+  projectsTitle: string;
+  viewProcess: string;
+  hideQuick: string;
+  showQuick: string;
+  infoTitle: string;
+  infoWhat: string;
+  infoWhatBody: string;
+  infoWhy: string;
+  infoWhyBody: string;
+  topics: Record<Topic, TopicCopy>;
+};
+
+const avatarUrl = '/assets/github-avatar.jpg';
+const travelPhotoUrl = '/assets/patagonia-wallpaper.jpg';
+const topicOrder: Topic[] = ['about', 'career', 'side', 'skills', 'fun', 'contact'];
+const careerMilestones = portfolioTimeline.filter((milestone) => milestone.category === 'company');
+const aussieProductIcons = [
+  { title: 'Neon Tower', src: 'https://aussie-pus.pages.dev/neonTower.png' },
+  { title: 'Neon Bricks', src: 'https://aussie-pus.pages.dev/neonBricks.png' },
+  { title: 'Arcflare', src: 'https://aussie-pus.pages.dev/arcflare_logo.png' },
+  { title: 'Decody', src: 'https://aussie-pus.pages.dev/decody_icon.png' },
+  { title: 'Car Park Dash', src: 'https://aussie-pus.pages.dev/carParkDash.png' },
+  { title: 'No Road Kill', src: 'https://aussie-pus.pages.dev/noRoadKill.png' }
+];
+const skillGroups = [
+  {
+    title: 'Frontend',
+    koTitle: '프론트엔드',
+    skills: ['React', 'JavaScript', 'jQuery', 'Ajax', 'Thymeleaf', 'WebSquare']
+  },
+  {
+    title: 'Backend & Systems',
+    koTitle: '백엔드 & 시스템',
+    skills: ['Java', 'Spring Boot', 'JSP', 'Servlet', 'MyBatis', 'C#', '.NET']
+  },
+  {
+    title: 'Database & Infra',
+    koTitle: '데이터베이스 & 인프라',
+    skills: ['MSSQL', 'Oracle', 'PostgreSQL', 'AWS', 'Jenkins', 'GitHub', 'Jira']
+  },
+  {
+    title: 'Automation & AI Tools',
+    koTitle: '자동화 & AI 도구',
+    skills: ['Python', 'Linux', 'ffmpeg', 'Selenium', 'Gemini API', 'Codex', 'Agent Workflows']
+  }
+];
+
+const copy: Record<Locale, Copy> = {
+  en: {
+    greeting: "Hey, I'm a developer",
+    role: 'Web Programmer',
+    watermark: 'Developer',
+    searchPlaceholder: 'Ask me anything…',
+    cta: 'View Portfolio',
+    back: 'Home',
+    portfolioTitle: 'Portfolio Assistant',
+    projectsTitle: 'Side Projects',
+    viewProcess: 'View process',
+    hideQuick: 'Hide quick questions',
+    showQuick: 'Show quick questions',
+    infoTitle: 'Welcome to AI Portfolio',
+    infoWhat: "What's this?",
+    infoWhatBody:
+      'I am excited to present my portfolio in a chat-first format. Whether you are a recruiter, teammate, or just curious, feel free to ask about my experience, projects, skills, and contact details.',
+    infoWhy: 'Why this format?',
+    infoWhyBody:
+      'Traditional resumes can be limiting. This portfolio adapts to what you want to know about my Java backend work, enterprise systems, automation projects, and career story.',
+    topics: {
+      about: {
+        label: 'Me',
+        question: 'Who are you?',
+        title: 'Stability-minded developer who keeps learning current tools',
+        answer:
+          'Hi, I am Kim Sungkyung, a Java web developer based in Seoul with 6 years 8 months of commercial experience. I studied Computer Information Engineering, built enterprise systems for LG U+, CareerCare, SK hynix ethics management, and DSIMS, and I care most about stable operations, practical improvements, and learning current tools.',
+        bullets: [
+          'What about you? What brings you here?'
+        ]
+      },
+      career: {
+        label: 'Career',
+        question: 'Show me your career',
+        title: 'Enterprise web systems across LG U+, CareerCare, SK hynix, and DSIMS',
+        answer:
+          'My commercial work has focused on Java-centered enterprise web systems, database-backed workflows, stable operations, and practical maintenance. The timeline below moves from application development to senior web/system work.',
+        bullets: [
+          '2017-2019: Bogo Information System, LG U+ shared modules and WebSquare screens.',
+          '2019-2023: CareerCare, CANDI maintenance, Java migration, BusinessPeople web/app and AWS deployment.',
+          '2025: Ourcom, SK hynix ethics management backend and multilingual web screens.',
+          '2026: InhouseSoft, DSIMS Spring Boot + React platform improvements.'
+        ]
+      },
+      side: {
+        label: 'Side',
+        question: 'Show me your side projects',
+        title: 'Automation, game, and developer utility side projects',
+        answer:
+          'Outside work, I build tools that remove repetitive effort: photo sorting, video repair checks, AI posting automation, browser automation, and mobile/web games.',
+        bullets: [
+          'Aussie Pus Studio games: https://aussie-pus.pages.dev/',
+          'Photo EXIF sorter for 10,000+ travel photos using Python metadata automation.',
+          'AI content generation and auto-posting tools using Gemini, Google Blogger API, Naver API, and Selenium.',
+          'GitHub: https://github.com/amaranth92'
+        ]
+      },
+      skills: {
+        label: 'Skills',
+        question: 'What can you build with?',
+        title: 'Backend, web, database, automation, and deployment stack',
+        answer:
+          'My strongest stack is Java-centered backend development with practical web UI, database, cloud, and automation experience.',
+        bullets: [
+          'Backend: Java, Spring Boot, JSP, Servlet, MyBatis, C#, .NET.',
+          'Frontend: React, JavaScript, jQuery, Ajax, Thymeleaf, WebSquare.',
+          'Database & Infra: MSSQL, Oracle, PostgreSQL, AWS, Git, GitHub, Jenkins, Jira, IntelliJ, SVN.',
+          'Automation: Python, Linux shell, ffmpeg, Selenium, API integrations.'
+        ]
+      },
+      fun: {
+        label: 'Fun',
+        question: 'What makes your journey different?',
+        title: 'Australia, automation, and practical side experiments',
+        answer:
+          'Outside the office, I worked independently as an Uber Eats and Uber Driver in Perth, traveled around the world for about a year including Patagonia, and kept building small tools for annoying repetitive tasks with Python, Linux, ffmpeg, Selenium, and AI APIs.',
+        bullets: [
+          'Want to talk about travel, automation, or side projects?'
+        ]
+      },
+      contact: {
+        label: 'Contact',
+        question: 'How can recruiters contact you?',
+        title: 'Open to backend, web, system, and network roles',
+        answer:
+          "Here are my contact details. I am open to backend, web, system, and network roles in Seoul, and I would be happy to chat.",
+        bullets: ["What's on your mind?"]
+      }
+    }
+  },
+  ko: {
+    greeting: '안녕하세요, 저는 개발자입니다',
+    role: '웹 프로그래머',
+    watermark: 'Developer',
+    searchPlaceholder: '무엇이든 물어보세요…',
+    cta: '포트폴리오 보기',
+    back: '처음으로',
+    portfolioTitle: '포트폴리오 어시스턴트',
+    projectsTitle: '사이드 프로젝트',
+    viewProcess: '과정 보기',
+    hideQuick: '빠른 질문 숨기기',
+    showQuick: '빠른 질문 보기',
+    infoTitle: 'AI 포트폴리오 안내',
+    infoWhat: '무엇을 볼 수 있나요?',
+    infoWhatBody:
+      '제 포트폴리오를 대화형 구조로 소개합니다. 채용 담당자, 동료, 방문자가 경력, 프로젝트, 기술, 연락처를 원하는 주제별로 빠르게 확인할 수 있습니다.',
+    infoWhy: '왜 이런 형식인가요?',
+    infoWhyBody:
+      '일반 이력서는 모든 방문자의 관심사에 맞춰 달라지기 어렵습니다. Java 백엔드 업무, 기업 시스템 운영, 자동화 프로젝트, 커리어 흐름 중 궁금한 부분으로 바로 이동할 수 있게 구성했습니다.',
+    topics: {
+      about: {
+        label: '소개',
+        question: '어떤 개발자인가요?',
+        title: '안정성을 중요시하며 최신 기술을 꾸준히 학습하는 개발자',
+        answer:
+          '안녕하세요. 저는 서울에서 일하는 Java 웹개발자 김성경입니다. 총 6년 8개월의 실무 경험을 가지고 있고, 컴퓨터정보공학을 전공한 뒤 LG U+, 커리어케어, SK하이닉스 윤리경영, DSIMS 같은 기업 업무 시스템을 개발했습니다. 안정적인 운영, 실질적인 개선, 최신 도구 학습을 중요하게 생각합니다.',
+        bullets: [
+          '어떤 점이 궁금해서 오셨나요?'
+        ]
+      },
+      career: {
+        label: '경력',
+        question: '경력을 보여주세요',
+        title: 'LG U+, 커리어케어, SK하이닉스, DSIMS로 이어지는 기업 웹 시스템 경험',
+        answer:
+          '실무에서는 Java 중심의 기업 웹 시스템, 데이터베이스 기반 업무 흐름, 안정적인 운영, 유지보수와 개선 업무를 주로 맡았습니다. 아래 타임라인에서 응용 개발부터 웹/시스템 개발 경험까지 순서대로 볼 수 있습니다.',
+        bullets: [
+          '2017-2019: 보고정보시스템, LG U+ 공통 모듈과 WebSquare 화면 개발.',
+          '2019-2023: 커리어케어, CANDI 유지보수, Java 전환, 비즈니스피플 웹/앱 및 AWS 배포.',
+          '2025: 아워콤, SK하이닉스 윤리경영 시스템 백엔드와 다국어 화면 개발.',
+          '2026: 인하우스소프트, DSIMS Spring Boot + React 플랫폼 개선.'
+        ]
+      },
+      side: {
+        label: '사이드',
+        question: '사이드 프로젝트를 보여주세요',
+        title: '자동화, 게임, 개발자 유틸리티 사이드 프로젝트',
+        answer:
+          '업무 외에도 반복 작업을 줄이는 도구를 직접 만듭니다. 사진 정리, 영상 오류 확인, AI 포스팅 자동화, 브라우저 자동화, 웹/모바일 게임을 만들었습니다.',
+        bullets: [
+          'Aussie Pus Studio 게임: https://aussie-pus.pages.dev/',
+          'Python EXIF 기반 10,000장 이상 여행 사진 자동 분류 프로그램.',
+          'Gemini, Google Blogger API, Naver API, Selenium 기반 AI 콘텐츠 생성 및 자동 포스팅 도구.',
+          'GitHub: https://github.com/amaranth92'
+        ]
+      },
+      skills: {
+        label: '기술',
+        question: '어떤 기술을 다룰 수 있나요?',
+        title: '백엔드, 웹, 데이터베이스, 자동화, 배포 스택',
+        answer:
+          'Java 중심의 백엔드 개발이 가장 강점이며, 웹 UI, 데이터베이스, 클라우드, 자동화까지 실무 기반으로 다뤄왔습니다.',
+        bullets: [
+          'Backend: Java, Spring Boot, JSP, Servlet, MyBatis, C#, .NET.',
+          'Frontend: React, JavaScript, jQuery, Ajax, Thymeleaf, WebSquare.',
+          'Database & Infra: MSSQL, Oracle, PostgreSQL, AWS, Git, GitHub, Jenkins, Jira, IntelliJ, SVN.',
+          'Automation: Python, Linux shell, ffmpeg, Selenium, API 연동.'
+        ]
+      },
+      fun: {
+        label: '기타',
+        question: '어떤 경험이 특별한가요?',
+        title: '호주 경험, 자동화, 실험적인 사이드 프로젝트',
+        answer:
+          '회사 밖에서는 호주 퍼스에서 Uber Eats와 Uber Driver로 일했고, 파타고니아를 포함해 약 1년간 세계여행을 했습니다. 그 과정에서 반복되는 불편함을 Python, Linux, ffmpeg, Selenium, AI API 같은 도구로 해결하는 실험을 계속했습니다.',
+        bullets: [
+          '여행, 자동화, 사이드 프로젝트 중 어떤 이야기가 궁금하신가요?'
+        ]
+      },
+      contact: {
+        label: '연락',
+        question: '어떻게 연락하면 되나요?',
+        title: '백엔드, 웹, 시스템, 네트워크 직무를 희망합니다',
+        answer:
+          '연락 가능한 정보는 위 카드에 정리했습니다. 서울 전지역의 백엔드, 웹, 시스템, 네트워크 직무 기회를 열어두고 있으며 편하게 이야기 나누고 싶습니다.',
+        bullets: ['어떤 이야기가 궁금하신가요?']
+      }
+    }
+  }
+};
+
+function ArrowIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M5 12h14m-7-7 7 7-7 7" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function FastfolioMark({ compact = false }: { compact?: boolean }) {
+  return (
+    <span className={`v2-fastfolio-mark ${compact ? 'is-compact' : ''}`} aria-hidden="true">
+      <span />
+      <span />
+    </span>
+  );
+}
+
+function TopicIcon({ topic }: { topic: Topic }) {
+  const paths: Record<Topic, string[]> = {
+    about: ['M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z', 'M4 22a8 8 0 0 1 16 0'],
+    career: ['M4 7h16', 'M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2', 'M5 7v12h14V7', 'M9 13h6'],
+    side: ['M7 4h10l3 5-8 11L4 9l3-5Z', 'M4 9h16', 'M12 4v16'],
+    skills: ['M12 3 4 7v10l8 4 8-4V7l-8-4Z', 'M4 7l8 4 8-4', 'M12 11v10'],
+    fun: ['M5.8 11.3 2 22l10.7-3.8', 'M4 3h.01', 'M22 8h.01', 'M15 2h.01', 'M11 13c1.9 1.9 2.8 4.2 2 5-.8.8-3.1-.1-5-2s-2.8-4.2-2-5c.8-.8 3.1.1 5 2Z'],
+    contact: ['M4 6h16v12H4z', 'm4 7 8 6 8-6']
+  };
+
+  return (
+    <svg className="v2-topic-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      {paths[topic].map((d) => (
+        <path key={d} d={d} stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+      ))}
+    </svg>
+  );
+}
+
+function TypewriterText({
+  text,
+  className,
+  as = 'p',
+  delay = 0
+}: {
+  text: string;
+  className?: string;
+  as?: 'p' | 'span' | 'strong';
+  delay?: number;
+}) {
+  const [visibleText, setVisibleText] = useState('');
+  const Component = as;
+
+  useEffect(() => {
+    let index = 0;
+    let intervalId = 0;
+    const timeoutId = window.setTimeout(() => {
+      setVisibleText('');
+      intervalId = window.setInterval(() => {
+        index += 1;
+        setVisibleText(text.slice(0, index));
+        if (index >= text.length) window.clearInterval(intervalId);
+      }, 12);
+    }, delay);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.clearInterval(intervalId);
+    };
+  }, [text, delay]);
+
+  return <Component className={`v2-typewriter ${className ?? ''}`.trim()}>{visibleText}</Component>;
+}
+
+function getProjectCopy(project: PersonalProject, locale: Locale) {
+  if (locale === 'ko') {
+    return {
+      title: project.ko.title,
+      category: project.ko.category,
+      shortDesc: project.ko.shortDesc,
+      process: project.ko.process
+    };
+  }
+
+  return {
+    title: project.title,
+    category: project.category,
+    shortDesc: project.shortDesc,
+    process: project.process
+  };
+}
+
+function getProjectCardCopy(project: PersonalProject, locale: Locale) {
+  const cardCopy: Record<string, { en: { title: string; category: string }; ko: { title: string; category: string } }> = {
+    'aussie-pus': {
+      en: { title: 'Aussie Pus', category: 'Side Project' },
+      ko: { title: 'Aussie Pus', category: '사이드 프로젝트' }
+    },
+    'photo-sorter': {
+      en: { title: 'Photo Sorter', category: 'Automation' },
+      ko: { title: '사진 분류', category: '자동화' }
+    },
+    'blackbox-ffmpeg': {
+      en: { title: 'Video Repair', category: 'Linux Tool' },
+      ko: { title: '영상 복구', category: 'Linux 도구' }
+    },
+    'ai-posting': {
+      en: { title: 'AI Posting', category: 'API Tool' },
+      ko: { title: 'AI 포스팅', category: 'API 도구' }
+    },
+    decody: {
+      en: { title: 'Decody', category: 'Dev Utility' },
+      ko: { title: 'Decody', category: '개발 도구' }
+    }
+  };
+
+  return cardCopy[project.id]?.[locale] ?? getProjectCopy(project, locale);
+}
+
+export function Version2Portfolio({ locale, onToggleLocale }: Props) {
+  const t = copy[locale];
+  const [query, setQuery] = useState('');
+  const [activeTopic, setActiveTopic] = useState<Topic | null>(null);
+  const [activeQuestion, setActiveQuestion] = useState('');
+  const [isAnswerLoading, setIsAnswerLoading] = useState(false);
+  const [isInfoOpen, setIsInfoOpen] = useState(false);
+  const [showQuickQuestions, setShowQuickQuestions] = useState(true);
+  const [selectedProject, setSelectedProject] = useState<PersonalProject | null>(null);
+  const projectRailRef = useRef<HTMLDivElement | null>(null);
+
+  const topic = activeTopic ? t.topics[activeTopic] : null;
+  const inferTopicFromQuery = (rawQuery: string): Topic => {
+    const normalized = rawQuery.toLowerCase();
+
+    if (/career|company|work|job|experience|경력|회사|실무/.test(normalized)) return 'career';
+    if (/side|project|app|game|프로젝트|게임|앱|사이드/.test(normalized)) return 'side';
+    if (/skill|stack|tech|기술|스택/.test(normalized)) return 'skills';
+    if (/fun|australia|global|automation|journey|travel|world|patagonia|호주|해외|자동화|여행|세계여행|파타고니아|기타/.test(normalized)) return 'fun';
+    if (/contact|email|github|연락|메일|깃허브/.test(normalized)) return 'contact';
+    return 'about';
+  };
+
+  const openTopic = (nextTopic: Topic, replace = false, questionOverride?: string) => {
+    const nextQuestion = questionOverride?.trim() || copy[locale].topics[nextTopic].question;
+    setActiveTopic(nextTopic);
+    setActiveQuestion(nextQuestion);
+    setIsAnswerLoading(true);
+    setIsInfoOpen(false);
+    setSelectedProject(null);
+    setQuery('');
+    const nextUrl = `/chat?query=${encodeURIComponent(nextQuestion)}`;
+    if (window.location.pathname + window.location.search !== nextUrl) {
+      window.history[replace ? 'replaceState' : 'pushState']({ topic: nextTopic }, '', nextUrl);
+    }
+  };
+
+  const closeChat = () => {
+    setActiveTopic(null);
+    setActiveQuestion('');
+    setIsAnswerLoading(false);
+    setIsInfoOpen(false);
+    setQuery('');
+    if (window.location.pathname !== '/' || window.location.search) {
+      window.history.pushState({}, '', '/');
+    }
+  };
+
+  const handleSubmit = (event: React.FormEvent) => {
+    event.preventDefault();
+    const nextQuestion = query.trim() || copy[locale].topics.about.question;
+    openTopic(inferTopicFromQuery(nextQuestion), false, nextQuestion);
+  };
+
+  const scrollProjects = (direction: -1 | 1) => {
+    projectRailRef.current?.scrollBy({
+      left: direction * 238,
+      behavior: 'smooth'
+    });
+  };
+
+  useEffect(() => {
+    const syncFromUrl = () => {
+      if (window.location.pathname !== '/chat') {
+        setActiveTopic(null);
+        setIsAnswerLoading(false);
+        return;
+      }
+
+      const urlQuery = new URLSearchParams(window.location.search).get('query') ?? '';
+      const nextTopic = inferTopicFromQuery(urlQuery);
+      setActiveTopic(nextTopic);
+      setActiveQuestion(urlQuery || copy[locale].topics[nextTopic].question);
+      setIsAnswerLoading(true);
+    };
+
+    syncFromUrl();
+    window.addEventListener('popstate', syncFromUrl);
+    return () => window.removeEventListener('popstate', syncFromUrl);
+  }, [locale]);
+
+  useEffect(() => {
+    if (!activeTopic) return undefined;
+
+    const timer = window.setTimeout(() => setIsAnswerLoading(false), 650);
+    return () => window.clearTimeout(timer);
+  }, [activeTopic, activeQuestion]);
+
+  return (
+    <main className={`v2-aaabad ${activeTopic ? 'is-chat-open' : ''}`}>
+      {!activeTopic && (
+        <section className="v2-landing" aria-label="Portfolio landing">
+          <div className="v2-topbar">
+            <button type="button" className="v2-pill-button" onClick={() => openTopic('about')}>
+              <FastfolioMark compact />
+              <span className="v2-pill-label-long">{t.cta}</span>
+              <span className="v2-pill-label-short">{t.back}</span>
+              <ArrowIcon />
+            </button>
+
+            <div className="v2-actions">
+              {onToggleLocale && (
+                <button type="button" onClick={onToggleLocale} className="v2-ghost-button">
+                  {locale === 'ko' ? 'English' : '한국어'}
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="v2-hero">
+            <button type="button" className="v2-mark" onClick={() => openTopic('about')} aria-label="About Developer">
+              <FastfolioMark />
+            </button>
+            <p className="v2-greeting">{t.greeting} 👋</p>
+            <h1>{t.role}</h1>
+
+            <button type="button" className="v2-avatar-button" onClick={() => openTopic('about')}>
+              <img src={avatarUrl} alt="Developer avatar" />
+            </button>
+
+            <form className="v2-search" onSubmit={handleSubmit}>
+              <input
+                type="text"
+                value={query}
+                placeholder={t.searchPlaceholder}
+                onChange={(event) => setQuery(event.target.value)}
+                aria-label={t.searchPlaceholder}
+              />
+              <button type="submit" aria-label="Submit">
+                <ArrowIcon />
+              </button>
+            </form>
+
+            <div className="v2-topic-grid" aria-label="Portfolio topics">
+              {topicOrder.map((key) => (
+                <button key={key} type="button" className="v2-topic-card" onClick={() => openTopic(key)}>
+                  <TopicIcon topic={key} />
+                  <span>{t.topics[key].label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="v2-watermark" aria-hidden="true">
+            {t.watermark}
+          </div>
+        </section>
+      )}
+
+      {topic && activeTopic && (
+        <section className="v2-chat" aria-label={t.portfolioTitle}>
+          <header className="v2-chat-top">
+            <button type="button" className="v2-build-yours" onClick={closeChat}>
+              <FastfolioMark compact />
+              <span className="v2-pill-label-long">{t.cta}</span>
+              <span className="v2-pill-label-short">{t.back}</span>
+              <span className="v2-chat-build-arrow">
+                <ArrowIcon />
+              </span>
+            </button>
+            <img src={avatarUrl} alt="Developer avatar" />
+            <button type="button" className="v2-chat-info" onClick={() => setIsInfoOpen(true)} aria-label="Open portfolio info" />
+          </header>
+
+          {isInfoOpen && (
+            <div className="v2-info-backdrop" role="dialog" aria-modal="true" aria-label="Portfolio information">
+              <section className="v2-info-panel">
+                <button type="button" className="v2-info-close" onClick={() => setIsInfoOpen(false)}>
+                  ×
+                </button>
+                <h2>{t.infoTitle}</h2>
+                <div className="v2-info-copy-card">
+                  <h3>{t.infoWhat}</h3>
+                  <p>{t.infoWhatBody}</p>
+                  <h3>{t.infoWhy}</h3>
+                  <p>{t.infoWhyBody}</p>
+                </div>
+                <div className="v2-info-actions">
+                  <button type="button" onClick={() => setIsInfoOpen(false)}>
+                    Start Chatting
+                  </button>
+                  <p>
+                    {locale === 'ko' ? '마음에 든다면 공유해주세요. 피드백은 언제나 환영합니다. ' : 'If you love it, please share it! Feedback is always welcome. '}
+                    <a href={`mailto:${profile.contact.email}`}>{locale === 'ko' ? '연락하기.' : 'Contact me.'}</a>
+                  </p>
+                </div>
+              </section>
+            </div>
+          )}
+
+          <div className="v2-chat-body">
+            {isAnswerLoading ? (
+              <div className="v2-loading-dots" aria-label="Loading answer">
+                <span />
+                <span />
+                <span />
+              </div>
+            ) : (
+              <>
+                {activeTopic === 'career' && <CareerBlock locale={locale} topic={topic} />}
+                {activeTopic === 'side' && (
+                  <SideProjectsBlock
+                    locale={locale}
+                    topic={topic}
+                    selectedProject={selectedProject}
+                    onSelectProject={setSelectedProject}
+                    onCloseProject={() => setSelectedProject(null)}
+                    railRef={projectRailRef}
+                    onScroll={scrollProjects}
+                  />
+                )}
+
+                {activeTopic === 'skills' && <SkillsExpertiseBlock locale={locale} />}
+                {activeTopic === 'contact' && <ContactBlock locale={locale} />}
+
+                {activeTopic !== 'career' && activeTopic !== 'side' && (
+                  <article className="v2-topic-note">
+                    <TypewriterText text={topic.title} className="v2-message-title" />
+                    <TypewriterText text={topic.answer} delay={260} />
+                    {activeTopic === 'contact' || activeTopic === 'about' || activeTopic === 'fun' ? (
+                      <TypewriterText text={topic.bullets[0]} className="v2-topic-question" delay={620} />
+                    ) : (
+                      <ul>
+                        {topic.bullets.map((bullet, index) => (
+                          <li key={bullet}>
+                            <TypewriterText text={bullet} delay={560 + index * 180} />
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {activeTopic === 'fun' && (
+                      <figure className="v2-fun-photo">
+                        <img src={travelPhotoUrl} alt={locale === 'ko' ? '파타고니아 세계여행 사진' : 'Patagonia world travel photo'} />
+                        <figcaption>{locale === 'ko' ? '파타고니아에서 찍은 세계여행 사진' : 'A Patagonia moment from my one-year world travel'}</figcaption>
+                      </figure>
+                    )}
+                  </article>
+                )}
+              </>
+            )}
+
+          </div>
+
+          <div className="v2-chat-composer">
+            <button type="button" className="v2-quick-toggle" onClick={() => setShowQuickQuestions((value) => !value)}>
+              {showQuickQuestions ? t.hideQuick : t.showQuick}
+            </button>
+            {showQuickQuestions && (
+              <nav className="v2-chat-nav" aria-label="Quick topics">
+                {topicOrder.map((key) => (
+                  <button key={key} type="button" className={activeTopic === key ? 'is-active' : ''} onClick={() => openTopic(key)}>
+                    <TopicIcon topic={key} />
+                    <span>{t.topics[key].label}</span>
+                  </button>
+                ))}
+                <button type="button" className="v2-chat-more" onClick={closeChat} aria-label={t.back}>
+                  ...
+                </button>
+              </nav>
+            )}
+            <form className="v2-chat-input" onSubmit={handleSubmit}>
+              <input
+                type="text"
+                value={query}
+                placeholder={locale === 'ko' ? '무엇이든 물어보세요' : 'Ask me anything'}
+                onChange={(event) => setQuery(event.target.value)}
+              />
+              <button type="submit" aria-label="Submit">
+                <ArrowIcon />
+              </button>
+            </form>
+          </div>
+        </section>
+      )}
+    </main>
+  );
+}
+
+function getMilestoneCopy(milestone: PortfolioMilestone, locale: Locale) {
+  if (locale === 'ko' && milestone.ko) {
+    return {
+      title: milestone.ko.title,
+      subtitle: milestone.ko.subtitle,
+      summary: milestone.ko.summary,
+      details: milestone.ko.details
+    };
+  }
+
+  return {
+    title: milestone.title,
+    subtitle: milestone.subtitle,
+    summary: milestone.summary,
+    details: milestone.details
+  };
+}
+
+function CareerBlock({ locale, topic }: { locale: Locale; topic: TopicCopy }) {
+  const isKorean = locale === 'ko';
+
+  return (
+    <section className="v2-career-block">
+      <TypewriterText text={topic.title} className="v2-message-title" />
+      <TypewriterText text={topic.answer} delay={260} />
+      <div className="v2-career-timeline">
+        {careerMilestones.map((milestone, index) => {
+          const milestoneCopy = getMilestoneCopy(milestone, locale);
+          return (
+            <article key={milestone.id} className="v2-career-item" style={{ animationDelay: `${index * 90 + 520}ms` }}>
+              <span>{milestone.year}</span>
+              <h2>{milestoneCopy.title}</h2>
+              <strong>{milestoneCopy.subtitle}</strong>
+              <p>{milestoneCopy.summary}</p>
+              <ul>
+                {milestoneCopy.details.slice(0, 3).map((detail) => (
+                  <li key={detail}>{detail}</li>
+                ))}
+              </ul>
+              <div>
+                {milestone.skills.slice(0, 6).map((skill) => (
+                  <em key={skill}>{skill}</em>
+                ))}
+              </div>
+            </article>
+          );
+        })}
+      </div>
+      <p className="v2-career-footnote">{isKorean ? '좌에서 우로 커리어가 이어지듯, 최근 경험일수록 실무 시스템 개선과 운영 안정성에 더 집중했습니다.' : 'The arc moves from implementation to system improvement, operations, and higher-responsibility web work.'}</p>
+    </section>
+  );
+}
+
+function SideProjectsBlock({
+  locale,
+  topic,
+  selectedProject,
+  onSelectProject,
+  onCloseProject,
+  railRef,
+  onScroll
+}: {
+  locale: Locale;
+  topic: TopicCopy;
+  selectedProject: PersonalProject | null;
+  onSelectProject: (project: PersonalProject) => void;
+  onCloseProject: () => void;
+  railRef: RefObject<HTMLDivElement | null>;
+  onScroll: (direction: -1 | 1) => void;
+}) {
+  const isKorean = locale === 'ko';
+
+  return (
+    <div className="v2-projects v2-side-projects">
+      {selectedProject && <ProjectDetail project={selectedProject} locale={locale} onClose={onCloseProject} />}
+      <TypewriterText text={topic.title} className="v2-message-title" />
+      <TypewriterText text={topic.answer} delay={260} />
+
+      <div className="v2-aussie-strip" aria-label={isKorean ? 'Aussie Pus 게임 아이콘' : 'Aussie Pus game icons'}>
+        {aussieProductIcons.map((product) => (
+          <a key={product.title} href="https://aussie-pus.pages.dev/#games" target="_blank" rel="noreferrer">
+            <img src={product.src} alt={product.title} />
+            <span>{product.title}</span>
+          </a>
+        ))}
+      </div>
+
+      <h2>{isKorean ? '사이드 프로젝트' : 'Side Projects'}</h2>
+      <div className="v2-project-rail-wrap">
+        <div className="v2-project-grid" ref={railRef}>
+          {personalProjects.map((project) => {
+            const projectCopy = getProjectCopy(project, locale);
+            const cardCopy = getProjectCardCopy(project, locale);
+            return (
+              <button
+                key={project.id}
+                type="button"
+                className={`v2-project-card is-${project.id}`}
+                onClick={() => onSelectProject(project)}
+                aria-label={`${cardCopy.title}: ${projectCopy.shortDesc}`}
+              >
+                <ProjectGlyph projectId={project.id} />
+                <span>{cardCopy.category}</span>
+                <strong>{cardCopy.title}</strong>
+              </button>
+            );
+          })}
+        </div>
+        <div className="v2-project-controls" aria-label="Project carousel controls">
+          <button type="button" onClick={() => onScroll(-1)} aria-label="Previous projects">
+            <ArrowIcon />
+          </button>
+          <button type="button" onClick={() => onScroll(1)} aria-label="Next projects">
+            <ArrowIcon />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ProjectGlyph({ projectId }: { projectId: string }) {
+  const iconByProject: Record<string, string> = {
+    'aussie-pus': 'https://aussie-pus.pages.dev/neonTower.png',
+    decody: 'https://aussie-pus.pages.dev/decody_icon.png'
+  };
+
+  const iconUrl = iconByProject[projectId];
+  if (iconUrl) {
+    return (
+      <span className="v2-project-glyph">
+        <img src={iconUrl} alt="" />
+      </span>
+    );
+  }
+
+  return <span className={`v2-project-glyph v2-project-glyph-${projectId}`} aria-hidden="true" />;
+}
+
+function ProjectDetail({ project, locale, onClose }: { project: PersonalProject; locale: Locale; onClose: () => void }) {
+  const projectCopy = getProjectCopy(project, locale);
+  const labels =
+    locale === 'ko'
+      ? { close: '닫기', background: '배경', architecture: '구성', outcome: '결과', website: '웹사이트' }
+      : { close: 'Close', background: 'Background', architecture: 'Architecture', outcome: 'Outcome', website: 'Website' };
+
+  return (
+    <article className="v2-project-detail">
+      <button type="button" onClick={onClose} className="v2-project-detail-close">
+        {labels.close}
+      </button>
+      <span>{projectCopy.category}</span>
+      <h2>{projectCopy.title}</h2>
+      {project.year && <p className="v2-project-year">{project.year}</p>}
+      <p>{projectCopy.shortDesc}</p>
+      <div className="v2-project-tags">
+        {project.tags.map((tag) => (
+          <em key={tag}>{tag}</em>
+        ))}
+      </div>
+      <div className="v2-project-process">
+        <strong>{labels.background}</strong>
+        <p>{projectCopy.process.background}</p>
+        <strong>{labels.architecture}</strong>
+        <p>{projectCopy.process.architecture}</p>
+        <strong>{labels.outcome}</strong>
+        <p>{projectCopy.process.outcome}</p>
+      </div>
+      <div className="v2-project-links">
+        {project.demoUrl && (
+          <a href={project.demoUrl} target="_blank" rel="noreferrer">
+            {labels.website}
+          </a>
+        )}
+        <a href={project.githubUrl} target="_blank" rel="noreferrer">
+          GitHub
+        </a>
+      </div>
+    </article>
+  );
+}
+
+function SkillsExpertiseBlock({ locale }: { locale: Locale }) {
+  const isKorean = locale === 'ko';
+
+  return (
+    <section className="v2-skills-expertise" aria-label={isKorean ? '기술 스택' : 'Skills and expertise'}>
+      <h2>{isKorean ? '기술 스택' : 'Skills & Expertise'}</h2>
+      {skillGroups.map((group) => (
+        <div key={group.title} className="v2-skill-group">
+          <h3>{isKorean ? group.koTitle : group.title}</h3>
+          <div>
+            {group.skills.map((skill) => (
+              <span key={skill}>{skill}</span>
+            ))}
+          </div>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+function ContactBlock({ locale }: { locale: Locale }) {
+  const isKorean = locale === 'ko';
+
+  return (
+    <section className="v2-contact-card" aria-label={isKorean ? '연락처' : 'Contacts'}>
+      <h2>{isKorean ? '연락처' : 'Contacts'}</h2>
+      <a href={`mailto:${profile.contact.email}`}>{profile.contact.email}</a>
+      <div>
+        <a href="https://github.com/amaranth92" target="_blank" rel="noreferrer">
+          GitHub
+        </a>
+        <a href="https://aussie-pus.pages.dev/" target="_blank" rel="noreferrer">
+          Aussie Pus
+        </a>
+        <a href="https://github.com/amaranth92?tab=repositories" target="_blank" rel="noreferrer">
+          Repositories
+        </a>
+      </div>
+    </section>
+  );
+}
