@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { RefObject } from 'react';
+import type { CSSProperties, RefObject } from 'react';
 import { personalProjects, portfolioTimeline, profile, type PersonalProject, type PortfolioMilestone } from '../data/portfolioTimeline';
 import type { Locale } from '../game/gameEvents';
 
@@ -38,8 +38,9 @@ type Copy = {
   topics: Record<Topic, TopicCopy>;
 };
 
-const avatarUrl = '/assets/github-avatar.jpg';
-const travelPhotoUrl = '/assets/patagonia-wallpaper.jpg';
+const assetBaseUrl = import.meta.env.BASE_URL;
+const avatarUrl = `${assetBaseUrl}assets/github-avatar.jpg`;
+const travelPhotoUrl = `${assetBaseUrl}assets/patagonia-wallpaper.jpg`;
 const topicOrder: Topic[] = ['about', 'career', 'side', 'skills', 'fun', 'contact'];
 const careerMilestones = portfolioTimeline
   .filter((milestone) => milestone.category === 'company')
@@ -162,8 +163,8 @@ const copy: Record<Locale, Copy> = {
     }
   },
   ko: {
-    greeting: '안녕하세요, 저는 개발자입니다',
-    role: '웹 프로그래머',
+    greeting: "Hey, I'm a developer",
+    role: 'Web Programmer',
     watermark: 'Developer',
     searchPlaceholder: '무엇이든 물어보세요…',
     cta: '포트폴리오 보기',
@@ -424,6 +425,7 @@ function isChatPath() {
 
 export function Version2Portfolio({ locale, onToggleLocale }: Props) {
   const t = copy[locale];
+  const [pointer, setPointer] = useState({ x: 50, y: 50 });
   const [query, setQuery] = useState('');
   const [activeTopic, setActiveTopic] = useState<Topic | null>(null);
   const [activeQuestion, setActiveQuestion] = useState('');
@@ -511,8 +513,35 @@ export function Version2Portfolio({ locale, onToggleLocale }: Props) {
     return () => window.clearTimeout(timer);
   }, [activeTopic, activeQuestion, locale]);
 
+  useEffect(() => {
+    let frameId = 0;
+    const handlePointerMove = (event: PointerEvent) => {
+      window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(() => {
+        setPointer({
+          x: (event.clientX / window.innerWidth) * 100,
+          y: (event.clientY / window.innerHeight) * 100
+        });
+      });
+    };
+
+    window.addEventListener('pointermove', handlePointerMove);
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.removeEventListener('pointermove', handlePointerMove);
+    };
+  }, []);
+
   return (
-    <main className={`v2-aaabad ${activeTopic ? 'is-chat-open' : ''}`}>
+    <main
+      className={`v2-aaabad ${activeTopic ? 'is-chat-open' : ''}`}
+      style={{ '--pointer-x': `${pointer.x}%`, '--pointer-y': `${pointer.y}%` } as CSSProperties}
+    >
+      <div className="v2-cursor-fx" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
       {!activeTopic && (
         <section className="v2-landing" aria-label="Portfolio landing">
           <div className="v2-topbar">
