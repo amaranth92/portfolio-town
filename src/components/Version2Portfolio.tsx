@@ -47,9 +47,7 @@ const careerMilestones = portfolioTimeline
 const aussieProductIcons = [
   { title: 'Neon Tower', src: 'https://aussie-pus.pages.dev/neonTower.png' },
   { title: 'Neon Bricks', src: 'https://aussie-pus.pages.dev/neonBricks.png' },
-  { title: 'Arcflare', src: 'https://aussie-pus.pages.dev/arcflare_logo.png' },
-  { title: 'Decody', src: 'https://aussie-pus.pages.dev/decody_icon.png' },
-  { title: 'Car Park Dash', src: 'https://aussie-pus.pages.dev/carParkDash.png' }
+  { title: 'Arcflare', src: 'https://aussie-pus.pages.dev/arcflare_logo.png' }
 ];
 const skillGroups = [
   {
@@ -718,9 +716,106 @@ function getMilestoneCopy(milestone: PortfolioMilestone, locale: Locale) {
   };
 }
 
+const careerResumeCopy: Record<
+  string,
+  {
+    en: { summary: string; details: string[] };
+    ko: { summary: string; details: string[] };
+  }
+> = {
+  inhouse: {
+    en: {
+      summary: 'Manager / Web Developer / Feb 2026 - May 2026',
+      details: [
+        'Developed pharmaceutical safety card, archive, and electronic document integrated management system features.',
+        'Operated and improved core functions in a Spring Boot + React(Vite) DSIMS platform, including pharmaceutical safety card issuance, search, management, document classification, document registration, disposal management, and external viewing.',
+        'Improved Excel bulk upload processing for roughly 20,000 to 50,000 rows by parsing files with Apache POI and loading large data through PostgreSQL COPY.',
+        'Organized permission and status-based screen flows and access control to improve user workflow consistency and operational efficiency.'
+      ]
+    },
+    ko: {
+      summary: '과장 / 웹개발자 / 2026.02 ~ 2026.05',
+      details: [
+        '의약품안전카드, 문서고, 전자문서 통합관리 시스템 개발',
+        'Spring Boot + React(Vite) 기반 DSIMS 플랫폼(CD/DR)에서 의약품안전카드 발급·조회·관리와 문서고/전자문서의 문서분류·문서등록·파기관리·외부열람 핵심 기능을 운영·개선함.',
+        'Excel 대량 업로드(건수 기준 2만~5만 건) 처리를 Apache POI로 업로드 파일을 파싱한 뒤 PostgreSQL COPY 기반으로 다량 데이터 적재 성능을 확보함.',
+        '권한·상태 기반 화면 흐름과 접근 제어를 정리해 사용자 작업 동선 일관성과 운영 효율을 높임.'
+      ]
+    }
+  },
+  ourcom: {
+    en: {
+      summary: 'Manager / Web Developer / May 2025 - Dec 2025',
+      details: [
+        'Developed SK hynix ethics management work system features.',
+        'Implemented report system backend logic with Java and Oracle.',
+        'Developed report submission, approval process, and administration features.',
+        'Designed database structures and wrote SQL for report data management.',
+        'Implemented multilingual frontend screens with Thymeleaf and managed source control with SVN in IntelliJ.'
+      ]
+    },
+    ko: {
+      summary: '과장 / 웹개발자 / 2025.05 ~ 2025.12',
+      details: [
+        'SK하이닉스 윤리경영업무 시스템 개발',
+        '제보 시스템 백엔드 로직 구현 (JAVA, Oracle)',
+        '제보 접수, 승인 프로세스 및 관리 기능 개발',
+        '제보 데이터 관리를 위한 DB 설계 및 SQL 작성',
+        '다국어 지원 프론트엔드 구현 (Thymeleaf)',
+        'IntelliJ 기반 개발 및 SVN을 활용한 소스 형상 관리'
+      ]
+    }
+  },
+  careercare: {
+    en: {
+      summary: 'IT Research Institute, Senior Researcher / Jun 2019 - Oct 2023',
+      details: [
+        'Developed and maintained the internal CANDI system.',
+        'Maintained CANDI, converted .NET-based code to Java, and developed new features in Java. Used MSSQL for required database work and managed deployment processes to support stable system operation.',
+        'Developed and maintained BusinessPeople web and app services mainly with Java. Connected services with MSSQL and deployed through AWS to provide an efficient and stable service environment.',
+        'Handled SEO work such as meta tag updates, keyword optimization, traffic analysis, and sitemap management.',
+        'Maintained the company official homepage based on PHP and handled simple updates and error response.'
+      ]
+    },
+    ko: {
+      summary: '정보기술연구소 책임연구원 / 2019.06 ~ 2023.10',
+      details: [
+        'CANDI 시스템 개발 및 유지보수',
+        '사내 시스템인 CANDI를 개발 및 유지보수하며, 닷넷 기반 코드를 Java로 전환하거나 신규 기능을 Java로 개발함. MSSQL을 사용하여 필요한 데이터베이스 작업을 수행하며, 배포 프로세스 전반을 관리하여 안정적인 시스템 운영을 지원함.',
+        '비즈니스피플 웹·앱 개발 및 AWS 배포',
+        '비즈니스피플 웹페이지와 앱을 Java를 중심으로 개발하며, 신규 기능 구현 및 유지보수를 수행. MSSQL을 활용해 데이터베이스를 연동하여 개발 작업을 진행하였고, AWS를 활용해 서비스 배포를 진행하여 효율적이고 안정적인 서비스 환경을 제공함.',
+        '검색 엔진 최적화를 위해 메타 태그 수정, 키워드 최적화, 트래픽 분석, 사이트맵 관리 등 SEO 작업을 수행함.',
+        '회사 공식 홈페이지 관리',
+        'PHP 기반의 회사 공식 홈페이지를 유지보수하며, 간단한 수정 작업 및 오류 대응을 수행함.'
+      ]
+    }
+  },
+  bogosys: {
+    en: {
+      summary: 'Application Development Team, Staff / Dec 2017 - Mar 2019',
+      details: [
+        'Worked on common module development for an LG U+ project.',
+        'Analyzed and reflected requirements while collaborating with other teams and team members.',
+        'Implemented screens with Java, JavaScript, and WebSquare.',
+        'Used Sourcetree for Git source version control.'
+      ]
+    },
+    ko: {
+      summary: '응용개발팀 사원 / 2017.12 ~ 2019.03',
+      details: [
+        'LG U 프로젝트에서 공통 모듈 개발을 담당하며, 다른 팀, 팀원들과 협업하여 요구사항을 분석·반영함.',
+        'Java와 JavaScript를 활용해 WebSquare 툴로 화면을 구현하고, Sourcetree를 사용해 Git 버전 관리를 수행함.'
+      ]
+    }
+  }
+};
+
 function CareerBlock({ locale, topic }: { locale: Locale; topic: TopicCopy }) {
+  const [selectedCareer, setSelectedCareer] = useState<PortfolioMilestone | null>(null);
+
   return (
     <section className="v2-career-block">
+      {selectedCareer && <CareerDetailModal milestone={selectedCareer} locale={locale} onClose={() => setSelectedCareer(null)} />}
       <SequentialTextBlock
         key={`career-${locale}`}
         items={[
@@ -731,27 +826,62 @@ function CareerBlock({ locale, topic }: { locale: Locale; topic: TopicCopy }) {
       <div className="v2-career-timeline">
         {careerMilestones.map((milestone, index) => {
           const milestoneCopy = getMilestoneCopy(milestone, locale);
+          const resumeCopy = careerResumeCopy[milestone.id]?.[locale];
           return (
-            <article key={milestone.id} className="v2-career-item" style={{ animationDelay: `${index * 90 + 520}ms` }}>
+            <button
+              key={milestone.id}
+              type="button"
+              className="v2-career-item"
+              style={{ animationDelay: `${index * 90 + 520}ms` }}
+              onClick={() => setSelectedCareer(milestone)}
+            >
               <span>{milestone.year}</span>
               <h2>{milestoneCopy.title}</h2>
               <strong>{milestoneCopy.subtitle}</strong>
-              <p>{milestoneCopy.summary}</p>
-              <ul>
-                {milestoneCopy.details.slice(0, 3).map((detail) => (
-                  <li key={detail}>{detail}</li>
-                ))}
-              </ul>
+              <p>{resumeCopy?.summary ?? milestoneCopy.summary}</p>
               <div>
                 {milestone.skills.slice(0, 6).map((skill) => (
                   <em key={skill}>{skill}</em>
                 ))}
               </div>
-            </article>
+            </button>
           );
         })}
       </div>
     </section>
+  );
+}
+
+function CareerDetailModal({ milestone, locale, onClose }: { milestone: PortfolioMilestone; locale: Locale; onClose: () => void }) {
+  const milestoneCopy = getMilestoneCopy(milestone, locale);
+  const resumeCopy = careerResumeCopy[milestone.id]?.[locale];
+  const labels = locale === 'ko' ? { close: '닫기', detail: '상세 이력' } : { close: 'Close', detail: 'Resume Detail' };
+
+  useEffect(() => {
+    const closeWithEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+
+    window.addEventListener('keydown', closeWithEscape);
+    return () => window.removeEventListener('keydown', closeWithEscape);
+  }, [onClose]);
+
+  return (
+    <div className="v2-career-modal-backdrop" role="presentation" onClick={onClose}>
+      <article className="v2-career-modal" role="dialog" aria-modal="true" aria-labelledby="career-detail-title" onClick={(event) => event.stopPropagation()}>
+        <button type="button" className="v2-career-modal-close" onClick={onClose}>
+          {labels.close}
+        </button>
+        <span>{labels.detail}</span>
+        <h2 id="career-detail-title">{milestoneCopy.title}</h2>
+        <strong>{resumeCopy?.summary ?? milestoneCopy.subtitle}</strong>
+        <div>
+          {(resumeCopy?.details ?? milestoneCopy.details).map((detail) => (
+            <p key={detail}>{detail}</p>
+          ))}
+        </div>
+      </article>
+    </div>
   );
 }
 
@@ -773,6 +903,16 @@ function SideProjectsBlock({
   onScroll: (direction: -1 | 1) => void;
 }) {
   const isKorean = locale === 'ko';
+  const projectDetailRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!selectedProject) return;
+
+    window.setTimeout(() => {
+      projectDetailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      projectDetailRef.current?.focus({ preventScroll: true });
+    }, 80);
+  }, [selectedProject]);
 
   return (
     <div className="v2-projects v2-side-projects">
@@ -823,7 +963,11 @@ function SideProjectsBlock({
           </button>
         </div>
       </div>
-      {selectedProject && <ProjectDetail project={selectedProject} locale={locale} onClose={onCloseProject} />}
+      {selectedProject && (
+        <div ref={projectDetailRef} className="v2-project-detail-focus" tabIndex={-1}>
+          <ProjectDetail project={selectedProject} locale={locale} onClose={onCloseProject} />
+        </div>
+      )}
     </div>
   );
 }
