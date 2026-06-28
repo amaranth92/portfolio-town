@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import type { CSSProperties, RefObject } from 'react';
+import type { RefObject } from 'react';
 import { personalProjects, portfolioTimeline, profile, type PersonalProject, type PortfolioMilestone } from '../data/portfolioTimeline';
 import type { Locale } from '../game/gameEvents';
 
@@ -36,6 +36,17 @@ type Copy = {
   infoWhy: string;
   infoWhyBody: string;
   topics: Record<Topic, TopicCopy>;
+};
+
+type FluidParticle = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  radius: number;
+  life: number;
+  maxLife: number;
+  color: string;
 };
 
 const assetBaseUrl = import.meta.env.BASE_URL;
@@ -260,6 +271,123 @@ function ArrowIcon() {
   );
 }
 
+function useFluidCanvas(canvasRef: RefObject<HTMLCanvasElement | null>) {
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext('2d', { alpha: true });
+    if (!canvas || !context) return undefined;
+
+    const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const coarsePointer = window.matchMedia('(pointer: coarse)').matches;
+    if (reduceMotion || coarsePointer) return undefined;
+
+    let animationId = 0;
+    let width = 0;
+    let height = 0;
+    let lastX = window.innerWidth / 2;
+    let lastY = window.innerHeight / 2;
+    let hue = 195;
+    const particles: FluidParticle[] = [];
+
+    const resize = () => {
+      const ratio = Math.min(window.devicePixelRatio || 1, 2);
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = Math.floor(width * ratio);
+      canvas.height = Math.floor(height * ratio);
+      canvas.style.width = `${width}px`;
+      canvas.style.height = `${height}px`;
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      context.clearRect(0, 0, width, height);
+    };
+
+    const addSplat = (x: number, y: number, dx: number, dy: number) => {
+      const speed = Math.min(Math.hypot(dx, dy), 80);
+      hue = (hue + 8) % 360;
+
+      for (let index = 0; index < 9; index += 1) {
+        const angle = Math.random() * Math.PI * 2;
+        const spread = 0.6 + Math.random() * 1.8;
+        particles.push({
+          x: x + (Math.random() - 0.5) * 18,
+          y: y + (Math.random() - 0.5) * 18,
+          vx: dx * 0.028 + Math.cos(angle) * spread,
+          vy: dy * 0.028 + Math.sin(angle) * spread,
+          radius: 34 + speed * 0.6 + Math.random() * 56,
+          life: 0,
+          maxLife: 44 + Math.random() * 34,
+          color: `hsla(${(hue + index * 18) % 360}, 86%, 58%, 0.22)`
+        });
+      }
+
+      if (particles.length > 240) particles.splice(0, particles.length - 240);
+    };
+
+    const handlePointerMove = (event: PointerEvent) => {
+      const dx = event.clientX - lastX;
+      const dy = event.clientY - lastY;
+      lastX = event.clientX;
+      lastY = event.clientY;
+      addSplat(event.clientX, event.clientY, dx, dy);
+    };
+
+    const handlePointerDown = (event: PointerEvent) => {
+      addSplat(event.clientX, event.clientY, 48 * (Math.random() - 0.5), 48 * (Math.random() - 0.5));
+    };
+
+    const render = () => {
+      context.globalCompositeOperation = 'source-over';
+      context.fillStyle = 'rgba(255, 255, 255, 0.075)';
+      context.fillRect(0, 0, width, height);
+      context.globalCompositeOperation = 'lighter';
+      context.filter = 'blur(10px)';
+
+      for (let index = particles.length - 1; index >= 0; index -= 1) {
+        const particle = particles[index];
+        particle.life += 1;
+        particle.x += particle.vx;
+        particle.y += particle.vy;
+        particle.vx *= 0.985;
+        particle.vy *= 0.985;
+        particle.radius *= 0.992;
+
+        const progress = particle.life / particle.maxLife;
+        if (progress >= 1 || particle.radius < 3) {
+          particles.splice(index, 1);
+          continue;
+        }
+
+        const alpha = Math.max(0, 1 - progress);
+        const gradient = context.createRadialGradient(particle.x, particle.y, 0, particle.x, particle.y, particle.radius);
+        gradient.addColorStop(0, particle.color.replace('0.22', `${0.34 * alpha}`));
+        gradient.addColorStop(0.42, particle.color.replace('0.22', `${0.16 * alpha}`));
+        gradient.addColorStop(1, 'rgba(255,255,255,0)');
+        context.fillStyle = gradient;
+        context.beginPath();
+        context.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+        context.fill();
+      }
+
+      context.filter = 'none';
+      animationId = window.requestAnimationFrame(render);
+    };
+
+    resize();
+    addSplat(width * 0.5, height * 0.38, 0, 0);
+    window.addEventListener('resize', resize);
+    window.addEventListener('pointermove', handlePointerMove);
+    window.addEventListener('pointerdown', handlePointerDown);
+    animationId = window.requestAnimationFrame(render);
+
+    return () => {
+      window.cancelAnimationFrame(animationId);
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerdown', handlePointerDown);
+    };
+  }, [canvasRef]);
+}
+
 function TopicIcon({ topic }: { topic: Topic }) {
   const paths: Record<Topic, string[]> = {
     about: ['M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z', 'M4 22a8 8 0 0 1 16 0'],
@@ -425,7 +553,7 @@ function isChatPath() {
 
 export function Version2Portfolio({ locale, onToggleLocale }: Props) {
   const t = copy[locale];
-  const [pointer, setPointer] = useState({ x: 50, y: 50 });
+  const fluidCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const [query, setQuery] = useState('');
   const [activeTopic, setActiveTopic] = useState<Topic | null>(null);
   const [activeQuestion, setActiveQuestion] = useState('');
@@ -513,35 +641,11 @@ export function Version2Portfolio({ locale, onToggleLocale }: Props) {
     return () => window.clearTimeout(timer);
   }, [activeTopic, activeQuestion, locale]);
 
-  useEffect(() => {
-    let frameId = 0;
-    const handlePointerMove = (event: PointerEvent) => {
-      window.cancelAnimationFrame(frameId);
-      frameId = window.requestAnimationFrame(() => {
-        setPointer({
-          x: (event.clientX / window.innerWidth) * 100,
-          y: (event.clientY / window.innerHeight) * 100
-        });
-      });
-    };
-
-    window.addEventListener('pointermove', handlePointerMove);
-    return () => {
-      window.cancelAnimationFrame(frameId);
-      window.removeEventListener('pointermove', handlePointerMove);
-    };
-  }, []);
+  useFluidCanvas(fluidCanvasRef);
 
   return (
-    <main
-      className={`v2-aaabad ${activeTopic ? 'is-chat-open' : ''}`}
-      style={{ '--pointer-x': `${pointer.x}%`, '--pointer-y': `${pointer.y}%` } as CSSProperties}
-    >
-      <div className="v2-cursor-fx" aria-hidden="true">
-        <span />
-        <span />
-        <span />
-      </div>
+    <main className={`v2-aaabad ${activeTopic ? 'is-chat-open' : ''}`}>
+      <canvas ref={fluidCanvasRef} className="v2-fluid-canvas" aria-hidden="true" />
       {!activeTopic && (
         <section className="v2-landing" aria-label="Portfolio landing">
           <div className="v2-topbar">
