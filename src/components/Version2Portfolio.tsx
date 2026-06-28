@@ -509,7 +509,7 @@ export function Version2Portfolio({ locale, onToggleLocale }: Props) {
 
     const timer = window.setTimeout(() => setIsAnswerLoading(false), 650);
     return () => window.clearTimeout(timer);
-  }, [activeTopic, activeQuestion]);
+  }, [activeTopic, activeQuestion, locale]);
 
   return (
     <main className={`v2-aaabad ${activeTopic ? 'is-chat-open' : ''}`}>
@@ -974,7 +974,7 @@ function SideProjectsBlock({
 
 function ProjectGlyph({ projectId }: { projectId: string }) {
   const iconByProject: Record<string, string> = {
-    'aussie-pus': 'https://aussie-pus.pages.dev/neonTower.png',
+    'aussie-pus': 'https://aussie-pus.pages.dev/Platypus.png',
     decody: 'https://aussie-pus.pages.dev/decody_icon.png'
   };
 
