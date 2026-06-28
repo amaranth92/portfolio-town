@@ -41,14 +41,15 @@ type Copy = {
 const avatarUrl = '/assets/github-avatar.jpg';
 const travelPhotoUrl = '/assets/patagonia-wallpaper.jpg';
 const topicOrder: Topic[] = ['about', 'career', 'side', 'skills', 'fun', 'contact'];
-const careerMilestones = portfolioTimeline.filter((milestone) => milestone.category === 'company');
+const careerMilestones = portfolioTimeline
+  .filter((milestone) => milestone.category === 'company')
+  .sort((a, b) => Number(b.year.slice(0, 4)) - Number(a.year.slice(0, 4)));
 const aussieProductIcons = [
   { title: 'Neon Tower', src: 'https://aussie-pus.pages.dev/neonTower.png' },
   { title: 'Neon Bricks', src: 'https://aussie-pus.pages.dev/neonBricks.png' },
   { title: 'Arcflare', src: 'https://aussie-pus.pages.dev/arcflare_logo.png' },
   { title: 'Decody', src: 'https://aussie-pus.pages.dev/decody_icon.png' },
-  { title: 'Car Park Dash', src: 'https://aussie-pus.pages.dev/carParkDash.png' },
-  { title: 'No Road Kill', src: 'https://aussie-pus.pages.dev/noRoadKill.png' }
+  { title: 'Car Park Dash', src: 'https://aussie-pus.pages.dev/carParkDash.png' }
 ];
 const skillGroups = [
   {
@@ -99,7 +100,7 @@ const copy: Record<Locale, Copy> = {
         question: 'Who are you?',
         title: 'Stability-minded developer who keeps learning current tools',
         answer:
-          'Hi, I am Kim Sungkyung, a Java web developer based in Seoul with 6 years 8 months of commercial experience. I studied Computer Information Engineering, built enterprise systems for LG U+, CareerCare, SK hynix ethics management, and DSIMS, and I care most about stable operations, practical improvements, and learning current tools.',
+          "Hi, I am Kim Seongkyung, a Java web developer based in Seoul with 6 years 8 months of commercial experience. I majored in Computer Information Engineering at Korea National University of Transportation, worked on projects for LG U+, SK hynix, and the Korea Institute of Drug Safety & Risk Management, and managed/developed systems at CareerCare's IT Research Institute.",
         bullets: [
           'What about you? What brings you here?'
         ]
@@ -107,14 +108,14 @@ const copy: Record<Locale, Copy> = {
       career: {
         label: 'Career',
         question: 'Show me your career',
-        title: 'Enterprise web systems across LG U+, CareerCare, SK hynix, and DSIMS',
+        title: 'Enterprise web systems across LG U+, CareerCare, SK hynix, and KIDS',
         answer:
           'My commercial work has focused on Java-centered enterprise web systems, database-backed workflows, stable operations, and practical maintenance. The timeline below moves from application development to senior web/system work.',
         bullets: [
           '2017-2019: Bogo Information System, LG U+ shared modules and WebSquare screens.',
           '2019-2023: CareerCare, CANDI maintenance, Java migration, BusinessPeople web/app and AWS deployment.',
           '2025: Ourcom, SK hynix ethics management backend and multilingual web screens.',
-          '2026: InhouseSoft, DSIMS Spring Boot + React platform improvements.'
+          '2026: InhouseSoft, Korea Institute of Drug Safety & Risk Management project with Spring Boot + React platform improvements.'
         ]
       },
       side: {
@@ -122,12 +123,11 @@ const copy: Record<Locale, Copy> = {
         question: 'Show me your side projects',
         title: 'Automation, game, and developer utility side projects',
         answer:
-          'Outside work, I build tools that remove repetitive effort: photo sorting, video repair checks, AI posting automation, browser automation, and mobile/web games.',
+          'Outside work, I keep side projects that can be explained with clear public material or real working context: Aussie Pus game production, the Photo EXIF Sorter automation tool, and the Decody developer utility currently in progress.',
         bullets: [
           'Aussie Pus Studio games: https://aussie-pus.pages.dev/',
-          'Photo EXIF sorter for 10,000+ travel photos using Python metadata automation.',
-          'AI content generation and auto-posting tools using Gemini, Google Blogger API, Naver API, and Selenium.',
-          'GitHub: https://github.com/amaranth92'
+          'Photo EXIF Sorter: Python automation for travel photo organization.',
+          'Decody: developer utility README and repository.'
         ]
       },
       skills: {
@@ -188,7 +188,7 @@ const copy: Record<Locale, Copy> = {
         question: '어떤 개발자인가요?',
         title: '안정성을 중요시하며 최신 기술을 꾸준히 학습하는 개발자',
         answer:
-          '안녕하세요. 저는 서울에서 일하는 Java 웹개발자 김성경입니다. 총 6년 8개월의 실무 경험을 가지고 있고, 컴퓨터정보공학을 전공한 뒤 LG U+, 커리어케어, SK하이닉스 윤리경영, DSIMS 같은 기업 업무 시스템을 개발했습니다. 안정적인 운영, 실질적인 개선, 최신 도구 학습을 중요하게 생각합니다.',
+          '안녕하세요. 저는 서울에서 일하는 Java 웹개발자 김성경입니다. 총 6년 8개월의 실무 경험을 가지고 있고, 한국교통대학교 컴퓨터정보공학과를 전공했습니다. LG U+, SK하이닉스, 한국의약품안전관리원 프로젝트를 수행했고, 커리어케어 정보기술연구소에서는 사내 시스템을 관리·개발했습니다.',
         bullets: [
           '어떤 점이 궁금해서 오셨나요?'
         ]
@@ -196,14 +196,14 @@ const copy: Record<Locale, Copy> = {
       career: {
         label: '경력',
         question: '경력을 보여주세요',
-        title: 'LG U+, 커리어케어, SK하이닉스, DSIMS로 이어지는 기업 웹 시스템 경험',
+        title: 'LG U+, 커리어케어, SK하이닉스, 한국의약품안전관리원으로 이어지는 기업 웹 시스템 경험',
         answer:
           '실무에서는 Java 중심의 기업 웹 시스템, 데이터베이스 기반 업무 흐름, 안정적인 운영, 유지보수와 개선 업무를 주로 맡았습니다. 아래 타임라인에서 응용 개발부터 웹/시스템 개발 경험까지 순서대로 볼 수 있습니다.',
         bullets: [
           '2017-2019: 보고정보시스템, LG U+ 공통 모듈과 WebSquare 화면 개발.',
           '2019-2023: 커리어케어, CANDI 유지보수, Java 전환, 비즈니스피플 웹/앱 및 AWS 배포.',
           '2025: 아워콤, SK하이닉스 윤리경영 시스템 백엔드와 다국어 화면 개발.',
-          '2026: 인하우스소프트, DSIMS Spring Boot + React 플랫폼 개선.'
+          '2026: 인하우스소프트, 한국의약품안전관리원 프로젝트의 Spring Boot + React 플랫폼 개선.'
         ]
       },
       side: {
@@ -211,12 +211,11 @@ const copy: Record<Locale, Copy> = {
         question: '사이드 프로젝트를 보여주세요',
         title: '자동화, 게임, 개발자 유틸리티 사이드 프로젝트',
         answer:
-          '업무 외에도 반복 작업을 줄이는 도구를 직접 만듭니다. 사진 정리, 영상 오류 확인, AI 포스팅 자동화, 브라우저 자동화, 웹/모바일 게임을 만들었습니다.',
+          '업무 외 프로젝트 중 실제로 설명 가능한 작업 맥락이나 공개 자료가 있는 항목을 중심으로 정리했습니다. Aussie Pus 게임 제작, 여행 사진 정리 자동화 도구, 현재 만들고 있는 Decody 개발자 유틸리티를 담았습니다.',
         bullets: [
           'Aussie Pus Studio 게임: https://aussie-pus.pages.dev/',
-          'Python EXIF 기반 10,000장 이상 여행 사진 자동 분류 프로그램.',
-          'Gemini, Google Blogger API, Naver API, Selenium 기반 AI 콘텐츠 생성 및 자동 포스팅 도구.',
-          'GitHub: https://github.com/amaranth92'
+          'Photo EXIF Sorter: 여행 사진 정리를 위한 Python 자동화 도구.',
+          'Decody: 개발자 유틸리티 README와 저장소.'
         ]
       },
       skills: {
@@ -262,15 +261,6 @@ function ArrowIcon() {
   );
 }
 
-function FastfolioMark({ compact = false }: { compact?: boolean }) {
-  return (
-    <span className={`v2-fastfolio-mark ${compact ? 'is-compact' : ''}`} aria-hidden="true">
-      <span />
-      <span />
-    </span>
-  );
-}
-
 function TopicIcon({ topic }: { topic: Topic }) {
   const paths: Record<Topic, string[]> = {
     about: ['M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z', 'M4 22a8 8 0 0 1 16 0'],
@@ -294,25 +284,41 @@ function TypewriterText({
   text,
   className,
   as = 'p',
-  delay = 0
+  delay = 0,
+  start = true,
+  onDone
 }: {
   text: string;
   className?: string;
   as?: 'p' | 'span' | 'strong';
   delay?: number;
+  start?: boolean;
+  onDone?: () => void;
 }) {
   const [visibleText, setVisibleText] = useState('');
+  const [isDone, setIsDone] = useState(false);
   const Component = as;
+  const onDoneRef = useRef(onDone);
 
   useEffect(() => {
+    onDoneRef.current = onDone;
+  }, [onDone]);
+
+  useEffect(() => {
+    if (!start) return undefined;
     let index = 0;
     let intervalId = 0;
     const timeoutId = window.setTimeout(() => {
       setVisibleText('');
+      setIsDone(false);
       intervalId = window.setInterval(() => {
         index += 1;
         setVisibleText(text.slice(0, index));
-        if (index >= text.length) window.clearInterval(intervalId);
+        if (index >= text.length) {
+          window.clearInterval(intervalId);
+          setIsDone(true);
+          window.setTimeout(() => onDoneRef.current?.(), 90);
+        }
       }, 12);
     }, delay);
 
@@ -320,9 +326,34 @@ function TypewriterText({
       window.clearTimeout(timeoutId);
       window.clearInterval(intervalId);
     };
-  }, [text, delay]);
+  }, [text, delay, start]);
 
-  return <Component className={`v2-typewriter ${className ?? ''}`.trim()}>{visibleText}</Component>;
+  return <Component className={`v2-typewriter ${isDone ? 'is-complete' : ''} ${className ?? ''}`.trim()}>{visibleText}</Component>;
+}
+
+function SequentialTextBlock({
+  items,
+  className
+}: {
+  items: Array<{ text: string; className?: string; as?: 'p' | 'span' | 'strong' }>;
+  className?: string;
+}) {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  return (
+    <div className={className}>
+      {items.slice(0, activeIndex + 1).map((item, index) => (
+        <TypewriterText
+          key={`${item.text}-${index}`}
+          text={item.text}
+          className={item.className}
+          as={item.as}
+          start={index === activeIndex}
+          onDone={() => setActiveIndex((value) => Math.max(value, index + 1))}
+        />
+      ))}
+    </div>
+  );
 }
 
 function getProjectCopy(project: PersonalProject, locale: Locale) {
@@ -370,6 +401,29 @@ function getProjectCardCopy(project: PersonalProject, locale: Locale) {
   return cardCopy[project.id]?.[locale] ?? getProjectCopy(project, locale);
 }
 
+function getLocaleBasePath(locale: Locale) {
+  const segments = window.location.pathname.split('/').filter(Boolean);
+  const localeIndex = segments.findIndex((segment) => segment === 'en' || segment === 'ko');
+
+  if (localeIndex >= 0) {
+    segments[localeIndex] = locale;
+    return `/${segments.slice(0, localeIndex + 1).join('/')}`;
+  }
+
+  const chatIndex = segments.findIndex((segment) => segment === 'chat');
+  if (chatIndex >= 0) {
+    return `/${segments.slice(0, chatIndex).concat(locale).join('/')}`;
+  }
+
+  return `/${segments.concat(locale).join('/')}`;
+}
+
+function isChatPath() {
+  const segments = window.location.pathname.split('/').filter(Boolean);
+  const localeIndex = segments.findIndex((segment) => segment === 'en' || segment === 'ko');
+  return localeIndex >= 0 ? segments[localeIndex + 1] === 'chat' : segments.at(-1) === 'chat';
+}
+
 export function Version2Portfolio({ locale, onToggleLocale }: Props) {
   const t = copy[locale];
   const [query, setQuery] = useState('');
@@ -401,7 +455,7 @@ export function Version2Portfolio({ locale, onToggleLocale }: Props) {
     setIsInfoOpen(false);
     setSelectedProject(null);
     setQuery('');
-    const nextUrl = `/chat?query=${encodeURIComponent(nextQuestion)}`;
+    const nextUrl = `${getLocaleBasePath(locale)}/chat?query=${encodeURIComponent(nextQuestion)}`;
     if (window.location.pathname + window.location.search !== nextUrl) {
       window.history[replace ? 'replaceState' : 'pushState']({ topic: nextTopic }, '', nextUrl);
     }
@@ -413,8 +467,9 @@ export function Version2Portfolio({ locale, onToggleLocale }: Props) {
     setIsAnswerLoading(false);
     setIsInfoOpen(false);
     setQuery('');
-    if (window.location.pathname !== '/' || window.location.search) {
-      window.history.pushState({}, '', '/');
+    const nextUrl = getLocaleBasePath(locale);
+    if (window.location.pathname + window.location.search !== nextUrl) {
+      window.history.pushState({}, '', nextUrl);
     }
   };
 
@@ -433,7 +488,7 @@ export function Version2Portfolio({ locale, onToggleLocale }: Props) {
 
   useEffect(() => {
     const syncFromUrl = () => {
-      if (window.location.pathname !== '/chat') {
+      if (!isChatPath()) {
         setActiveTopic(null);
         setIsAnswerLoading(false);
         return;
@@ -464,7 +519,6 @@ export function Version2Portfolio({ locale, onToggleLocale }: Props) {
         <section className="v2-landing" aria-label="Portfolio landing">
           <div className="v2-topbar">
             <button type="button" className="v2-pill-button" onClick={() => openTopic('about')}>
-              <FastfolioMark compact />
               <span className="v2-pill-label-long">{t.cta}</span>
               <span className="v2-pill-label-short">{t.back}</span>
               <ArrowIcon />
@@ -480,9 +534,6 @@ export function Version2Portfolio({ locale, onToggleLocale }: Props) {
           </div>
 
           <div className="v2-hero">
-            <button type="button" className="v2-mark" onClick={() => openTopic('about')} aria-label="About Developer">
-              <FastfolioMark />
-            </button>
             <p className="v2-greeting">{t.greeting} 👋</p>
             <h1>{t.role}</h1>
 
@@ -523,7 +574,6 @@ export function Version2Portfolio({ locale, onToggleLocale }: Props) {
         <section className="v2-chat" aria-label={t.portfolioTitle}>
           <header className="v2-chat-top">
             <button type="button" className="v2-build-yours" onClick={closeChat}>
-              <FastfolioMark compact />
               <span className="v2-pill-label-long">{t.cta}</span>
               <span className="v2-pill-label-short">{t.back}</span>
               <span className="v2-chat-build-arrow">
@@ -531,7 +581,11 @@ export function Version2Portfolio({ locale, onToggleLocale }: Props) {
               </span>
             </button>
             <img src={avatarUrl} alt="Developer avatar" />
-            <button type="button" className="v2-chat-info" onClick={() => setIsInfoOpen(true)} aria-label="Open portfolio info" />
+            {onToggleLocale && (
+              <button type="button" className="v2-chat-lang" onClick={onToggleLocale}>
+                {locale === 'ko' ? 'English' : '한국어'}
+              </button>
+            )}
           </header>
 
           {isInfoOpen && (
@@ -587,19 +641,17 @@ export function Version2Portfolio({ locale, onToggleLocale }: Props) {
 
                 {activeTopic !== 'career' && activeTopic !== 'side' && (
                   <article className="v2-topic-note">
-                    <TypewriterText text={topic.title} className="v2-message-title" />
-                    <TypewriterText text={topic.answer} delay={260} />
-                    {activeTopic === 'contact' || activeTopic === 'about' || activeTopic === 'fun' ? (
-                      <TypewriterText text={topic.bullets[0]} className="v2-topic-question" delay={620} />
-                    ) : (
-                      <ul>
-                        {topic.bullets.map((bullet, index) => (
-                          <li key={bullet}>
-                            <TypewriterText text={bullet} delay={560 + index * 180} />
-                          </li>
-                        ))}
-                      </ul>
+                    {activeTopic === 'about' && (
+                      <img className="v2-about-avatar-square" src={avatarUrl} alt={locale === 'ko' ? '김성경 GitHub 프로필 사진' : 'Kim Seongkyung GitHub profile'} />
                     )}
+                    <SequentialTextBlock
+                      key={`${activeTopic}-${locale}`}
+                      items={[
+                        { text: topic.title, className: 'v2-message-title' },
+                        { text: topic.answer },
+                        { text: topic.bullets[0], className: 'v2-topic-question' }
+                      ]}
+                    />
                     {activeTopic === 'fun' && (
                       <figure className="v2-fun-photo">
                         <img src={travelPhotoUrl} alt={locale === 'ko' ? '파타고니아 세계여행 사진' : 'Patagonia world travel photo'} />
@@ -667,12 +719,15 @@ function getMilestoneCopy(milestone: PortfolioMilestone, locale: Locale) {
 }
 
 function CareerBlock({ locale, topic }: { locale: Locale; topic: TopicCopy }) {
-  const isKorean = locale === 'ko';
-
   return (
     <section className="v2-career-block">
-      <TypewriterText text={topic.title} className="v2-message-title" />
-      <TypewriterText text={topic.answer} delay={260} />
+      <SequentialTextBlock
+        key={`career-${locale}`}
+        items={[
+          { text: topic.title, className: 'v2-message-title' },
+          { text: topic.answer }
+        ]}
+      />
       <div className="v2-career-timeline">
         {careerMilestones.map((milestone, index) => {
           const milestoneCopy = getMilestoneCopy(milestone, locale);
@@ -696,7 +751,6 @@ function CareerBlock({ locale, topic }: { locale: Locale; topic: TopicCopy }) {
           );
         })}
       </div>
-      <p className="v2-career-footnote">{isKorean ? '좌에서 우로 커리어가 이어지듯, 최근 경험일수록 실무 시스템 개선과 운영 안정성에 더 집중했습니다.' : 'The arc moves from implementation to system improvement, operations, and higher-responsibility web work.'}</p>
     </section>
   );
 }
@@ -722,9 +776,13 @@ function SideProjectsBlock({
 
   return (
     <div className="v2-projects v2-side-projects">
-      {selectedProject && <ProjectDetail project={selectedProject} locale={locale} onClose={onCloseProject} />}
-      <TypewriterText text={topic.title} className="v2-message-title" />
-      <TypewriterText text={topic.answer} delay={260} />
+      <SequentialTextBlock
+        key={`side-${locale}`}
+        items={[
+          { text: topic.title, className: 'v2-message-title' },
+          { text: topic.answer }
+        ]}
+      />
 
       <div className="v2-aussie-strip" aria-label={isKorean ? 'Aussie Pus 게임 아이콘' : 'Aussie Pus game icons'}>
         {aussieProductIcons.map((product) => (
@@ -765,6 +823,7 @@ function SideProjectsBlock({
           </button>
         </div>
       </div>
+      {selectedProject && <ProjectDetail project={selectedProject} locale={locale} onClose={onCloseProject} />}
     </div>
   );
 }
@@ -822,9 +881,11 @@ function ProjectDetail({ project, locale, onClose }: { project: PersonalProject;
             {labels.website}
           </a>
         )}
-        <a href={project.githubUrl} target="_blank" rel="noreferrer">
-          GitHub
-        </a>
+        {project.githubUrl && (
+          <a href={project.githubUrl} target="_blank" rel="noreferrer">
+            GitHub
+          </a>
+        )}
       </div>
     </article>
   );

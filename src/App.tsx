@@ -7,6 +7,8 @@ import { gameEvents, type Locale, type MilestoneOpenEvent } from './game/gameEve
 function App() {
   const isPrivacyPolicy = window.location.pathname.replace(/\/+$/, '') === '/privacy-policy-car-park-dash';
   const [locale, setLocale] = useState<Locale>(() => {
+    const pathLocale = getLocaleFromPath();
+    if (pathLocale) return pathLocale;
     const saved = window.localStorage.getItem('portfolio-locale');
     return saved === 'ko' || saved === 'en' ? saved : 'en';
   });
@@ -34,6 +36,16 @@ function App() {
   }, [locale]);
 
   useEffect(() => {
+    const syncLocaleFromPath = () => {
+      const pathLocale = getLocaleFromPath();
+      if (pathLocale) setLocale(pathLocale);
+    };
+
+    window.addEventListener('popstate', syncLocaleFromPath);
+    return () => window.removeEventListener('popstate', syncLocaleFromPath);
+  }, []);
+
+  useEffect(() => {
     if (!activeMilestone) return undefined;
 
     const closeWithKey = (event: KeyboardEvent) => {
@@ -52,11 +64,40 @@ function App() {
     <div className="app-shell">
       <Version2Portfolio
         locale={locale}
-        onToggleLocale={() => setLocale((value) => (value === 'ko' ? 'en' : 'ko'))}
+        onToggleLocale={() => {
+          const nextLocale = locale === 'ko' ? 'en' : 'ko';
+          setLocale(nextLocale);
+          window.history.pushState({}, '', getLocalizedPath(nextLocale));
+        }}
       />
       <PortfolioPopup milestone={activeMilestone} isKorean={isKorean} />
     </div>
   );
+}
+
+function getLocaleFromPath(): Locale | null {
+  const segments = window.location.pathname.split('/').filter(Boolean);
+  const locale = segments.find((segment) => segment === 'en' || segment === 'ko');
+  return locale === 'en' || locale === 'ko' ? locale : null;
+}
+
+function getLocalizedPath(locale: Locale) {
+  const segments = window.location.pathname.split('/').filter(Boolean);
+  const localeIndex = segments.findIndex((segment) => segment === 'en' || segment === 'ko');
+
+  if (localeIndex >= 0) {
+    segments[localeIndex] = locale;
+    return `/${segments.join('/')}${window.location.search}`;
+  }
+
+  const chatIndex = segments.findIndex((segment) => segment === 'chat');
+  if (chatIndex >= 0) {
+    segments.splice(chatIndex, 0, locale);
+  } else {
+    segments.push(locale);
+  }
+
+  return `/${segments.join('/')}${window.location.search}`;
 }
 
 function PrivacyPolicy() {

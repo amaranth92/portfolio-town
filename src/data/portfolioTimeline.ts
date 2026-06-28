@@ -22,7 +22,7 @@ export type PersonalProject = {
   category: string;
   year?: string;
   shortDesc: string;
-  githubUrl: string;
+  githubUrl?: string;
   demoUrl?: string;
   tags: string[];
   isPrivateRepo?: boolean;
@@ -74,7 +74,6 @@ export const personalProjects: PersonalProject[] = [
     title: 'Aussie Pus Studio',
     category: 'Side Project / Web Games',
     shortDesc: 'A collection of browser and mobile-friendly games released as a personal game studio site.',
-    githubUrl: 'https://github.com/amaranth92',
     demoUrl: 'https://aussie-pus.pages.dev/',
     tags: ['JavaScript', 'Canvas', 'Game UI', 'Mobile Web'],
     isPrivateRepo: true,
@@ -99,9 +98,8 @@ export const personalProjects: PersonalProject[] = [
   {
     id: 'photo-sorter',
     title: 'Photo EXIF Sorter',
-    category: 'Desktop Automation Tool',
+    category: 'Automation Tool',
     shortDesc: 'Python tool that sorts 10,000+ travel photos by date and location using EXIF metadata.',
-    githubUrl: 'https://github.com/amaranth92/photo-exif-sorter',
     tags: ['Python', 'EXIF', 'File I/O', 'Automation'],
     process: {
       background: 'Created after world travel produced a large photo archive that was too slow to organize manually.',
@@ -111,64 +109,13 @@ export const personalProjects: PersonalProject[] = [
     },
     ko: {
       title: '사진 EXIF 자동 분류 프로그램',
-      category: '데스크톱 자동화 도구',
+      category: '자동화 도구',
       shortDesc: '여행 사진 10,000장 이상을 EXIF 날짜와 위치 기준으로 자동 분류하는 Python 도구입니다.',
       process: {
         background: '세계여행 중 쌓인 대량의 사진을 수작업으로 정리하기 어려워 직접 만들었습니다.',
         architecture: 'EXIF의 촬영 시간과 GPS 정보를 읽고, 사용자가 정한 규칙에 맞춰 폴더 구조를 생성했습니다.',
         troubleshooting: '메타데이터가 없거나 손상된 파일은 파일 날짜와 중복 검사를 활용해 데이터 손실 없이 처리했습니다.',
         outcome: '반복적인 사진 정리 작업을 재사용 가능한 자동화 흐름으로 줄였습니다.'
-      }
-    }
-  },
-  {
-    id: 'blackbox-ffmpeg',
-    title: 'Blackbox Video Repair Checker',
-    category: 'Linux / ffmpeg Automation',
-    shortDesc: 'Batch script for checking and converting broken dashcam video files with Linux commands and ffmpeg.',
-    githubUrl: 'https://github.com/amaranth92',
-    tags: ['Linux', 'ffmpeg', 'Shell Script', 'Automation'],
-    process: {
-      background: 'Built during the Australia period to avoid opening every blackbox video manually.',
-      architecture: 'Used shell commands and ffmpeg checks to scan, validate, and convert video files in batches.',
-      troubleshooting: 'Separated damaged files from playable files and made conversion repeatable from the command line.',
-      outcome: 'Removed a tedious manual inspection loop and improved understanding of media processing.'
-    },
-    ko: {
-      title: '블랙박스 영상 오류 확인 스크립트',
-      category: 'Linux / ffmpeg 자동화',
-      shortDesc: '블랙박스 영상 파일 오류를 Linux 명령어와 ffmpeg로 일괄 확인하고 변환하는 스크립트입니다.',
-      process: {
-        background: '호주에서 블랙박스 영상을 하나씩 열어 확인해야 하는 비효율을 줄이기 위해 만들었습니다.',
-        architecture: '쉘 명령어와 ffmpeg 검사를 활용해 영상 파일을 일괄 스캔, 검증, 변환했습니다.',
-        troubleshooting: '손상 파일과 재생 가능한 파일을 분리하고, 명령줄에서 반복 실행 가능한 흐름으로 정리했습니다.',
-        outcome: '반복 확인 시간을 줄였고 동영상 처리 방식에 대한 이해도 함께 높였습니다.'
-      }
-    }
-  },
-  {
-    id: 'ai-posting',
-    title: 'AI Content Auto Posting',
-    category: 'API / Browser Automation',
-    shortDesc: 'Automation tool for AI-assisted content generation, image upload, and blog posting.',
-    githubUrl: 'https://github.com/amaranth92',
-    tags: ['Python', 'Gemini API', 'Google Blogger API', 'Naver API', 'Selenium'],
-    isPrivateRepo: true,
-    process: {
-      background: 'Created to automate repetitive content writing, uploading, and posting workflows.',
-      architecture: 'Combined AI text generation APIs, blog APIs, image upload steps, and Selenium browser control.',
-      troubleshooting: 'Stabilized login and posting steps by separating API-driven work from browser-only actions.',
-      outcome: 'Expanded automation experience from simple scripts to API and browser-integrated workflows.'
-    },
-    ko: {
-      title: 'AI 콘텐츠 자동 포스팅 도구',
-      category: 'API / 브라우저 자동화',
-      shortDesc: 'AI 기반 글 생성, 이미지 업로드, 블로그 게시 과정을 자동화한 개인 도구입니다.',
-      process: {
-        background: '반복적인 글 작성, 이미지 업로드, 게시 과정을 줄이기 위해 만들었습니다.',
-        architecture: 'AI 생성 API, 블로그 API, 이미지 업로드 단계, Selenium 브라우저 제어를 조합했습니다.',
-        troubleshooting: 'API로 처리 가능한 작업과 브라우저에서만 가능한 작업을 분리해 로그인과 게시 과정을 안정화했습니다.',
-        outcome: '단순 스크립트를 넘어 API 연동과 브라우저 제어가 결합된 자동화 경험을 쌓았습니다.'
       }
     }
   },
