@@ -622,8 +622,8 @@ function getProjectCardCopy(project: PersonalProject, locale: Locale) {
       ko: { title: '사진 분류', category: '자동화' }
     },
     nagalttae: {
-      en: { title: 'Nagalttae', category: 'Toss In-App' },
-      ko: { title: '나갈때', category: '토스 인앱' }
+      en: { title: 'Nagalttae', category: 'Weather Mate' },
+      ko: { title: '나갈때', category: '날씨 준비' }
     },
     'blackbox-ffmpeg': {
       en: { title: 'Video Repair', category: 'Linux Tool' },
@@ -1222,6 +1222,7 @@ function SideProjectsBlock({
 function ProjectGlyph({ projectId }: { projectId: string }) {
   const iconByProject: Record<string, string> = {
     'aussie-pus': 'https://aussie-pus.pages.dev/Platypus.png',
+    nagalttae: `${assetBaseUrl}assets/nagalttae-logo.png`,
     decody: 'https://aussie-pus.pages.dev/decody_icon.png'
   };
 
