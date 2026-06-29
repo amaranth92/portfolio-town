@@ -100,6 +100,7 @@ export const personalProjects: PersonalProject[] = [
     title: 'Photo EXIF Sorter',
     category: 'Automation Tool',
     shortDesc: 'Python tool that sorts 10,000+ travel photos by date and location using EXIF metadata.',
+    githubUrl: 'https://github.com/amaranth92/portfolio-projects/blob/master/docs/photo-exif-sorter.md',
     tags: ['Python', 'EXIF', 'File I/O', 'Automation'],
     process: {
       background: 'Created after world travel produced a large photo archive that was too slow to organize manually.',
@@ -124,7 +125,7 @@ export const personalProjects: PersonalProject[] = [
     title: 'Decody',
     category: 'AI Application',
     shortDesc: 'AI app that translates pet behavior from photos, videos, and audio, then helps create subtitles and voice dubbing for short clips.',
-    githubUrl: 'https://github.com/amaranth92/portfolio-projects#decody',
+    githubUrl: 'https://github.com/amaranth92/portfolio-projects/blob/master/docs/decody.md',
     tags: ['AI', 'Pet Behavior', 'Subtitle', 'Voice Dubbing'],
     process: {
       background: 'Started as a practical AI product idea from Aussie Pus Studio: making pet behavior easier for owners to understand.',
