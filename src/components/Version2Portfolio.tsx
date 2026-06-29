@@ -135,9 +135,10 @@ const copy: Record<Locale, Copy> = {
         question: 'Show me your side projects',
         title: 'Automation, game, and AI app side projects',
         answer:
-          'Outside work, I keep side projects that can be explained with clear public material or real working context: Aussie Pus game production, the Photo EXIF Sorter automation tool, and Decody, an AI app for pet behavior translation and short clip subtitles/dubbing.',
+          'Outside work, I keep side projects that can be explained with clear public material or real working context: Aussie Pus game production, Nagalttae for the Toss In-App environment, the Photo EXIF Sorter automation tool, and Decody, an AI app for pet behavior translation and short clip subtitles/dubbing.',
         bullets: [
           'Aussie Pus Studio games: https://aussie-pus.pages.dev/',
+          'Nagalttae: Toss In-App mobile flow project.',
           'Photo EXIF Sorter: Python automation for travel photo organization.',
           'Decody: AI app for translating pet behavior from photos, videos, and audio, with subtitle and voice dubbing support for short clips.'
         ]
@@ -223,9 +224,10 @@ const copy: Record<Locale, Copy> = {
         question: '사이드 프로젝트를 보여주세요',
         title: '자동화, 게임, AI 앱 사이드 프로젝트',
         answer:
-          '업무 외 프로젝트 중 실제로 설명 가능한 작업 맥락이나 공개 자료가 있는 항목을 중심으로 정리했습니다. Aussie Pus 게임 제작, 여행 사진 정리 자동화 도구, 반려동물 행동 번역과 숏폼 자막/더빙을 돕는 Decody AI 앱을 담았습니다.',
+          '업무 외 프로젝트 중 실제로 설명 가능한 작업 맥락이나 공개 자료가 있는 항목을 중심으로 정리했습니다. Aussie Pus 게임 제작, 토스 인앱 환경의 나갈때, 여행 사진 정리 자동화 도구, 반려동물 행동 번역과 숏폼 자막/더빙을 돕는 Decody AI 앱을 담았습니다.',
         bullets: [
           'Aussie Pus Studio 게임: https://aussie-pus.pages.dev/',
+          '나갈때: 토스 인앱 환경에서 만든 모바일 흐름 프로젝트.',
           'Photo EXIF Sorter: 여행 사진 정리를 위한 Python 자동화 도구.',
           'Decody: 사진, 영상, 오디오 속 반려동물 행동을 번역하고 짧은 클립용 자막과 음성 더빙을 만드는 AI 앱.'
         ]
@@ -618,6 +620,10 @@ function getProjectCardCopy(project: PersonalProject, locale: Locale) {
     'photo-sorter': {
       en: { title: 'Photo Sorter', category: 'Automation' },
       ko: { title: '사진 분류', category: '자동화' }
+    },
+    nagalttae: {
+      en: { title: 'Nagalttae', category: 'Toss In-App' },
+      ko: { title: '나갈때', category: '토스 인앱' }
     },
     'blackbox-ffmpeg': {
       en: { title: 'Video Repair', category: 'Linux Tool' },

@@ -96,6 +96,31 @@ export const personalProjects: PersonalProject[] = [
     }
   },
   {
+    id: 'nagalttae',
+    title: 'Nagalttae',
+    category: 'Toss In-App Project',
+    shortDesc: 'Mobile in-app project developed for the Toss app environment with a lightweight user flow.',
+    githubUrl: 'https://github.com/amaranth92/portfolio-projects/blob/master/docs/nagalttae.md',
+    tags: ['Toss In-App', 'Mobile Web', 'UI Flow', 'Side Project'],
+    process: {
+      background: 'Built as a side project for the Toss in-app environment.',
+      architecture: 'Focused on a compact mobile-first flow that can run naturally inside an existing app context.',
+      troubleshooting: 'Kept the screens and interactions simple so the experience would not feel heavy inside an in-app browser.',
+      outcome: 'Documented the project publicly without exposing private source code.'
+    },
+    ko: {
+      title: '나갈때',
+      category: '토스 인앱 프로젝트',
+      shortDesc: '토스 앱 환경에서 동작하는 가벼운 모바일 인앱 흐름을 중심으로 개발한 사이드 프로젝트입니다.',
+      process: {
+        background: '토스 인앱 환경을 기준으로 만든 사이드 프로젝트입니다.',
+        architecture: '기존 앱 안에서 자연스럽게 동작할 수 있도록 짧고 가벼운 모바일 우선 흐름에 집중했습니다.',
+        troubleshooting: '인앱 브라우저 안에서 무겁게 느껴지지 않도록 화면과 상호작용을 단순하게 유지했습니다.',
+        outcome: '비공개 소스 코드는 노출하지 않고, 프로젝트 설명만 공개 문서로 정리했습니다.'
+      }
+    }
+  },
+  {
     id: 'photo-sorter',
     title: 'Photo EXIF Sorter',
     category: 'Automation Tool',
