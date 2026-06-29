@@ -122,25 +122,25 @@ export const personalProjects: PersonalProject[] = [
   {
     id: 'decody',
     title: 'Decody',
-    category: 'Developer Utility',
-    shortDesc: 'Web-based parsing and decoding utility for backend debugging work.',
+    category: 'AI Application',
+    shortDesc: 'AI app that translates pet behavior from photos, videos, and audio, then helps create subtitles and voice dubbing for short clips.',
     githubUrl: 'https://github.com/amaranth92/decody',
-    tags: ['TypeScript', 'Parsing', 'Base64', 'JWT'],
+    tags: ['AI', 'Pet Behavior', 'Subtitle', 'Voice Dubbing'],
     process: {
-      background: 'Built to speed up common backend debugging tasks such as decoding tokens and structured strings.',
-      architecture: 'Kept parsing client-side so sensitive text does not need to be transmitted to a server.',
-      troubleshooting: 'Focused on predictable formatting and immediate feedback for copied production-like strings.',
-      outcome: 'Created a small developer tool that supports day-to-day debugging habits.'
+      background: 'Started as a practical AI product idea from Aussie Pus Studio: making pet behavior easier for owners to understand.',
+      architecture: 'Designed around photo, video, and audio inputs, with AI interpretation plus short-form subtitle and dubbing output.',
+      troubleshooting: 'Focused on keeping the output understandable instead of technical, so users can quickly read or reuse the result.',
+      outcome: 'Positioned Decody as a lightweight AI app for pet behavior translation and short clip localization.'
     },
     ko: {
       title: 'Decody',
-      category: '개발자 유틸리티',
-      shortDesc: '백엔드 디버깅에 필요한 문자열 파싱과 디코딩을 빠르게 처리하는 웹 도구입니다.',
+      category: 'AI 앱',
+      shortDesc: '사진, 영상, 오디오 속 반려동물 행동을 사람이 이해할 수 있는 언어로 번역하고 짧은 클립용 자막과 음성 더빙을 만드는 AI 앱입니다.',
       process: {
-        background: '토큰, 인코딩 문자열, 구조화된 텍스트를 빠르게 확인하기 위해 만들었습니다.',
-        architecture: '민감한 문자열을 서버로 보내지 않도록 브라우저 안에서 파싱하도록 구성했습니다.',
-        troubleshooting: '실무에서 복사한 문자열을 바로 확인할 수 있도록 예측 가능한 포맷과 즉시 피드백에 집중했습니다.',
-        outcome: '일상적인 디버깅 습관을 도와주는 작은 개발자 도구를 만들었습니다.'
+        background: 'Aussie Pus Studio에서 반려동물의 행동을 보호자가 더 쉽게 이해할 수 있도록 만든 AI 제품 아이디어입니다.',
+        architecture: '사진, 영상, 오디오 입력을 바탕으로 행동을 해석하고, 숏폼 클립에 쓸 수 있는 자막과 더빙 결과를 만드는 흐름으로 구성했습니다.',
+        troubleshooting: '기술적인 설명보다 사용자가 바로 이해하고 활용할 수 있는 문장과 결과물에 집중했습니다.',
+        outcome: 'Decody를 반려동물 행동 번역과 짧은 클립 현지화를 돕는 가벼운 AI 앱으로 정리했습니다.'
       }
     }
   }

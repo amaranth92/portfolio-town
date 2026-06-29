@@ -133,13 +133,13 @@ const copy: Record<Locale, Copy> = {
       side: {
         label: 'Side',
         question: 'Show me your side projects',
-        title: 'Automation, game, and developer utility side projects',
+        title: 'Automation, game, and AI app side projects',
         answer:
-          'Outside work, I keep side projects that can be explained with clear public material or real working context: Aussie Pus game production, the Photo EXIF Sorter automation tool, and the Decody developer utility currently in progress.',
+          'Outside work, I keep side projects that can be explained with clear public material or real working context: Aussie Pus game production, the Photo EXIF Sorter automation tool, and Decody, an AI app for pet behavior translation and short clip subtitles/dubbing.',
         bullets: [
           'Aussie Pus Studio games: https://aussie-pus.pages.dev/',
           'Photo EXIF Sorter: Python automation for travel photo organization.',
-          'Decody: developer utility README and repository.'
+          'Decody: AI app for translating pet behavior from photos, videos, and audio, with subtitle and voice dubbing support for short clips.'
         ]
       },
       skills: {
@@ -221,13 +221,13 @@ const copy: Record<Locale, Copy> = {
       side: {
         label: '사이드',
         question: '사이드 프로젝트를 보여주세요',
-        title: '자동화, 게임, 개발자 유틸리티 사이드 프로젝트',
+        title: '자동화, 게임, AI 앱 사이드 프로젝트',
         answer:
-          '업무 외 프로젝트 중 실제로 설명 가능한 작업 맥락이나 공개 자료가 있는 항목을 중심으로 정리했습니다. Aussie Pus 게임 제작, 여행 사진 정리 자동화 도구, 현재 만들고 있는 Decody 개발자 유틸리티를 담았습니다.',
+          '업무 외 프로젝트 중 실제로 설명 가능한 작업 맥락이나 공개 자료가 있는 항목을 중심으로 정리했습니다. Aussie Pus 게임 제작, 여행 사진 정리 자동화 도구, 반려동물 행동 번역과 숏폼 자막/더빙을 돕는 Decody AI 앱을 담았습니다.',
         bullets: [
           'Aussie Pus Studio 게임: https://aussie-pus.pages.dev/',
           'Photo EXIF Sorter: 여행 사진 정리를 위한 Python 자동화 도구.',
-          'Decody: 개발자 유틸리티 README와 저장소.'
+          'Decody: 사진, 영상, 오디오 속 반려동물 행동을 번역하고 짧은 클립용 자막과 음성 더빙을 만드는 AI 앱.'
         ]
       },
       skills: {
@@ -628,8 +628,8 @@ function getProjectCardCopy(project: PersonalProject, locale: Locale) {
       ko: { title: 'AI 포스팅', category: 'API 도구' }
     },
     decody: {
-      en: { title: 'Decody', category: 'Dev Utility' },
-      ko: { title: 'Decody', category: '개발 도구' }
+      en: { title: 'Decody', category: 'AI App' },
+      ko: { title: 'Decody', category: 'AI 앱' }
     }
   };
 

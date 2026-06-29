@@ -23,7 +23,7 @@ Kim Seongkyung is a web programmer based in Seoul with 6 years and 8 months of c
 
 - Aussie Pus Studio: public game/app hub for browser and mobile-friendly experiments.
 - Photo EXIF Sorter: Python automation for organizing large travel photo archives by date and location metadata.
-- Decody: developer utility for parsing and decoding backend debugging strings.
+- Decody: AI app that translates pet behavior from photos, videos, and audio, with subtitle and voice dubbing support for short clips.
 
 ## Tech Stack
 
