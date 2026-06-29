@@ -124,7 +124,7 @@ export const personalProjects: PersonalProject[] = [
     title: 'Decody',
     category: 'AI Application',
     shortDesc: 'AI app that translates pet behavior from photos, videos, and audio, then helps create subtitles and voice dubbing for short clips.',
-    githubUrl: 'https://github.com/amaranth92/decody',
+    githubUrl: 'https://github.com/amaranth92/portfolio-projects#decody',
     tags: ['AI', 'Pet Behavior', 'Subtitle', 'Voice Dubbing'],
     process: {
       background: 'Started as a practical AI product idea from Aussie Pus Studio: making pet behavior easier for owners to understand.',
