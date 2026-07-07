@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pt-BR" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calculadora de hora extra - Calculadora do Trabalho</title>
+  <meta name="description" content="Trata o tempo acima de 8 horas como hora extra estimada e aplica 1,5x o valor por hora. Regras locais podem variar." />
+  <meta name="robots" content="index,follow" />
+  <meta property="og:title" content="Calculadora do Trabalho - horas, hora extra e custo de reuniões" />
+  <meta property="og:description" content="Calcule horas trabalhadas, hora extra, custo de reuniões e blocos de foco em uma ferramenta de produtividade." />
+  <link rel="canonical" href="https://amaranth92.github.io/portfolio-town/work-value-lab/pt-br/overtime-calculator/" />
+  <link rel="alternate" hreflang="ko" href="https://amaranth92.github.io/portfolio-town/work-value-lab/overtime-calculator/" />
+  <link rel="alternate" hreflang="en" href="https://amaranth92.github.io/portfolio-town/work-value-lab/en/overtime-calculator/" />
+  <link rel="alternate" hreflang="ja" href="https://amaranth92.github.io/portfolio-town/work-value-lab/ja/overtime-calculator/" />
+  <link rel="alternate" hreflang="zh-Hans" href="https://amaranth92.github.io/portfolio-town/work-value-lab/zh/overtime-calculator/" />
+  <link rel="alternate" hreflang="ar" href="https://amaranth92.github.io/portfolio-town/work-value-lab/ar/overtime-calculator/" />
+  <link rel="alternate" hreflang="es" href="https://amaranth92.github.io/portfolio-town/work-value-lab/es/overtime-calculator/" />
+  <link rel="alternate" hreflang="pt-BR" href="https://amaranth92.github.io/portfolio-town/work-value-lab/pt-br/overtime-calculator/" />
+  <link rel="alternate" hreflang="de" href="https://amaranth92.github.io/portfolio-town/work-value-lab/de/overtime-calculator/" />
+  <link rel="alternate" hreflang="x-default" href="https://amaranth92.github.io/portfolio-town/work-value-lab/en/overtime-calculator/" />
+  <link rel="stylesheet" href="../../styles.css" />
+  <script>window.WORKCALC_I18N={locale:"pt-BR",currency:"BRL",block:"blocos",summary:'Hoje você trabalhou {worked}; uma reunião de {meetingMinutes} minutos custa cerca de {meetingCost}.'};</script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/work-value-lab/pt-br/">Calculadora do Trabalho</a>
+    <nav aria-label="Números de produtividade que profissionais calculam com frequência">
+      <a href="#work">Horas</a>
+      <a href="#overtime">Hora extra</a>
+      <a href="#meeting">Reuniões</a>
+      <a href="#focus">Foco</a>
+    </nav>
+  </header>
+  <main>
+    <section class="hero" aria-labelledby="title">
+      <div class="tool-panel">
+        <div class="panel-head"><h1 id="title">Calculadora de hora extra</h1><p>Trata o tempo acima de 8 horas como hora extra estimada e aplica 1,5x o valor por hora. Regras locais podem variar.</p></div>
+        <form id="calculator" class="grid-form">
+          <label>Hora inicial<input id="startTime" type="time" value="09:00" /></label>
+          <label>Hora final<input id="endTime" type="time" value="18:20" /></label>
+          <label>Pausa em minutos<input id="breakMinutes" type="number" min="0" value="60" /></label>
+          <label>Valor por hora<input id="hourlyWage" type="number" min="0" step="1" value="35" /></label>
+          <label>Pessoas na reunião<input id="people" type="number" min="1" value="6" /></label>
+          <label>Minutos de reunião<input id="meetingMinutes" type="number" min="0" value="45" /></label>
+          <label>Minutos por bloco<input id="focusMinutes" type="number" min="5" value="50" /></label>
+          <label>Meta diária de foco<input id="focusGoal" type="number" min="5" value="240" /></label>
+        </form>
+      </div>
+      <aside class="result-panel" aria-live="polite">
+        <h2>Números de hoje</h2>
+        <dl class="results">
+          <div><dt>Tempo trabalhado</dt><dd id="worked">-</dd></div>
+          <div><dt>Hora extra estimada</dt><dd id="overtimePay">-</dd></div>
+          <div><dt>Custo da reunião</dt><dd id="meetingCost">-</dd></div>
+          <div><dt>Blocos necessários</dt><dd id="focusBlocks">-</dd></div>
+        </dl>
+        <p id="summary" class="summary"></p>
+        <div class="ad-slot" aria-label="Espaço de anúncio">Espaço de anúncio</div>
+      </aside>
+    </section>
+    <section class="language-panel" aria-label="Language versions"><a class="lang" href="/work-value-lab/">일값 계산소</a>
+      <a class="lang" href="/work-value-lab/en/">Work Value Lab</a>
+      <a class="lang" href="/work-value-lab/ja/">仕事価値計算所</a>
+      <a class="lang" href="/work-value-lab/zh/">工作价值计算器</a>
+      <a class="lang" href="/work-value-lab/ar/">حاسبة قيمة العمل</a>
+      <a class="lang" href="/work-value-lab/es/">Calculadora del Trabajo</a>
+      <a class="lang active" href="/work-value-lab/pt-br/">Calculadora do Trabalho</a>
+      <a class="lang" href="/work-value-lab/de/">Arbeitswert Rechner</a></section>
+    <section class="content" aria-labelledby="guide-title">
+      <h2 id="guide-title">Números de produtividade que profissionais calculam com frequência</h2>
+      <div class="article-grid"><article id="work"><h3>Calculadora de horas trabalhadas</h3><p>Subtraia as pausas do período entre início e fim para obter o tempo real trabalhado.</p><a class="read-more" href="/work-value-lab/pt-br/work-hours-calculator/">Horas</a></article>
+        <article id="overtime"><h3>Calculadora de hora extra</h3><p>Trata o tempo acima de 8 horas como hora extra estimada e aplica 1,5x o valor por hora. Regras locais podem variar.</p><a class="read-more" href="/work-value-lab/pt-br/overtime-calculator/">Hora extra</a></article>
+        <article id="meeting"><h3>Calculadora de custo de reunião</h3><p>Multiplica participantes, duração e valor por hora para estimar o custo de uma reunião.</p><a class="read-more" href="/work-value-lab/pt-br/meeting-cost-calculator/">Reuniões</a></article>
+        <article id="focus"><h3>Calculadora de blocos de foco</h3><p>Divide a meta diária pela duração do bloco para saber quantas sessões de foco são necessárias.</p><a class="read-more" href="/work-value-lab/pt-br/focus-block-calculator/">Foco</a></article></div>
+    </section>
+    <section class="plain-section"><h2>Princípio de anúncios e conteúdo</h2><p>Os anúncios ficam separados dos campos de entrada. A ferramenta e a explicação útil vêm antes, sem induzir cliques acidentais.</p></section>
+  </main>
+  <footer><a href="/work-value-lab/pt-br/">Calculadora do Trabalho</a><span>Calculadora no navegador que não envia dados pessoais para servidor.</span><nav aria-label="Site links"><a href="/work-value-lab/pt-br/about/">About</a><a href="/work-value-lab/pt-br/privacy/">Privacy</a><a href="/work-value-lab/pt-br/contact/">Contact</a></nav></footer>
+  <script src="../../script.js"></script>
+</body>
+</html>

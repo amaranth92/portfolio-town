@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="zh-Hans" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>加班费计算器 - 工作价值计算器</title>
+  <meta name="description" content="把超过8小时的部分作为加班估算，并按1.5倍时薪计算。实际规则以当地法规和合同为准。" />
+  <meta name="robots" content="index,follow" />
+  <meta property="og:title" content="工作价值计算器 - 工时、加班费、会议成本计算器" />
+  <meta property="og:description" content="在一个页面计算工时、加班费、会议成本和专注时间块，适合日常办公与团队效率估算。" />
+  <link rel="canonical" href="https://amaranth92.github.io/portfolio-town/work-value-lab/zh/overtime-calculator/" />
+  <link rel="alternate" hreflang="ko" href="https://amaranth92.github.io/portfolio-town/work-value-lab/overtime-calculator/" />
+  <link rel="alternate" hreflang="en" href="https://amaranth92.github.io/portfolio-town/work-value-lab/en/overtime-calculator/" />
+  <link rel="alternate" hreflang="ja" href="https://amaranth92.github.io/portfolio-town/work-value-lab/ja/overtime-calculator/" />
+  <link rel="alternate" hreflang="zh-Hans" href="https://amaranth92.github.io/portfolio-town/work-value-lab/zh/overtime-calculator/" />
+  <link rel="alternate" hreflang="ar" href="https://amaranth92.github.io/portfolio-town/work-value-lab/ar/overtime-calculator/" />
+  <link rel="alternate" hreflang="es" href="https://amaranth92.github.io/portfolio-town/work-value-lab/es/overtime-calculator/" />
+  <link rel="alternate" hreflang="pt-BR" href="https://amaranth92.github.io/portfolio-town/work-value-lab/pt-br/overtime-calculator/" />
+  <link rel="alternate" hreflang="de" href="https://amaranth92.github.io/portfolio-town/work-value-lab/de/overtime-calculator/" />
+  <link rel="alternate" hreflang="x-default" href="https://amaranth92.github.io/portfolio-town/work-value-lab/en/overtime-calculator/" />
+  <link rel="stylesheet" href="../../styles.css" />
+  <script>window.WORKCALC_I18N={locale:"zh-CN",currency:"CNY",block:"个专注块",summary:'今天实际工作{worked}；{meetingMinutes}分钟会议约消耗{meetingCost}。'};</script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/work-value-lab/zh/">工作价值计算器</a>
+    <nav aria-label="职场人士常算的生产力数字">
+      <a href="#work">工时</a>
+      <a href="#overtime">加班费</a>
+      <a href="#meeting">会议成本</a>
+      <a href="#focus">专注块</a>
+    </nav>
+  </header>
+  <main>
+    <section class="hero" aria-labelledby="title">
+      <div class="tool-panel">
+        <div class="panel-head"><h1 id="title">加班费计算器</h1><p>把超过8小时的部分作为加班估算，并按1.5倍时薪计算。实际规则以当地法规和合同为准。</p></div>
+        <form id="calculator" class="grid-form">
+          <label>开始时间<input id="startTime" type="time" value="09:00" /></label>
+          <label>结束时间<input id="endTime" type="time" value="18:20" /></label>
+          <label>休息分钟<input id="breakMinutes" type="number" min="0" value="60" /></label>
+          <label>时薪<input id="hourlyWage" type="number" min="0" step="1" value="80" /></label>
+          <label>会议人数<input id="people" type="number" min="1" value="6" /></label>
+          <label>会议分钟<input id="meetingMinutes" type="number" min="0" value="45" /></label>
+          <label>专注块分钟<input id="focusMinutes" type="number" min="5" value="50" /></label>
+          <label>每日专注目标分钟<input id="focusGoal" type="number" min="5" value="240" /></label>
+        </form>
+      </div>
+      <aside class="result-panel" aria-live="polite">
+        <h2>今天的数据</h2>
+        <dl class="results">
+          <div><dt>实际工作</dt><dd id="worked">-</dd></div>
+          <div><dt>预计加班费</dt><dd id="overtimePay">-</dd></div>
+          <div><dt>会议成本</dt><dd id="meetingCost">-</dd></div>
+          <div><dt>需要专注块</dt><dd id="focusBlocks">-</dd></div>
+        </dl>
+        <p id="summary" class="summary"></p>
+        <div class="ad-slot" aria-label="广告区域">广告区域</div>
+      </aside>
+    </section>
+    <section class="language-panel" aria-label="Language versions"><a class="lang" href="/work-value-lab/">일값 계산소</a>
+      <a class="lang" href="/work-value-lab/en/">Work Value Lab</a>
+      <a class="lang" href="/work-value-lab/ja/">仕事価値計算所</a>
+      <a class="lang active" href="/work-value-lab/zh/">工作价值计算器</a>
+      <a class="lang" href="/work-value-lab/ar/">حاسبة قيمة العمل</a>
+      <a class="lang" href="/work-value-lab/es/">Calculadora del Trabajo</a>
+      <a class="lang" href="/work-value-lab/pt-br/">Calculadora do Trabalho</a>
+      <a class="lang" href="/work-value-lab/de/">Arbeitswert Rechner</a></section>
+    <section class="content" aria-labelledby="guide-title">
+      <h2 id="guide-title">职场人士常算的生产力数字</h2>
+      <div class="article-grid"><article id="work"><h3>工时计算器</h3><p>从开始时间到结束时间中扣除休息时间，计算实际工作时长。</p><a class="read-more" href="/work-value-lab/zh/work-hours-calculator/">工时</a></article>
+        <article id="overtime"><h3>加班费计算器</h3><p>把超过8小时的部分作为加班估算，并按1.5倍时薪计算。实际规则以当地法规和合同为准。</p><a class="read-more" href="/work-value-lab/zh/overtime-calculator/">加班费</a></article>
+        <article id="meeting"><h3>会议成本计算器</h3><p>用参会人数、会议时长和时薪估算会议消耗的人力成本。</p><a class="read-more" href="/work-value-lab/zh/meeting-cost-calculator/">会议成本</a></article>
+        <article id="focus"><h3>专注块计算器</h3><p>将每日专注目标除以单个专注块时长，得到今天需要的深度工作次数。</p><a class="read-more" href="/work-value-lab/zh/focus-block-calculator/">专注块</a></article></div>
+    </section>
+    <section class="plain-section"><h2>广告和内容原则</h2><p>广告区域与输入控件分开，不使用诱导误点的布局。</p></section>
+  </main>
+  <footer><a href="/work-value-lab/zh/">工作价值计算器</a><span>这是不会把个人数据发送到服务器的浏览器计算器。</span><nav aria-label="Site links"><a href="/work-value-lab/zh/about/">About</a><a href="/work-value-lab/zh/privacy/">Privacy</a><a href="/work-value-lab/zh/contact/">Contact</a></nav></footer>
+  <script src="../../script.js"></script>
+</body>
+</html>

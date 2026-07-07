@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://amaranth92.github.io/portfolio-town/work-value-lab/sitemap.xml

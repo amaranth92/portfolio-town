@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ja" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>会議コスト計算 - 仕事価値計算所</title>
+  <meta name="description" content="参加人数、会議時間、時給を掛けて会議に使われる人件費を概算します。" />
+  <meta name="robots" content="index,follow" />
+  <meta property="og:title" content="仕事価値計算所 - 勤務時間・残業代・会議コスト計算機" />
+  <meta property="og:description" content="勤務時間、残業代、会議コスト、集中ブロックを一画面で計算できる生産性ツールです。" />
+  <link rel="canonical" href="https://amaranth92.github.io/portfolio-town/work-value-lab/ja/meeting-cost-calculator/" />
+  <link rel="alternate" hreflang="ko" href="https://amaranth92.github.io/portfolio-town/work-value-lab/meeting-cost-calculator/" />
+  <link rel="alternate" hreflang="en" href="https://amaranth92.github.io/portfolio-town/work-value-lab/en/meeting-cost-calculator/" />
+  <link rel="alternate" hreflang="ja" href="https://amaranth92.github.io/portfolio-town/work-value-lab/ja/meeting-cost-calculator/" />
+  <link rel="alternate" hreflang="zh-Hans" href="https://amaranth92.github.io/portfolio-town/work-value-lab/zh/meeting-cost-calculator/" />
+  <link rel="alternate" hreflang="ar" href="https://amaranth92.github.io/portfolio-town/work-value-lab/ar/meeting-cost-calculator/" />
+  <link rel="alternate" hreflang="es" href="https://amaranth92.github.io/portfolio-town/work-value-lab/es/meeting-cost-calculator/" />
+  <link rel="alternate" hreflang="pt-BR" href="https://amaranth92.github.io/portfolio-town/work-value-lab/pt-br/meeting-cost-calculator/" />
+  <link rel="alternate" hreflang="de" href="https://amaranth92.github.io/portfolio-town/work-value-lab/de/meeting-cost-calculator/" />
+  <link rel="alternate" hreflang="x-default" href="https://amaranth92.github.io/portfolio-town/work-value-lab/en/meeting-cost-calculator/" />
+  <link rel="stylesheet" href="../../styles.css" />
+  <script>window.WORKCALC_I18N={locale:"ja-JP",currency:"JPY",block:"ブロック",summary:'今日は{worked}働き、{meetingMinutes}分の会議は約{meetingCost}の人件費です。'};</script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/work-value-lab/ja/">仕事価値計算所</a>
+    <nav aria-label="ビジネスパーソンがよく計算する生産性の数字">
+      <a href="#work">勤務時間</a>
+      <a href="#overtime">残業代</a>
+      <a href="#meeting">会議費</a>
+      <a href="#focus">集中ブロック</a>
+    </nav>
+  </header>
+  <main>
+    <section class="hero" aria-labelledby="title">
+      <div class="tool-panel">
+        <div class="panel-head"><h1 id="title">会議コスト計算</h1><p>参加人数、会議時間、時給を掛けて会議に使われる人件費を概算します。</p></div>
+        <form id="calculator" class="grid-form">
+          <label>開始時間<input id="startTime" type="time" value="09:00" /></label>
+          <label>終了時間<input id="endTime" type="time" value="18:20" /></label>
+          <label>休憩時間(分)<input id="breakMinutes" type="number" min="0" value="60" /></label>
+          <label>時給<input id="hourlyWage" type="number" min="0" step="1" value="1800" /></label>
+          <label>会議人数<input id="people" type="number" min="1" value="6" /></label>
+          <label>会議時間(分)<input id="meetingMinutes" type="number" min="0" value="45" /></label>
+          <label>集中ブロック(分)<input id="focusMinutes" type="number" min="5" value="50" /></label>
+          <label>1日の集中目標(分)<input id="focusGoal" type="number" min="5" value="240" /></label>
+        </form>
+      </div>
+      <aside class="result-panel" aria-live="polite">
+        <h2>今日の数字</h2>
+        <dl class="results">
+          <div><dt>実勤務</dt><dd id="worked">-</dd></div>
+          <div><dt>想定残業代</dt><dd id="overtimePay">-</dd></div>
+          <div><dt>会議コスト</dt><dd id="meetingCost">-</dd></div>
+          <div><dt>必要な集中ブロック</dt><dd id="focusBlocks">-</dd></div>
+        </dl>
+        <p id="summary" class="summary"></p>
+        <div class="ad-slot" aria-label="広告枠">広告枠</div>
+      </aside>
+    </section>
+    <section class="language-panel" aria-label="Language versions"><a class="lang" href="/work-value-lab/">일값 계산소</a>
+      <a class="lang" href="/work-value-lab/en/">Work Value Lab</a>
+      <a class="lang active" href="/work-value-lab/ja/">仕事価値計算所</a>
+      <a class="lang" href="/work-value-lab/zh/">工作价值计算器</a>
+      <a class="lang" href="/work-value-lab/ar/">حاسبة قيمة العمل</a>
+      <a class="lang" href="/work-value-lab/es/">Calculadora del Trabajo</a>
+      <a class="lang" href="/work-value-lab/pt-br/">Calculadora do Trabalho</a>
+      <a class="lang" href="/work-value-lab/de/">Arbeitswert Rechner</a></section>
+    <section class="content" aria-labelledby="guide-title">
+      <h2 id="guide-title">ビジネスパーソンがよく計算する生産性の数字</h2>
+      <div class="article-grid"><article id="work"><h3>勤務時間計算</h3><p>開始時間と終了時間から休憩時間を差し引いて、実際に働いた時間を計算します。</p><a class="read-more" href="/work-value-lab/ja/work-hours-calculator/">勤務時間</a></article>
+        <article id="overtime"><h3>残業代計算</h3><p>8時間を超えた時間を残業の目安として、時給の1.5倍で概算します。実際の制度は契約や地域で異なります。</p><a class="read-more" href="/work-value-lab/ja/overtime-calculator/">残業代</a></article>
+        <article id="meeting"><h3>会議コスト計算</h3><p>参加人数、会議時間、時給を掛けて会議に使われる人件費を概算します。</p><a class="read-more" href="/work-value-lab/ja/meeting-cost-calculator/">会議費</a></article>
+        <article id="focus"><h3>集中ブロック計算</h3><p>1日の集中目標をブロック時間で割り、今日必要な集中セッション数を出します。</p><a class="read-more" href="/work-value-lab/ja/focus-block-calculator/">集中ブロック</a></article></div>
+    </section>
+    <section class="plain-section"><h2>広告とコンテンツの原則</h2><p>広告は入力欄から離れた独立した場所に置き、誤クリックを誘う配置にしません。</p></section>
+  </main>
+  <footer><a href="/work-value-lab/ja/">仕事価値計算所</a><span>個人情報をサーバーへ送信しないブラウザ計算機です。</span><nav aria-label="Site links"><a href="/work-value-lab/ja/about/">About</a><a href="/work-value-lab/ja/privacy/">Privacy</a><a href="/work-value-lab/ja/contact/">Contact</a></nav></footer>
+  <script src="../../script.js"></script>
+</body>
+</html>

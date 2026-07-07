@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Focus block calculator - Work Value Lab</title>
+  <meta name="description" content="Divide your daily focus goal by your preferred focus block length to see how many deep-work sessions you need today." />
+  <meta name="robots" content="index,follow" />
+  <meta property="og:title" content="Work Value Lab - Work Hours, Overtime, Meeting Cost Calculator" />
+  <meta property="og:description" content="Calculate work hours, overtime pay, meeting cost, and focus blocks in one browser productivity tool." />
+  <link rel="canonical" href="https://amaranth92.github.io/portfolio-town/work-value-lab/en/focus-block-calculator/" />
+  <link rel="alternate" hreflang="ko" href="https://amaranth92.github.io/portfolio-town/work-value-lab/focus-block-calculator/" />
+  <link rel="alternate" hreflang="en" href="https://amaranth92.github.io/portfolio-town/work-value-lab/en/focus-block-calculator/" />
+  <link rel="alternate" hreflang="ja" href="https://amaranth92.github.io/portfolio-town/work-value-lab/ja/focus-block-calculator/" />
+  <link rel="alternate" hreflang="zh-Hans" href="https://amaranth92.github.io/portfolio-town/work-value-lab/zh/focus-block-calculator/" />
+  <link rel="alternate" hreflang="ar" href="https://amaranth92.github.io/portfolio-town/work-value-lab/ar/focus-block-calculator/" />
+  <link rel="alternate" hreflang="es" href="https://amaranth92.github.io/portfolio-town/work-value-lab/es/focus-block-calculator/" />
+  <link rel="alternate" hreflang="pt-BR" href="https://amaranth92.github.io/portfolio-town/work-value-lab/pt-br/focus-block-calculator/" />
+  <link rel="alternate" hreflang="de" href="https://amaranth92.github.io/portfolio-town/work-value-lab/de/focus-block-calculator/" />
+  <link rel="alternate" hreflang="x-default" href="https://amaranth92.github.io/portfolio-town/work-value-lab/en/focus-block-calculator/" />
+  <link rel="stylesheet" href="../../styles.css" />
+  <script>window.WORKCALC_I18N={locale:"en-US",currency:"USD",block:"blocks",summary:'Today you worked {worked}; a {meetingMinutes}-minute meeting costs about {meetingCost}.'};</script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/work-value-lab/en/">Work Value Lab</a>
+    <nav aria-label="Productivity numbers knowledge workers calculate often">
+      <a href="#work">Work hours</a>
+      <a href="#overtime">Overtime</a>
+      <a href="#meeting">Meeting cost</a>
+      <a href="#focus">Focus blocks</a>
+    </nav>
+  </header>
+  <main>
+    <section class="hero" aria-labelledby="title">
+      <div class="tool-panel">
+        <div class="panel-head"><h1 id="title">Focus block calculator</h1><p>Divide your daily focus goal by your preferred focus block length to see how many deep-work sessions you need today.</p></div>
+        <form id="calculator" class="grid-form">
+          <label>Start time<input id="startTime" type="time" value="09:00" /></label>
+          <label>End time<input id="endTime" type="time" value="18:20" /></label>
+          <label>Break minutes<input id="breakMinutes" type="number" min="0" value="60" /></label>
+          <label>Hourly rate<input id="hourlyWage" type="number" min="0" step="1" value="35" /></label>
+          <label>Meeting people<input id="people" type="number" min="1" value="6" /></label>
+          <label>Meeting minutes<input id="meetingMinutes" type="number" min="0" value="45" /></label>
+          <label>Focus block minutes<input id="focusMinutes" type="number" min="5" value="50" /></label>
+          <label>Daily focus goal minutes<input id="focusGoal" type="number" min="5" value="240" /></label>
+        </form>
+      </div>
+      <aside class="result-panel" aria-live="polite">
+        <h2>Today’s numbers</h2>
+        <dl class="results">
+          <div><dt>Worked time</dt><dd id="worked">-</dd></div>
+          <div><dt>Estimated overtime</dt><dd id="overtimePay">-</dd></div>
+          <div><dt>Meeting cost</dt><dd id="meetingCost">-</dd></div>
+          <div><dt>Needed focus blocks</dt><dd id="focusBlocks">-</dd></div>
+        </dl>
+        <p id="summary" class="summary"></p>
+        <div class="ad-slot" aria-label="Ad space">Ad space</div>
+      </aside>
+    </section>
+    <section class="language-panel" aria-label="Language versions"><a class="lang" href="/work-value-lab/">일값 계산소</a>
+      <a class="lang active" href="/work-value-lab/en/">Work Value Lab</a>
+      <a class="lang" href="/work-value-lab/ja/">仕事価値計算所</a>
+      <a class="lang" href="/work-value-lab/zh/">工作价值计算器</a>
+      <a class="lang" href="/work-value-lab/ar/">حاسبة قيمة العمل</a>
+      <a class="lang" href="/work-value-lab/es/">Calculadora del Trabajo</a>
+      <a class="lang" href="/work-value-lab/pt-br/">Calculadora do Trabalho</a>
+      <a class="lang" href="/work-value-lab/de/">Arbeitswert Rechner</a></section>
+    <section class="content" aria-labelledby="guide-title">
+      <h2 id="guide-title">Productivity numbers knowledge workers calculate often</h2>
+      <div class="article-grid"><article id="work"><h3>Work hours calculator</h3><p>Subtract break time from the span between start and end time to get real worked time. A 9-hour stay with a 60-minute lunch is 8 hours of work.</p><a class="read-more" href="/work-value-lab/en/work-hours-calculator/">Work hours</a></article>
+        <article id="overtime"><h3>Overtime calculator</h3><p>This tool treats time above 8 hours as overtime and applies a 1.5x hourly-rate multiplier. Local laws and contracts may differ.</p><a class="read-more" href="/work-value-lab/en/overtime-calculator/">Overtime</a></article>
+        <article id="meeting"><h3>Meeting cost calculator</h3><p>Meeting cost is people multiplied by meeting duration and hourly rate. Short meetings become expensive when many people attend.</p><a class="read-more" href="/work-value-lab/en/meeting-cost-calculator/">Meeting cost</a></article>
+        <article id="focus"><h3>Focus block calculator</h3><p>Divide your daily focus goal by your preferred focus block length to see how many deep-work sessions you need today.</p><a class="read-more" href="/work-value-lab/en/focus-block-calculator/">Focus blocks</a></article></div>
+    </section>
+    <section class="plain-section"><h2>Ads and content principle</h2><p>Ads are kept in a separate area away from inputs. The tool and useful explanation come first, without layouts that encourage accidental clicks.</p></section>
+  </main>
+  <footer><a href="/work-value-lab/en/">Work Value Lab</a><span>A browser calculator that does not send personal data to a server.</span><nav aria-label="Site links"><a href="/work-value-lab/en/about/">About</a><a href="/work-value-lab/en/privacy/">Privacy</a><a href="/work-value-lab/en/contact/">Contact</a></nav></footer>
+  <script src="../../script.js"></script>
+</body>
+</html>

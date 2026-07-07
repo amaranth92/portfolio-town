@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="ko" dir="ltr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>근무시간 계산 - 일값 계산소</title>
+  <meta name="description" content="출근 시간과 퇴근 시간에서 휴게 시간을 빼면 실제 근무 시간이 나옵니다. 같은 9시간 체류라도 점심 60분을 제외하면 실근무는 8시간입니다." />
+  <meta name="robots" content="index,follow" />
+  <meta property="og:title" content="일값 계산소 - 근무시간, 야근비, 회의비 생산성 계산기" />
+  <meta property="og:description" content="근무시간, 야근비, 회의 비용, 집중 블록을 한 화면에서 계산하는 직장인 생산성 계산기입니다." />
+  <link rel="canonical" href="https://amaranth92.github.io/portfolio-town/work-value-lab/work-hours-calculator/" />
+  <link rel="alternate" hreflang="ko" href="https://amaranth92.github.io/portfolio-town/work-value-lab/work-hours-calculator/" />
+  <link rel="alternate" hreflang="en" href="https://amaranth92.github.io/portfolio-town/work-value-lab/en/work-hours-calculator/" />
+  <link rel="alternate" hreflang="ja" href="https://amaranth92.github.io/portfolio-town/work-value-lab/ja/work-hours-calculator/" />
+  <link rel="alternate" hreflang="zh-Hans" href="https://amaranth92.github.io/portfolio-town/work-value-lab/zh/work-hours-calculator/" />
+  <link rel="alternate" hreflang="ar" href="https://amaranth92.github.io/portfolio-town/work-value-lab/ar/work-hours-calculator/" />
+  <link rel="alternate" hreflang="es" href="https://amaranth92.github.io/portfolio-town/work-value-lab/es/work-hours-calculator/" />
+  <link rel="alternate" hreflang="pt-BR" href="https://amaranth92.github.io/portfolio-town/work-value-lab/pt-br/work-hours-calculator/" />
+  <link rel="alternate" hreflang="de" href="https://amaranth92.github.io/portfolio-town/work-value-lab/de/work-hours-calculator/" />
+  <link rel="alternate" hreflang="x-default" href="https://amaranth92.github.io/portfolio-town/work-value-lab/en/work-hours-calculator/" />
+  <link rel="stylesheet" href="../styles.css" />
+  <script>window.WORKCALC_I18N={locale:"ko-KR",currency:"KRW",block:"블록",summary:'오늘은 {worked} 일했고, 회의 {meetingMinutes}분은 대략 {meetingCost}의 인건비를 씁니다.'};</script>
+</head>
+<body>
+  <header class="site-header">
+    <a class="brand" href="/work-value-lab/">일값 계산소</a>
+    <nav aria-label="직장인이 자주 계산하는 생산성 숫자">
+      <a href="#work">근무시간</a>
+      <a href="#overtime">야근비</a>
+      <a href="#meeting">회의비</a>
+      <a href="#focus">집중블록</a>
+    </nav>
+  </header>
+  <main>
+    <section class="hero" aria-labelledby="title">
+      <div class="tool-panel">
+        <div class="panel-head"><h1 id="title">근무시간 계산</h1><p>출근 시간과 퇴근 시간에서 휴게 시간을 빼면 실제 근무 시간이 나옵니다. 같은 9시간 체류라도 점심 60분을 제외하면 실근무는 8시간입니다.</p></div>
+        <form id="calculator" class="grid-form">
+          <label>출근 시간<input id="startTime" type="time" value="09:00" /></label>
+          <label>퇴근 시간<input id="endTime" type="time" value="18:20" /></label>
+          <label>휴게 시간(분)<input id="breakMinutes" type="number" min="0" value="60" /></label>
+          <label>시급<input id="hourlyWage" type="number" min="0" step="1" value="12000" /></label>
+          <label>회의 인원<input id="people" type="number" min="1" value="6" /></label>
+          <label>회의 시간(분)<input id="meetingMinutes" type="number" min="0" value="45" /></label>
+          <label>집중 블록(분)<input id="focusMinutes" type="number" min="5" value="50" /></label>
+          <label>하루 목표 집중시간(분)<input id="focusGoal" type="number" min="5" value="240" /></label>
+        </form>
+      </div>
+      <aside class="result-panel" aria-live="polite">
+        <h2>오늘의 숫자</h2>
+        <dl class="results">
+          <div><dt>실근무</dt><dd id="worked">-</dd></div>
+          <div><dt>예상 야근비</dt><dd id="overtimePay">-</dd></div>
+          <div><dt>회의 비용</dt><dd id="meetingCost">-</dd></div>
+          <div><dt>필요 집중블록</dt><dd id="focusBlocks">-</dd></div>
+        </dl>
+        <p id="summary" class="summary"></p>
+        <div class="ad-slot" aria-label="광고 영역">광고 영역</div>
+      </aside>
+    </section>
+    <section class="language-panel" aria-label="Language versions"><a class="lang active" href="/work-value-lab/">일값 계산소</a>
+      <a class="lang" href="/work-value-lab/en/">Work Value Lab</a>
+      <a class="lang" href="/work-value-lab/ja/">仕事価値計算所</a>
+      <a class="lang" href="/work-value-lab/zh/">工作价值计算器</a>
+      <a class="lang" href="/work-value-lab/ar/">حاسبة قيمة العمل</a>
+      <a class="lang" href="/work-value-lab/es/">Calculadora del Trabajo</a>
+      <a class="lang" href="/work-value-lab/pt-br/">Calculadora do Trabalho</a>
+      <a class="lang" href="/work-value-lab/de/">Arbeitswert Rechner</a></section>
+    <section class="content" aria-labelledby="guide-title">
+      <h2 id="guide-title">직장인이 자주 계산하는 생산성 숫자</h2>
+      <div class="article-grid"><article id="work"><h3>근무시간 계산</h3><p>출근 시간과 퇴근 시간에서 휴게 시간을 빼면 실제 근무 시간이 나옵니다. 같은 9시간 체류라도 점심 60분을 제외하면 실근무는 8시간입니다.</p><a class="read-more" href="/work-value-lab/work-hours-calculator/">근무시간</a></article>
+        <article id="overtime"><h3>야근비 계산</h3><p>이 계산기는 8시간을 넘는 시간을 야근 후보로 보고 시급의 1.5배를 적용합니다. 회사 규정과 근로계약에 따라 실제 금액은 달라질 수 있습니다.</p><a class="read-more" href="/work-value-lab/overtime-calculator/">야근비</a></article>
+        <article id="meeting"><h3>회의 비용 계산</h3><p>회의 비용은 참석자 수, 회의 시간, 시간당 인건비를 곱해 계산합니다. 짧은 회의도 여러 명이 들어가면 하루 예산을 빠르게 씁니다.</p><a class="read-more" href="/work-value-lab/meeting-cost-calculator/">회의비</a></article>
+        <article id="focus"><h3>집중블록 계산</h3><p>하루 목표 집중시간을 블록 단위로 나누면 오늘 필요한 몰입 세션 수가 보입니다. 240분 목표에 50분 블록이면 5블록이 필요합니다.</p><a class="read-more" href="/work-value-lab/focus-block-calculator/">집중블록</a></article></div>
+    </section>
+    <section class="plain-section"><h2>광고와 콘텐츠 원칙</h2><p>광고는 계산 입력칸을 가리지 않는 별도 영역에만 둡니다. 사용자가 실수로 누르게 만드는 배치 대신, 도구와 설명 콘텐츠를 먼저 제공합니다.</p></section>
+  </main>
+  <footer><a href="/work-value-lab/">일값 계산소</a><span>개인정보를 서버로 전송하지 않는 브라우저 계산기입니다.</span><nav aria-label="Site links"><a href="/work-value-lab/about/">About</a><a href="/work-value-lab/privacy/">Privacy</a><a href="/work-value-lab/contact/">Contact</a></nav></footer>
+  <script src="../script.js"></script>
+</body>
+</html>
