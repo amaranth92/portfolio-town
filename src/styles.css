@@ -4494,7 +4494,19 @@ button {
   }
 }
 
-/* Product cards: use real product art, not decorative pseudo-scenes. */
+.is-side-open .v2-chat-body {
+  padding-bottom: 32px;
+}
+
+.is-side-open .v2-chat-composer {
+  display: none;
+}
+
+.is-side-open .v2-project-groups {
+  padding-top: 24px;
+}
+
+
 .v2-project-group-grid button {
   width: auto;
   flex: none;

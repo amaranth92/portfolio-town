@@ -763,7 +763,7 @@ export function Version2Portfolio({ locale, onToggleLocale }: Props) {
   useFluidCanvas(fluidCanvasRef);
 
   return (
-    <main className={`v2-aaabad ${activeTopic ? 'is-chat-open' : ''}`}>
+    <main className={`v2-aaabad ${activeTopic ? 'is-chat-open' : ''} ${activeTopic === 'side' ? 'is-side-open' : ''}`}>
       {!activeTopic && <canvas ref={fluidCanvasRef} className="v2-fluid-canvas" aria-hidden="true" />}
       {!activeTopic && (
         <section className="v2-landing" aria-label="Portfolio landing">
