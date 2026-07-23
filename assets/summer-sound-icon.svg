@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" role="img" aria-label="Summer Sound">
+  <rect width="160" height="160" rx="38" fill="#E7F7FF"/>
+  <circle cx="80" cy="80" r="38" fill="#43B7D8"/>
+  <path d="M58 77c9-10 15-10 22 0s13 10 22 0 13-10 22 0" fill="none" stroke="#fff" stroke-width="7" stroke-linecap="round"/>
+  <path d="M80 30v14m0 72v14M30 80h14m72 0h14" stroke="#F7C948" stroke-width="6" stroke-linecap="round"/>
+</svg>
