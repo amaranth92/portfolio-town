@@ -3830,7 +3830,7 @@ button {
 
 .v2-project-groups {
   display: grid;
-  gap: 32px;
+  gap: 20px;
   padding-top: 138px;
 }
 
@@ -4486,7 +4486,9 @@ button {
 
 /* Product cards: use real product art, not decorative pseudo-scenes. */
 .v2-project-group-grid button {
-  min-height: 258px;
+  width: auto;
+  flex: none;
+  min-height: 220px;
   justify-content: flex-start;
   gap: 8px;
   border: 1px solid #e2e8f0;
