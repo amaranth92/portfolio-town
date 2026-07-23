@@ -593,6 +593,12 @@ function SequentialTextBlock({
   );
 }
 
+const projectGroupCopy = {
+  'mobile-games': { en: 'Mobile Games', ko: '모바일 게임' },
+  apps: { en: 'Apps', ko: '앱' },
+  toss: { en: 'Toss In-App', ko: '앱인토스' }
+} as const;
+
 function getProjectCopy(project: PersonalProject, locale: Locale) {
   if (locale === 'ko') {
     return {
@@ -1183,21 +1189,32 @@ function SideProjectsBlock({
       <h2>{isKorean ? '사이드 프로젝트' : 'Side Projects'}</h2>
       <div className="v2-project-rail-wrap">
         <div className="v2-project-grid" ref={railRef}>
-          {personalProjects.map((project) => {
-            const projectCopy = getProjectCopy(project, locale);
-            const cardCopy = getProjectCardCopy(project, locale);
+          {(['mobile-games', 'apps', 'toss'] as const).map((group) => {
+            const groupProjects = personalProjects.filter((project) => project.portfolioGroup === group);
+            const groupLabel = projectGroupCopy[group][locale];
             return (
-              <button
-                key={project.id}
-                type="button"
-                className={`v2-project-card is-${project.id}`}
-                onClick={() => onSelectProject(project)}
-                aria-label={`${cardCopy.title}: ${projectCopy.shortDesc}`}
-              >
-                <ProjectGlyph projectId={project.id} />
-                <span>{cardCopy.category}</span>
-                <strong>{cardCopy.title}</strong>
-              </button>
+              <section key={group} className={`v2-project-group v2-project-group-${group}`} aria-labelledby={`project-group-${group}`}>
+                <h3 id={`project-group-${group}`}>{groupLabel}</h3>
+                <div className="v2-project-group-grid">
+                  {groupProjects.map((project) => {
+                    const projectCopy = getProjectCopy(project, locale);
+                    const cardCopy = getProjectCardCopy(project, locale);
+                    return (
+                      <button
+                        key={project.id}
+                        type="button"
+                        className={`v2-project-card is-${project.id}`}
+                        onClick={() => onSelectProject(project)}
+                        aria-label={`${cardCopy.title}: ${projectCopy.shortDesc}`}
+                      >
+                        <ProjectGlyph projectId={project.id} />
+                        <span>{cardCopy.category}</span>
+                        <strong>{cardCopy.title}</strong>
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
             );
           })}
         </div>

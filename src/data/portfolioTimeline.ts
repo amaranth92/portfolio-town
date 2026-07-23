@@ -20,6 +20,7 @@ export type PersonalProject = {
   id: string;
   title: string;
   category: string;
+  portfolioGroup: 'mobile-games' | 'apps' | 'toss';
   year?: string;
   shortDesc: string;
   githubUrl?: string;
@@ -73,6 +74,7 @@ export const personalProjects: PersonalProject[] = [
     year: '2026',
     title: 'Aussie Pus Studio',
     category: 'Side Project / Web Games',
+    portfolioGroup: 'mobile-games',
     shortDesc: 'A collection of browser and mobile-friendly games released as a personal game studio site.',
     demoUrl: 'https://aussie-pus.pages.dev/',
     tags: ['JavaScript', 'Canvas', 'Game UI', 'Mobile Web'],
@@ -99,6 +101,7 @@ export const personalProjects: PersonalProject[] = [
     id: 'nagalttae',
     title: 'Nagalttae',
     category: 'Toss In-App Weather Mini App',
+    portfolioGroup: 'toss',
     shortDesc: 'Toss In-App weather preparation mini app that recommends what to bring before leaving for work based on location and weather data.',
     githubUrl: 'https://github.com/amaranth92/portfolio-projects/blob/master/docs/nagalttae.md',
     tags: ['Toss In-App', 'React', 'TypeScript', 'Weather API'],
@@ -124,6 +127,7 @@ export const personalProjects: PersonalProject[] = [
     id: 'photo-sorter',
     title: 'Photo EXIF Sorter',
     category: 'Automation Tool',
+    portfolioGroup: 'apps',
     shortDesc: 'Python tool that sorts 10,000+ travel photos by date and location using EXIF metadata.',
     githubUrl: 'https://github.com/amaranth92/portfolio-projects/blob/master/docs/photo-exif-sorter.md',
     tags: ['Python', 'EXIF', 'File I/O', 'Automation'],
@@ -149,6 +153,7 @@ export const personalProjects: PersonalProject[] = [
     id: 'decody',
     title: 'Decody',
     category: 'AI Application',
+    portfolioGroup: 'apps',
     shortDesc: 'AI app that translates pet behavior from photos, videos, and audio, then helps create subtitles and voice dubbing for short clips.',
     githubUrl: 'https://github.com/amaranth92/portfolio-projects/blob/master/docs/decody.md',
     tags: ['AI', 'Pet Behavior', 'Subtitle', 'Voice Dubbing'],

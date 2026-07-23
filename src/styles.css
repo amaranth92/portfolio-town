@@ -3803,9 +3803,30 @@ button {
   display: none;
 }
 
-.v2-project-rail-wrap {
-  position: relative;
+.v2-project-group {
+  flex: 0 0 auto;
+  width: min(100%, 520px);
+  padding: 0 2px 4px;
 }
+
+.v2-project-group h3 {
+  margin: 0 0 10px;
+  color: #475569;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.v2-project-group-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 224px);
+  gap: 14px;
+}
+
+.v2-project-group-mobile-games h3 { color: #c2410c; }
+.v2-project-group-apps h3 { color: #2563eb; }
+.v2-project-group-toss h3 { color: #15803d; }
 
 .v2-project-controls {
   display: flex;
