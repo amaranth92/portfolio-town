@@ -1194,6 +1194,7 @@ function SideProjectsBlock({
                       <ProjectGlyph projectId={project.id} />
                       <span>{cardCopy.category}</span>
                       <strong>{cardCopy.title}</strong>
+                      <p>{projectCopy.shortDesc}</p>
                     </button>
                   );
                 })}
@@ -1213,9 +1214,10 @@ function SideProjectsBlock({
 
 function ProjectGlyph({ projectId }: { projectId: string }) {
   const iconByProject: Record<string, string> = {
-    'aussie-pus': 'https://aussie-pus.pages.dev/Platypus.png',
+    'aussie-pus': `${assetBaseUrl}assets/aussie-pus-icon.png`,
     nagalttae: `${assetBaseUrl}assets/nagalttae-logo.png`,
-    decody: 'https://aussie-pus.pages.dev/decody_icon.png'
+    'photo-sorter': `${assetBaseUrl}assets/photo-sorter-icon.svg`,
+    decody: `${assetBaseUrl}assets/decody-icon.png`
   };
 
   const iconUrl = iconByProject[projectId];
