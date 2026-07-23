@@ -594,7 +594,7 @@ function SequentialTextBlock({
 }
 
 const projectGroupCopy = {
-  'mobile-games': { en: 'Mobile Games', ko: '모바일 게임' },
+  'mobile-games': { en: 'WEB', ko: 'WEB' },
   apps: { en: 'Apps', ko: '앱' },
   toss: { en: 'Toss In-App', ko: '앱인토스' }
 } as const;
@@ -626,6 +626,18 @@ function getProjectCardCopy(project: PersonalProject, locale: Locale) {
     'photo-sorter': {
       en: { title: 'Photo Sorter', category: 'Automation' },
       ko: { title: '사진 분류', category: '자동화' }
+    },
+    'photo-weave': {
+      en: { title: 'PhotoWeave Resize Stitch', category: 'Mac App' },
+      ko: { title: 'PhotoWeave Resize Stitch', category: 'Mac 앱' }
+    },
+    'premium-qr-generator': {
+      en: { title: 'Premium QR Generator', category: 'Web App' },
+      ko: { title: 'Premium QR Generator', category: '웹 앱' }
+    },
+    'smart-text-analyzer': {
+      en: { title: 'Smart Text Analyzer', category: 'Web App' },
+      ko: { title: 'Smart Text Analyzer', category: '웹 앱' }
     },
     nagalttae: {
       en: { title: 'Nagalttae', category: 'Weather Mate' },
@@ -1225,6 +1237,9 @@ function ProjectGlyph({ projectId }: { projectId: string }) {
     'aussie-pus': `${assetBaseUrl}assets/aussie-pus-icon.png`,
     nagalttae: `${assetBaseUrl}assets/nagalttae-logo.png`,
     'photo-sorter': `${assetBaseUrl}assets/photo-sorter-icon.svg`,
+    'photo-weave': `${assetBaseUrl}assets/photoweave-icon.png`,
+    'premium-qr-generator': `${assetBaseUrl}assets/qr-generator-icon.svg`,
+    'smart-text-analyzer': `${assetBaseUrl}assets/text-analyzer-icon.svg`,
     'salt-bread-tycoon': `${assetBaseUrl}assets/salt-bread-icon.svg`,
     'summer-sound': `${assetBaseUrl}assets/summer-sound-icon.svg`,
     decody: `${assetBaseUrl}assets/decody-icon.png`

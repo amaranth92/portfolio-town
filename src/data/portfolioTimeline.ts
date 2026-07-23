@@ -174,6 +174,84 @@ export const personalProjects: PersonalProject[] = [
     }
   },
   {
+    id: 'photo-weave',
+    title: 'PhotoWeave Resize Stitch',
+    category: 'Mac App',
+    portfolioGroup: 'apps',
+    shortDesc: 'A simple Mac utility for resizing and stitching images into clean, share-ready layouts.',
+    demoUrl: 'https://apps.apple.com/us/app/photoweave-resize-stitch/id6788288348?mt=12',
+    tags: ['Mac App', 'Photo Tool', 'Utility'],
+    process: {
+      background: 'Built to make image resizing and stitching faster than using a full editing suite.',
+      architecture: 'Focused the workflow on selecting images, choosing a layout, and exporting the final composition.',
+      troubleshooting: 'Kept controls compact so common photo layout tasks stay quick and predictable.',
+      outcome: 'Published a focused resize-and-stitch utility for clean image layouts.'
+    },
+    ko: {
+      title: 'PhotoWeave Resize Stitch',
+      category: 'Mac 앱',
+      shortDesc: '이미지를 빠르게 리사이즈하고 이어 붙여 공유하기 좋은 레이아웃으로 만드는 Mac 유틸리티입니다.',
+      process: {
+        background: '무거운 이미지 편집 도구 없이 사진 크기 조정과 이어 붙이기를 빠르게 처리하기 위해 만들었습니다.',
+        architecture: '이미지 선택, 레이아웃 설정, 최종 결과 내보내기로 흐름을 단순화했습니다.',
+        troubleshooting: '자주 쓰는 사진 배치 작업을 예측 가능하게 처리하도록 조작 요소를 간결하게 구성했습니다.',
+        outcome: '깔끔한 이미지 레이아웃을 만드는 리사이즈·스티치 전용 유틸리티로 출시했습니다.'
+      }
+    }
+  },
+  {
+    id: 'premium-qr-generator',
+    title: 'Premium QR Generator',
+    category: 'Web App',
+    portfolioGroup: 'apps',
+    shortDesc: 'A focused web tool for creating polished QR codes quickly and exporting them for real use.',
+    demoUrl: 'https://premium-qr-generator.pages.dev/',
+    tags: ['Web App', 'QR', 'Cloudflare Pages'],
+    process: {
+      background: 'Created a lightweight QR workflow for people who need a usable result without a complex design tool.',
+      architecture: 'Kept generation, preview, and export in one responsive browser flow.',
+      troubleshooting: 'Prioritized readable output and a short path from input to downloadable QR code.',
+      outcome: 'Delivered a focused QR generator that works directly in the browser.'
+    },
+    ko: {
+      title: 'Premium QR Generator',
+      category: '웹 앱',
+      shortDesc: '실제로 사용할 수 있는 깔끔한 QR 코드를 빠르게 만들고 내보내는 웹 도구입니다.',
+      process: {
+        background: '복잡한 디자인 도구 없이 바로 쓸 수 있는 QR 결과물을 만들기 위해 구성했습니다.',
+        architecture: '생성, 미리보기, 내보내기를 하나의 반응형 브라우저 흐름으로 묶었습니다.',
+        troubleshooting: '입력부터 다운로드까지의 단계를 줄이고 QR 가독성을 우선했습니다.',
+        outcome: '브라우저에서 바로 사용할 수 있는 집중형 QR 생성기를 완성했습니다.'
+      }
+    }
+  },
+  {
+    id: 'smart-text-analyzer',
+    title: 'Smart Text Analyzer',
+    category: 'Web App',
+    portfolioGroup: 'apps',
+    shortDesc: 'A multilingual word-count and readability analyzer with autosave and SEO-friendly workflows.',
+    demoUrl: 'https://smart-text-analyzer.pages.dev/',
+    tags: ['Web App', 'Text Analysis', 'Multilingual'],
+    process: {
+      background: 'Built for writers and teams that need quick text length and legibility checks while drafting.',
+      architecture: 'Combined live text metrics, readability feedback, autosave, and responsive browser UI.',
+      troubleshooting: 'Handled multilingual text and kept feedback visible without interrupting the writing flow.',
+      outcome: 'Created a practical browser-based analyzer for everyday writing checks.'
+    },
+    ko: {
+      title: 'Smart Text Analyzer',
+      category: '웹 앱',
+      shortDesc: '자동 저장과 다국어 분석을 지원하는 단어 수·텍스트 가독성 분석 웹 도구입니다.',
+      process: {
+        background: '글을 작성하면서 빠르게 분량과 읽기 쉬운 정도를 확인하려는 사용자를 위해 만들었습니다.',
+        architecture: '실시간 텍스트 지표, 가독성 피드백, 자동 저장, 반응형 브라우저 UI를 결합했습니다.',
+        troubleshooting: '다국어 텍스트를 처리하면서도 작성 흐름을 끊지 않도록 피드백 위치를 정리했습니다.',
+        outcome: '일상적인 글쓰기 점검에 바로 쓸 수 있는 브라우저 분석 도구를 만들었습니다.'
+      }
+    }
+  },
+  {
     id: 'photo-sorter',
     title: 'Photo EXIF Sorter',
     category: 'Automation Tool',
