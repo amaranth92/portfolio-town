@@ -3789,7 +3789,7 @@ button {
   text-decoration: none;
 }
 
-.v2-project-grid {
+.v2-project-group-grid {
   display: flex;
   gap: 14px;
   overflow-x: auto;
@@ -3799,7 +3799,7 @@ button {
   scrollbar-width: none;
 }
 
-.v2-project-grid::-webkit-scrollbar {
+.v2-project-group-grid::-webkit-scrollbar {
   display: none;
 }
 
@@ -3828,6 +3828,28 @@ button {
 .v2-project-group-apps h3 { color: #2563eb; }
 .v2-project-group-toss h3 { color: #15803d; }
 
+.v2-project-groups {
+  display: grid;
+  gap: 32px;
+  padding-top: 138px;
+}
+
+.v2-project-group {
+  width: 100%;
+}
+
+.v2-project-group-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  overflow: visible;
+  padding: 0;
+  scroll-snap-type: none;
+}
+
+.v2-project-group-grid button {
+  width: auto;
+  flex: none;
+}
+
 .v2-project-controls {
   display: flex;
   justify-content: flex-end;
@@ -3854,7 +3876,7 @@ button {
   height: 18px;
 }
 
-.v2-project-grid button {
+.v2-project-group-grid button {
   flex: 0 0 224px;
   width: 224px;
   min-height: 320px;
@@ -3928,7 +3950,7 @@ button {
   background: radial-gradient(circle at 50% 50%, #ffffff 0 17%, transparent 18%), conic-gradient(from 40deg, #60a5fa, #a78bfa, #f472b6, #60a5fa);
 }
 
-.v2-project-grid button::before {
+.v2-project-group-grid button::before {
   content: "";
   position: absolute;
   left: 34px;
@@ -3940,7 +3962,7 @@ button {
   opacity: 0.96;
 }
 
-.v2-project-grid button::after {
+.v2-project-group-grid button::after {
   content: "";
   position: absolute;
   right: 22px;
@@ -3952,11 +3974,11 @@ button {
   filter: drop-shadow(-68px 4px 0 rgba(15, 23, 42, 0.78));
 }
 
-.v2-project-grid button:nth-child(2) {
+.v2-project-group-grid button:nth-child(2) {
   background: linear-gradient(180deg, #111827 0%, #a3a3a3 42%, #fff1bd 100%);
 }
 
-.v2-project-grid button:nth-child(2)::before {
+.v2-project-group-grid button:nth-child(2)::before {
   left: auto;
   right: 18px;
   width: 130px;
@@ -3965,7 +3987,7 @@ button {
   background: linear-gradient(135deg, #111827, #f59e0b);
 }
 
-.v2-project-grid button:nth-child(2)::after {
+.v2-project-group-grid button:nth-child(2)::after {
   right: 68px;
   bottom: 28px;
   width: 86px;
@@ -3974,11 +3996,11 @@ button {
   filter: drop-shadow(58px 0 0 rgba(15, 23, 42, 0.86));
 }
 
-.v2-project-grid button:nth-child(3) {
+.v2-project-group-grid button:nth-child(3) {
   background: radial-gradient(circle at 78% 22%, rgba(239, 68, 68, 0.56), transparent 28%), linear-gradient(180deg, #210505, #111111);
 }
 
-.v2-project-grid button:nth-child(3)::before {
+.v2-project-group-grid button:nth-child(3)::before {
   left: 20px;
   right: 20px;
   bottom: 48px;
@@ -3987,20 +4009,20 @@ button {
   background: #26262b;
 }
 
-.v2-project-grid button:nth-child(3)::after {
+.v2-project-group-grid button:nth-child(3)::after {
   display: none;
 }
 
-.v2-project-grid button:nth-child(n + 4) {
+.v2-project-group-grid button:nth-child(n + 4) {
   background: linear-gradient(180deg, #101010, #323232 52%, #111827);
 }
 
-.v2-project-grid button:hover {
+.v2-project-group-grid button:hover {
   transform: translateY(-2px);
   box-shadow: 0 16px 28px rgba(15, 23, 42, 0.08);
 }
 
-.v2-project-grid span {
+.v2-project-group-grid span {
   position: relative;
   z-index: 1;
   color: #ffffff;
@@ -4009,7 +4031,7 @@ button {
   text-transform: none;
 }
 
-.v2-project-grid strong {
+.v2-project-group-grid strong {
   position: relative;
   z-index: 1;
   color: #ffffff;
@@ -4017,7 +4039,7 @@ button {
   line-height: 1.08;
 }
 
-.v2-project-grid small {
+.v2-project-group-grid small {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -4026,7 +4048,7 @@ button {
   white-space: nowrap;
 }
 
-.v2-project-grid em {
+.v2-project-group-grid em {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -4232,7 +4254,7 @@ button {
     margin-bottom: 38px;
   }
 
-  .v2-project-grid {
+  .v2-project-group-grid {
     gap: 16px;
   }
 
@@ -4394,10 +4416,15 @@ button {
     font-size: 14px;
   }
 
-  .v2-project-grid button {
-    flex: 0 0 min(224px, calc(100vw - 64px));
-    width: min(224px, calc(100vw - 64px));
-    min-height: 320px;
+  .v2-project-group-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .v2-project-group-grid button {
+    flex: none;
+    width: 100%;
+    min-height: 250px;
   }
 
   .v2-project-controls {

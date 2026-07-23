@@ -681,8 +681,6 @@ export function Version2Portfolio({ locale, onToggleLocale }: Props) {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [showQuickQuestions, setShowQuickQuestions] = useState(true);
   const [selectedProject, setSelectedProject] = useState<PersonalProject | null>(null);
-  const projectRailRef = useRef<HTMLDivElement | null>(null);
-
   const topic = activeTopic ? t.topics[activeTopic] : null;
   const inferTopicFromQuery = (rawQuery: string): Topic => {
     const normalized = rawQuery.toLowerCase();
@@ -725,13 +723,6 @@ export function Version2Portfolio({ locale, onToggleLocale }: Props) {
     event.preventDefault();
     const nextQuestion = query.trim() || copy[locale].topics.about.question;
     openTopic(inferTopicFromQuery(nextQuestion), false, nextQuestion);
-  };
-
-  const scrollProjects = (direction: -1 | 1) => {
-    projectRailRef.current?.scrollBy({
-      left: direction * 238,
-      behavior: 'smooth'
-    });
   };
 
   useEffect(() => {
@@ -882,8 +873,6 @@ export function Version2Portfolio({ locale, onToggleLocale }: Props) {
                     selectedProject={selectedProject}
                     onSelectProject={setSelectedProject}
                     onCloseProject={() => setSelectedProject(null)}
-                    railRef={projectRailRef}
-                    onScroll={scrollProjects}
                   />
                 )}
 
@@ -1143,17 +1132,13 @@ function SideProjectsBlock({
   topic,
   selectedProject,
   onSelectProject,
-  onCloseProject,
-  railRef,
-  onScroll
+  onCloseProject
 }: {
   locale: Locale;
   topic: TopicCopy;
   selectedProject: PersonalProject | null;
   onSelectProject: (project: PersonalProject) => void;
   onCloseProject: () => void;
-  railRef: RefObject<HTMLDivElement | null>;
-  onScroll: (direction: -1 | 1) => void;
 }) {
   const isKorean = locale === 'ko';
   const projectDetailRef = useRef<HTMLDivElement | null>(null);
@@ -1187,45 +1172,35 @@ function SideProjectsBlock({
       </div>
 
       <h2>{isKorean ? '사이드 프로젝트' : 'Side Projects'}</h2>
-      <div className="v2-project-rail-wrap">
-        <div className="v2-project-grid" ref={railRef}>
-          {(['mobile-games', 'apps', 'toss'] as const).map((group) => {
-            const groupProjects = personalProjects.filter((project) => project.portfolioGroup === group);
-            const groupLabel = projectGroupCopy[group][locale];
-            return (
-              <section key={group} className={`v2-project-group v2-project-group-${group}`} aria-labelledby={`project-group-${group}`}>
-                <h3 id={`project-group-${group}`}>{groupLabel}</h3>
-                <div className="v2-project-group-grid">
-                  {groupProjects.map((project) => {
-                    const projectCopy = getProjectCopy(project, locale);
-                    const cardCopy = getProjectCardCopy(project, locale);
-                    return (
-                      <button
-                        key={project.id}
-                        type="button"
-                        className={`v2-project-card is-${project.id}`}
-                        onClick={() => onSelectProject(project)}
-                        aria-label={`${cardCopy.title}: ${projectCopy.shortDesc}`}
-                      >
-                        <ProjectGlyph projectId={project.id} />
-                        <span>{cardCopy.category}</span>
-                        <strong>{cardCopy.title}</strong>
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
-            );
-          })}
-        </div>
-        <div className="v2-project-controls" aria-label="Project carousel controls">
-          <button type="button" onClick={() => onScroll(-1)} aria-label="Previous projects">
-            <ArrowIcon />
-          </button>
-          <button type="button" onClick={() => onScroll(1)} aria-label="Next projects">
-            <ArrowIcon />
-          </button>
-        </div>
+      <div className="v2-project-groups">
+        {(['mobile-games', 'apps', 'toss'] as const).map((group) => {
+          const groupProjects = personalProjects.filter((project) => project.portfolioGroup === group);
+          const groupLabel = projectGroupCopy[group][locale];
+          return (
+            <section key={group} className={`v2-project-group v2-project-group-${group}`} aria-labelledby={`project-group-${group}`}>
+              <h3 id={`project-group-${group}`}>{groupLabel}</h3>
+              <div className="v2-project-group-grid">
+                {groupProjects.map((project) => {
+                  const projectCopy = getProjectCopy(project, locale);
+                  const cardCopy = getProjectCardCopy(project, locale);
+                  return (
+                    <button
+                      key={project.id}
+                      type="button"
+                      className={`v2-project-card is-${project.id}`}
+                      onClick={() => onSelectProject(project)}
+                      aria-label={`${cardCopy.title}: ${projectCopy.shortDesc}`}
+                    >
+                      <ProjectGlyph projectId={project.id} />
+                      <span>{cardCopy.category}</span>
+                      <strong>{cardCopy.title}</strong>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          );
+        })}
       </div>
       {selectedProject && (
         <div ref={projectDetailRef} className="v2-project-detail-focus" tabIndex={-1}>
