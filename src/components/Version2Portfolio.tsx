@@ -1240,8 +1240,8 @@ function ProjectGlyph({ projectId }: { projectId: string }) {
     'photo-weave': `${assetBaseUrl}assets/photoweave-icon.png`,
     'premium-qr-generator': `${assetBaseUrl}assets/qr-generator-icon.svg`,
     'smart-text-analyzer': `${assetBaseUrl}assets/text-analyzer-icon.svg`,
-    'salt-bread-tycoon': `${assetBaseUrl}assets/salt-bread-icon.svg`,
-    'summer-sound': `${assetBaseUrl}assets/summer-sound-icon.svg`,
+    'salt-bread-tycoon': `${assetBaseUrl}assets/salt-bread-toss-logo.png`,
+    'summer-sound': `${assetBaseUrl}assets/summer-sound-toss-logo.png`,
     decody: `${assetBaseUrl}assets/decody-icon.png`
   };
 

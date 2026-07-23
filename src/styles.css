@@ -3868,9 +3868,10 @@ button {
 }
 
 .v2-project-group-grid button {
-  flex: 0 0 224px;
-  width: 224px;
-  min-height: 320px;
+  flex: 0 0 100%;
+  width: 100%;
+  height: 280px;
+  min-height: 280px;
   position: relative;
   overflow: hidden;
   display: flex;
@@ -4408,22 +4409,17 @@ button {
   }
 
   .v2-project-groups {
-    display: flex;
-    gap: 16px;
-    overflow-x: auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    overflow: visible;
     padding-top: 138px;
     padding-bottom: 8px;
-    scroll-snap-type: x mandatory;
-    scrollbar-width: none;
-  }
-
-  .v2-project-groups::-webkit-scrollbar {
-    display: none;
   }
 
   .v2-project-group {
-    flex: 0 0 min(78vw, 300px);
-    scroll-snap-align: start;
+    width: 100%;
+    flex: none;
   }
 
   .v2-project-group-grid {
@@ -4434,7 +4430,8 @@ button {
   .v2-project-group-grid button {
     flex: none;
     width: 100%;
-    min-height: 250px;
+    height: 280px;
+    min-height: 280px;
   }
 
   .v2-project-controls {
