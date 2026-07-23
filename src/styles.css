@@ -3830,24 +3830,15 @@ button {
 
 .v2-project-groups {
   display: grid;
-  gap: 20px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+  gap: 16px;
   padding-top: 138px;
 }
 
-.v2-project-group {
-  width: 100%;
-}
-
 .v2-project-group-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  overflow: visible;
-  padding: 0;
-  scroll-snap-type: none;
-}
-
-.v2-project-group-grid button {
-  width: auto;
-  flex: none;
+  grid-template-columns: 1fr;
+  gap: 12px;
 }
 
 .v2-project-controls {
@@ -4414,6 +4405,25 @@ button {
   .v2-message {
     padding: 13px 15px;
     font-size: 14px;
+  }
+
+  .v2-project-groups {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-top: 138px;
+    padding-bottom: 8px;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .v2-project-groups::-webkit-scrollbar {
+    display: none;
+  }
+
+  .v2-project-group {
+    flex: 0 0 min(78vw, 300px);
+    scroll-snap-align: start;
   }
 
   .v2-project-group-grid {

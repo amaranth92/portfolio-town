@@ -631,6 +631,14 @@ function getProjectCardCopy(project: PersonalProject, locale: Locale) {
       en: { title: 'Nagalttae', category: 'Weather Mate' },
       ko: { title: '나갈때', category: '날씨 준비' }
     },
+    'salt-bread-tycoon': {
+      en: { title: 'Salt Bread Tycoon', category: 'Toss In-App Game' },
+      ko: { title: '소금빵 키우기', category: '토스 인앱 게임' }
+    },
+    'summer-sound': {
+      en: { title: 'Summer Sound', category: 'Toss In-App' },
+      ko: { title: '여름소리', category: '토스 인앱' }
+    },
     'blackbox-ffmpeg': {
       en: { title: 'Video Repair', category: 'Linux Tool' },
       ko: { title: '영상 복구', category: 'Linux 도구' }
@@ -1217,6 +1225,8 @@ function ProjectGlyph({ projectId }: { projectId: string }) {
     'aussie-pus': `${assetBaseUrl}assets/aussie-pus-icon.png`,
     nagalttae: `${assetBaseUrl}assets/nagalttae-logo.png`,
     'photo-sorter': `${assetBaseUrl}assets/photo-sorter-icon.svg`,
+    'salt-bread-tycoon': `${assetBaseUrl}assets/salt-bread-icon.svg`,
+    'summer-sound': `${assetBaseUrl}assets/summer-sound-icon.svg`,
     decody: `${assetBaseUrl}assets/decody-icon.png`
   };
 

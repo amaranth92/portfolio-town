@@ -124,6 +124,56 @@ export const personalProjects: PersonalProject[] = [
     }
   },
   {
+    id: 'salt-bread-tycoon',
+    title: 'Salt Bread Tycoon',
+    category: 'Toss In-App Game',
+    portfolioGroup: 'toss',
+    shortDesc: 'A cozy Toss In-App idle game about growing a tiny salt-bread bakery.',
+    tags: ['Toss In-App', 'Game', 'React'],
+    process: {
+      background: 'Designed as a short, friendly idle-game experience for quick mobile sessions.',
+      architecture: 'Built around simple tap, upgrade, and passive-growth interactions that fit an in-app flow.',
+      troubleshooting: 'Kept the loop readable on small screens by prioritizing one primary action and compact feedback.',
+      outcome: 'Created a lightweight bakery game concept that is easy to understand in a few seconds.'
+    },
+    ko: {
+      title: '소금빵 키우기',
+      category: '토스 인앱 게임',
+      shortDesc: '작은 소금빵 가게를 키워가는 아기자기한 토스 인앱 방치형 게임입니다.',
+      process: {
+        background: '짧은 모바일 세션에 맞는 친근한 방치형 게임 경험으로 기획했습니다.',
+        architecture: '탭, 업그레이드, 자동 성장 중심의 간단한 상호작용으로 인앱 흐름에 맞췄습니다.',
+        troubleshooting: '작은 화면에서도 핵심 행동과 보상 피드백이 바로 보이도록 화면을 단순화했습니다.',
+        outcome: '몇 초 안에 규칙을 이해할 수 있는 가벼운 베이커리 게임 콘셉트를 만들었습니다.'
+      }
+    }
+  },
+  {
+    id: 'summer-sound',
+    title: 'Summer Sound',
+    category: 'Toss In-App Experience',
+    portfolioGroup: 'toss',
+    shortDesc: 'A small Toss In-App sound experience for capturing the mood of a bright summer day.',
+    tags: ['Toss In-App', 'Audio UI', 'React'],
+    process: {
+      background: 'Created as a calm, lightweight mobile experience instead of another utility-heavy screen.',
+      architecture: 'Combined a focused visual, a short audio interaction, and a simple replay-first flow.',
+      troubleshooting: 'Reduced the interface to clear play and pause states so the experience stays approachable.',
+      outcome: 'Produced a compact audio-led concept that works naturally inside a mobile mini app.'
+    },
+    ko: {
+      title: '여름소리',
+      category: '토스 인앱 콘텐츠',
+      shortDesc: '밝은 여름날의 분위기를 담은 작은 토스 인앱 사운드 경험입니다.',
+      process: {
+        background: '기능을 많이 넣기보다 잠깐 쉬어갈 수 있는 차분한 모바일 경험으로 만들었습니다.',
+        architecture: '집중도 높은 화면과 짧은 오디오 상호작용, 다시 듣기 중심의 간단한 흐름을 결합했습니다.',
+        troubleshooting: '재생과 일시정지 상태를 명확하게 나눠 처음 사용해도 부담 없도록 정리했습니다.',
+        outcome: '모바일 미니앱 안에서 자연스럽게 동작하는 오디오 중심 콘셉트를 구현했습니다.'
+      }
+    }
+  },
+  {
     id: 'photo-sorter',
     title: 'Photo EXIF Sorter',
     category: 'Automation Tool',
