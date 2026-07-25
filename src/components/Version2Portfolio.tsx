@@ -61,7 +61,9 @@ const careerMilestones = portfolioTimeline
 const aussieProductIcons = [
   { title: 'Neon Tower', src: 'https://aussie-pus.pages.dev/neonTower.png' },
   { title: 'Neon Bricks', src: 'https://aussie-pus.pages.dev/neonBricks.png' },
-  { title: 'Arcflare', src: 'https://aussie-pus.pages.dev/arcflare_logo.png' }
+  { title: 'Neon Drift: Arcflare', src: 'https://aussie-pus.pages.dev/arcflare_logo.png' },
+  { title: 'Car Out Puzzle', src: 'https://aussie-pus.pages.dev/carOutPuzzle.png' },
+  { title: 'Decernum', src: 'https://aussie-pus.pages.dev/decernum/assets/icon.png' }
 ];
 const skillGroups = [
   {
@@ -1242,7 +1244,12 @@ function ProjectGlyph({ projectId }: { projectId: string }) {
     'smart-text-analyzer': `${assetBaseUrl}assets/text-analyzer-icon.svg`,
     'salt-bread-tycoon': `${assetBaseUrl}assets/salt-bread-toss-logo.png`,
     'summer-sound': `${assetBaseUrl}assets/summer-sound-toss-logo.png`,
-    decody: `${assetBaseUrl}assets/decody-icon.png`
+    decody: `${assetBaseUrl}assets/decody-icon.png`,
+    'neon-tower': 'https://aussie-pus.pages.dev/neonTower.png',
+    'neon-bricks': 'https://aussie-pus.pages.dev/neonBricks.png',
+    arcflare: 'https://aussie-pus.pages.dev/arcflare_logo.png',
+    'car-out-puzzle': 'https://aussie-pus.pages.dev/carOutPuzzle.png',
+    decernum: 'https://aussie-pus.pages.dev/decernum/assets/icon.png'
   };
 
   const iconUrl = iconByProject[projectId];

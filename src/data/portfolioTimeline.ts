@@ -98,6 +98,141 @@ export const personalProjects: PersonalProject[] = [
     }
   },
   {
+    id: 'neon-tower',
+    year: '2026',
+    title: 'Neon Tower',
+    category: 'Mobile Arcade Game',
+    portfolioGroup: 'mobile-games',
+    shortDesc: 'A one-tap arcade game about stacking neon blocks as high as possible.',
+    demoUrl: 'https://apps.apple.com/kr/app/neon-tower-space-builder/id6759367969',
+    tags: ['Arcade', 'Mobile', 'One Tap'],
+    process: {
+      background: 'Built as a quick arcade challenge with a clear goal and short sessions.',
+      architecture: 'Used a lightweight touch-first game loop with timing-based stacking.',
+      troubleshooting: 'Tuned the input window and feedback so each miss feels readable.',
+      outcome: 'Released a compact neon tower game for mobile play.'
+    },
+    ko: {
+      title: 'Neon Tower',
+      category: '모바일 아케이드 게임',
+      shortDesc: '네온 블록을 최대한 높이 쌓는 원탭 아케이드 게임입니다.',
+      process: {
+        background: '짧은 세션에 맞는 명확한 목표의 아케이드 게임으로 만들었습니다.',
+        architecture: '타이밍 기반의 터치 중심 게임 루프를 사용했습니다.',
+        troubleshooting: '실패 원인을 바로 알 수 있도록 입력 판정과 피드백을 조정했습니다.',
+        outcome: '모바일에서 즐길 수 있는 네온 타워 게임으로 출시했습니다.'
+      }
+    }
+  },
+  {
+    id: 'neon-bricks',
+    year: '2026',
+    title: 'Neon Bricks',
+    category: 'Mobile Arcade Game',
+    portfolioGroup: 'mobile-games',
+    shortDesc: 'A neon brick-breaker game where every shot changes the next move.',
+    demoUrl: 'https://apps.apple.com/kr/app/neon-bricks-infinite-blast/id6759252636',
+    tags: ['Arcade', 'Brick Breaker', 'Mobile'],
+    process: {
+      background: 'Reworked the classic brick-breaker loop into a bright, replayable mobile game.',
+      architecture: 'Combined simple aiming, bounce physics, and score-focused progression.',
+      troubleshooting: 'Adjusted bounce angles and touch aiming for small-screen control.',
+      outcome: 'Published an accessible neon arcade game with quick replay loops.'
+    },
+    ko: {
+      title: 'Neon Bricks',
+      category: '모바일 아케이드 게임',
+      shortDesc: '한 번의 발사가 다음 움직임을 바꾸는 네온 벽돌깨기 게임입니다.',
+      process: {
+        background: '고전 벽돌깨기를 밝고 반복 플레이하기 좋은 모바일 게임으로 다듬었습니다.',
+        architecture: '조준, 반사 물리, 점수 중심 진행을 간단한 흐름으로 묶었습니다.',
+        troubleshooting: '작은 화면에서도 조작하기 쉽도록 반사각과 터치 조준을 조정했습니다.',
+        outcome: '짧게 반복해서 즐길 수 있는 네온 아케이드 게임으로 출시했습니다.'
+      }
+    }
+  },
+  {
+    id: 'arcflare',
+    year: '2026',
+    title: 'Neon Drift: Arcflare',
+    category: 'Mobile Survival Arcade',
+    portfolioGroup: 'mobile-games',
+    shortDesc: 'A neon survival ride where drifting through hazards is the whole challenge.',
+    demoUrl: 'https://apps.apple.com/no/app/neon-drift-arcflare/id6768177224',
+    tags: ['Arcade', 'Drift', 'Survival'],
+    process: {
+      background: 'Created a fast arcade game around drifting, dodging, and chasing a high score.',
+      architecture: 'Built the loop around continuous movement, hazard timing, and score pressure.',
+      troubleshooting: 'Balanced speed and obstacle spacing so the game stays tense but readable.',
+      outcome: 'Released a neon drift game designed for short, repeatable runs.'
+    },
+    ko: {
+      title: 'Neon Drift: Arcflare',
+      category: '모바일 서바이벌 아케이드',
+      shortDesc: '장애물을 피하며 드리프트하는 네온 서바이벌 게임입니다.',
+      process: {
+        background: '드리프트와 회피, 기록 경쟁을 중심으로 빠른 아케이드 게임을 만들었습니다.',
+        architecture: '지속 이동, 장애물 타이밍, 점수 압박을 핵심 루프로 구성했습니다.',
+        troubleshooting: '긴장감은 유지하면서도 읽기 쉽도록 속도와 장애물 간격을 조절했습니다.',
+        outcome: '짧게 반복 도전할 수 있는 네온 드리프트 게임으로 출시했습니다.'
+      }
+    }
+  },
+  {
+    id: 'car-out-puzzle',
+    year: '2026',
+    title: 'Car Out Puzzle',
+    category: 'Mobile Puzzle Game',
+    portfolioGroup: 'mobile-games',
+    shortDesc: 'Untangle crowded parking lots by moving every car through the right exit.',
+    demoUrl: 'https://apps.apple.com/us/app/car-out-puzzle/id6776967812',
+    tags: ['Puzzle', 'Logic', 'Mobile'],
+    process: {
+      background: 'Turned a familiar parking-lot problem into a compact level-based puzzle.',
+      architecture: 'Used grid movement and ordered exits to make every move matter.',
+      troubleshooting: 'Kept crowded layouts readable with clear paths and focused feedback.',
+      outcome: 'Released a mobile puzzle game built around planning one move ahead.'
+    },
+    ko: {
+      title: 'Car Out Puzzle',
+      category: '모바일 퍼즐 게임',
+      shortDesc: '주차장의 차를 올바른 출구로 움직여 모두 빼내는 퍼즐 게임입니다.',
+      process: {
+        background: '익숙한 주차장 문제를 짧은 스테이지 퍼즐로 만들었습니다.',
+        architecture: '격자 이동과 출구 순서를 사용해 모든 움직임의 의미를 살렸습니다.',
+        troubleshooting: '복잡한 배치도 경로가 잘 보이도록 화면과 피드백을 정리했습니다.',
+        outcome: '한 수 앞을 생각하는 모바일 퍼즐 게임으로 출시했습니다.'
+      }
+    }
+  },
+  {
+    id: 'decernum',
+    year: '2026',
+    title: 'Decernum',
+    category: 'Paid iOS Strategy Game',
+    portfolioGroup: 'mobile-games',
+    shortDesc: 'A fully offline political strategy game about governing a generation ship.',
+    demoUrl: 'https://apps.apple.com/us/app/decernum/id6791876634',
+    tags: ['Strategy', 'Offline', 'iOS'],
+    process: {
+      background: 'Designed a long-form political story where every crisis changes the ship society.',
+      architecture: 'Connected founder choices, policy decisions, factions, and multiple endings.',
+      troubleshooting: 'Kept a large decision tree understandable through focused event screens.',
+      outcome: 'Released a paid offline strategy game with ten possible endings.'
+    },
+    ko: {
+      title: 'Decernum',
+      category: '유료 iOS 전략 게임',
+      shortDesc: '세대 우주선의 사회를 통치하는 완전 오프라인 정치 전략 게임입니다.',
+      process: {
+        background: '모든 위기가 우주선 사회를 바꾸는 장편 정치 이야기를 설계했습니다.',
+        architecture: '창립자 선택, 정책, 파벌, 다중 엔딩을 하나의 흐름으로 연결했습니다.',
+        troubleshooting: '많은 선택지를 집중도 높은 이벤트 화면으로 이해하기 쉽게 정리했습니다.',
+        outcome: '10개의 결말을 담은 유료 오프라인 전략 게임으로 출시했습니다.'
+      }
+    }
+  },
+  {
     id: 'nagalttae',
     title: 'Nagalttae',
     category: 'Toss In-App Weather Mini App',
