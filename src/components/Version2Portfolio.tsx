@@ -1195,7 +1195,7 @@ function SideProjectsBlock({
 
       <h2>{isKorean ? '사이드 프로젝트' : 'Side Projects'}</h2>
       <div className="v2-project-groups">
-        {(['mobile-games', 'apps', 'toss'] as const).map((group) => {
+        {(['apps', 'toss'] as const).map((group) => {
           const groupProjects = personalProjects.filter((project) => project.portfolioGroup === group);
           const groupLabel = projectGroupCopy[group][locale];
           return (
