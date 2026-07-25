@@ -20,7 +20,8 @@ export type PersonalProject = {
   id: string;
   title: string;
   category: string;
-  portfolioGroup: 'mobile-games' | 'apps' | 'toss';
+  // `web` renders in WEB; `mobile-games` is reserved for the top game strip.
+  portfolioGroup: 'web' | 'mobile-games' | 'apps' | 'toss';
   year?: string;
   shortDesc: string;
   githubUrl?: string;
@@ -74,7 +75,7 @@ export const personalProjects: PersonalProject[] = [
     year: '2026',
     title: 'Aussie Pus Studio',
     category: 'Side Project / Web Games',
-    portfolioGroup: 'mobile-games',
+    portfolioGroup: 'web',
     shortDesc: 'A collection of browser and mobile-friendly games released as a personal game studio site.',
     demoUrl: 'https://aussie-pus.pages.dev/',
     tags: ['JavaScript', 'Canvas', 'Game UI', 'Mobile Web'],
@@ -338,7 +339,7 @@ export const personalProjects: PersonalProject[] = [
     id: 'premium-qr-generator',
     title: 'Premium QR Generator',
     category: 'Web App',
-    portfolioGroup: 'mobile-games',
+    portfolioGroup: 'web',
     shortDesc: 'A focused web tool for creating polished QR codes quickly and exporting them for real use.',
     demoUrl: 'https://premium-qr-generator.pages.dev/',
     tags: ['Web App', 'QR', 'Cloudflare Pages'],
@@ -364,7 +365,7 @@ export const personalProjects: PersonalProject[] = [
     id: 'smart-text-analyzer',
     title: 'Smart Text Analyzer',
     category: 'Web App',
-    portfolioGroup: 'mobile-games',
+    portfolioGroup: 'web',
     shortDesc: 'A multilingual word-count and readability analyzer with autosave and SEO-friendly workflows.',
     demoUrl: 'https://smart-text-analyzer.pages.dev/',
     tags: ['Web App', 'Text Analysis', 'Multilingual'],
